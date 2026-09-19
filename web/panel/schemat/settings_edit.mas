@@ -1142,7 +1142,7 @@
 				}
 			}
 
-			if ($event_type eq "wsdc") {
+			if ($event->nsda_category == "105") {
 
 				my $round_prep = $round_settings{'wsdc_round_type'};
 </%perl>
