@@ -202,7 +202,7 @@
 			$mail{text_body} = $body;
 		}
 
-		if ($ARGS{"reply_to"}) {
+		if ($ARGS{"reply_to"} && (not defined $ARGS{'no_reply'})) {
 			$mail{reply_to} = $ARGS{"reply_to"};
 		}
 

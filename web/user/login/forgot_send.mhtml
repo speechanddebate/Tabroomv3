@@ -1,7 +1,7 @@
 <%args>
 	$username => undef
-	$person  => undef
-	$session => undef
+	$person   => undef
+	$session  => undef
 </%args>
 <%init>
 
@@ -48,12 +48,29 @@
 			$user_person->setting("pass_change_expires", "date", $expires);
 			$url = "$Tab::url_prefix/user/login/forgot_change.mhtml?id=$id&key=$key";
 
-			my $message_text = "
-	Someone, hopefully you, has asked to reset your Tabroom.com password.
+			my $name = $user_person->first." ".$user_person->last;
+			my $first = $user_person->first;
 
-	If you would like to reset your password, please click on this link, or copy & paste it into your web browser:
+			my $message_html = "<p>Hello $first,</p><p>You have requested to reset the Tabroom.com password for $name.</p>
+	<p>If you would like to reset your password, please click on this link, or copy it into your web browser:</p>
+	<p>
+	<a href=\"$url\">$url</a>
+	</p>
 
-	$url
+	<p>Once there, you will be able to change your Tabroom.com login password. This link will expire in a couple hours.</p>
+	<p>If you have any questions, please let us know.</p>
+
+	<p>-- Tabroom.com</p>
+	<p>help\@tabroom.com</p>
+
+	<p>Requestor IP: ".$ENV{HTTP_X_FORWARDED_FOR}."</p>
+	<p>Requested at: $nowstring</p>";
+
+	my $message_text = "\tYou have requested to reset the Tabroom.com password for $name.
+
+	If you would like to reset your password, please copy this link into your web browser:
+
+	".$url."
 
 	Once there, you will be able to change your Tabroom.com login password. This link will expire in a couple hours.
 
@@ -64,8 +81,8 @@
 
 	Requestor IP: ".$ENV{HTTP_X_FORWARDED_FOR}."
 	Timestamp: $nowstring
-
 ";
+
 			my @ids;
 			push @ids, $user_person->id;
 
@@ -75,7 +92,7 @@
 			}
 
 			my $numberwang = substr($now->epoch, -6, 6);
-			my $from_string = "Tabroom Password Reset <iforgot_".$numberwang.'@www.tabroom.com>';
+			my $from_string = "Tabroom Password Reset <iforgot\@tabroom.com>";
 
 			$m->comp("/funclib/send_notify.mas",
 				from            => $from_string,
@@ -84,7 +101,8 @@
 				no_inbox        => 1,
 				no_web          => 1,
 				subject         => 'Your Tabroom.com Password Reset',
-				body            => $message_text
+				body            => $message_text,
+				html            => $message_html
 			);
 
 			my $logmsg = "Password change link requested for user ".$user_person->id." ".$user_person->email." from IP: ".$ENV{HTTP_X_FORWARDED_FOR};

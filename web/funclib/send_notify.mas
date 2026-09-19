@@ -55,11 +55,12 @@
 			host => $Tab::url_prefix
 		);
 
-		my %send_message = (
+		my %send_message  = (
 			from          => $ARGS{"from_string"} || $ARGS{'from'},
 			to            => $ARGS{"to_string"} || "noreply\@www.tabroom.com",
 			sender        => int($ARGS{'sender'}),
 			url           => $ARGS{"url"},
+			noReply       => $ARGS{'no_reply'},
 			noWeb         => $ARGS{"no_web"} || $ARGS{"noWeb"},
 			noEmail       => $ARGS{"no_email"} || $ARGS{"noEmail"},
 			noInbox       => $ARGS{"no_inbox"} || $ARGS{'noInbox'},

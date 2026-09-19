@@ -21,32 +21,36 @@
 			contact.onsite, contact.official, contact.email, contact.book, contact.nsda contact_nsda,
 			person.id person_id, person.first, person.middle, person.last,
 			person.email person_email,
-			person.nsda, diamonds.value diamonds, hof.value hof,
-			email_unconfirmed.value email_unconfirmed,
 			person.phone, person.no_email,
-			judge.id judge
-
-		from (person, contact)
-
-			left join person_setting email_unconfirmed
-				on email_unconfirmed.tag = 'email_unconfirmed'
+			(select email_unconfirmed.value
+				from person_setting email_unconfirmed
+				where email_unconfirmed.tag = 'email_unconfirmed'
 				and email_unconfirmed.person = person.id
-
-
-			left join person_setting diamonds
-				on diamonds.tag = 'diamonds'
+			) email_unconfirmed,
+			(select diamonds.value
+				from person_setting diamonds
+				where diamonds.tag = 'diamonds'
 				and diamonds.person = person.id
-
-			left join person_setting hof
-				on hof.tag = 'hof'
+			) diamonds,
+			(select hof.value
+				from person_setting hof
+				where hof.tag = 'hof'
 				and hof.person = person.id
+			) hof,
+			(select judge.id
+				from judge, category
+				where judge.person = person.id
+				and judge.active = 1
+				and judge.category = category.id
+				and category.tourn = school.tourn
+				limit 1
+			) judge
 
-			left join judge on judge.active = 1
-				and judge.school = contact.school
-				and judge.person = person.id
+		from (person, contact, school)
 
 		where person.id = contact.person
-			and contact.school = ?
+			and school.id = ?
+			and contact.school = school.id
 			$limit
 
             and not exists (
@@ -55,7 +59,7 @@
                 where ss.tag = 'rejected'
                 and ss.school = contact.school
             )
-
+		group by person.id
 		order by contact.official DESC, person.last, person.first, person.nsda
 	");
 

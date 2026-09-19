@@ -734,14 +734,12 @@
 		</h2>
 
 		<div class="row flexrow centeralign padmore">
-
 			<span class="third semibold bluetext">
 				Tournament
 			</span>
 
 			<span class="twothirds leftalign semibold redtext padsettingtext">
 				<% $tourn->name %>
-
 %#				Prevents the phenonmenon where folks log into a different
 %#				tournament elsewhere and it jacks their session so they blast
 %#				the wrong tournament
@@ -751,11 +749,9 @@
 					value = "<% $tourn->id %>"
 				>
 			</span>
-
 		</div>
 
 		<div class="row flexrow centeralign padmore">
-
 			<span class="third semibold bluetext">
 				Subject Line
 			</span>
@@ -786,7 +782,6 @@
 				</span>
 			</div>
 		</label>
-
 
 		<div class="row flexrow centeralign padmore">
 			<span class="third semibold bluetext">
@@ -835,6 +830,23 @@
 						name  = "hidden"
 						value = "1"
 						<% $email && $email->hidden ? "checked" : "" %>
+					>
+				</span>
+			</div>
+		</label>
+
+		<label for="no_reply">
+			<div class="row flexrow hover centeralign padmore personalized" title="Without a reply-to, any replies to this email will bounce.  However, it will have a better chance of getting through spam filters.">
+				<span class = "third semibold bluetext">
+					Do not provide a Reply-To address
+				</span>
+
+				<span class="twothirds leftalign">
+					<input
+						type  = "checkbox"
+						id    = "no_reply"
+						name  = "no_reply"
+						value = "1"
 					>
 				</span>
 			</div>

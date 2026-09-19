@@ -121,11 +121,12 @@
 	push @raw, $target->id;
 
 	my $numberwang = substr($now->epoch, -6, 6);
-	my $from_string = "Tabroom Password Reset <iforgot_".$numberwang.'@www.tabroom.com>';
+	my $from_string = "Tabroom Password Reset <iforgot\@tabroom.com>";
 
 	$m->comp("/funclib/send_notify.mas",
 		from     => $from_string,
 		ids      => \@raw,
+		no_reply => 1,
 		no_inbox => 1,
 		subject  => $subject,
 		body     => $email

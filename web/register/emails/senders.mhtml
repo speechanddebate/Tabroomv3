@@ -39,6 +39,7 @@
             $m->comp("/funclib/send_email.mas",
                 body        => $body,
 				from        => $person,
+				no_reply    => 1,
                 subject     => "Tabroom.com email confirmation",
                 from_string => 'Tabroom <noreply@www.tabroom.com>',
                 raw         => $new
