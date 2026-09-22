@@ -3,6 +3,37 @@
 </%flags>
 <%init>
 
+	my %cookies = eval {
+
+		my @cookies = split(";", $r->headers_in->{'Cookie'});
+		my %return;
+
+		foreach my $cookie (@cookies) {
+			my ($key, @values) = split(/=/, $cookie);
+			my $value = APR::Request::decode(join("=", @values));
+			$key =~ s/\s+//g;
+			$return{$key} = $value;
+		}
+
+		return %return;
+	};
+
+	my $clear;
+
+	if (scalar (keys %cookies)) {
+		$clear++;
+		Tab::debuglog("I have ".(scalar (keys %cookies))." cookies so I have cleared the hurdle");
+	}
+
+</%init>
+
+%	unless ($clear) {
+%#		<h3>Stick 'em up, clanker.</h3>
+%#		$m->abort();
+%	}
+
+<%perl>
+
 	my $err;
 
 	if ($Tab::hostname eq "www.tabroom.com") {
@@ -40,5 +71,5 @@
 	$m->redirect("/index/index.mhtml");
 
 
-</%init>
+</%perl>
 

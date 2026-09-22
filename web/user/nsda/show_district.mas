@@ -2,10 +2,10 @@
 	$person
 	$person_settings
 	$district
-	$chapter    => undef
-	$default    => "members"
-	$dbh => undef
-	$now => undef
+	$chapter => undef
+	$default => "members"
+	$dbh     => undef
+	$now     => undef
 </%args>
 <%init>
 

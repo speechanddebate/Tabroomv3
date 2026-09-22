@@ -18,11 +18,16 @@
 	&>
 
 	<div class="main">
-		<& "show_district.mas",
-			person          => $person,
-			person_settings => $person_settings,
-			district        => $district,
-			default         => $default
-		&>
+
+%		if ($district && $district->id) {
+			<& "show_district.mas",
+				person          => $person,
+				person_settings => $person_settings,
+				district        => $district,
+				default         => $default
+			&>
+%		} else {
+%			$m->comp("/funclib/abort.mas", messages => "No district found for ID ".$district_id);
+%		}
 	</div>
 

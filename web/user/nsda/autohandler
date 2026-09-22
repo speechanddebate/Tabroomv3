@@ -8,6 +8,7 @@
 <%init>
 
 	unless ($person->site_admin) {
+
 		if ($district_id && (not defined $perms->{district}{$district_id})) {
 			$m->comp("/funclib/abort.mas", message => "You do not have access to that area");
 		}

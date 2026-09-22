@@ -373,7 +373,7 @@
             event     => $event_id,
             published => 1,
 			tag       => 'circuit',
-			entity    => 'entry'
+			entity    => 'entry',
 			circuit   => $circuit_id,
             label     => "CEDA Points"
         });
