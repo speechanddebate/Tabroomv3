@@ -584,7 +584,7 @@
 
 			<link
 				rel         = "manifest"
-				href        = "/index/manifest.json"
+				href        = "/lib/javascript/manifest.json"
 				crossorigin = "use-credentials"
 			/>
 

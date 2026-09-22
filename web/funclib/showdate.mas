@@ -22,7 +22,7 @@
 
 	if ($dt) {
 		$dt = $dt->clone();
-	} else {
+	} elsif ($string) {
 		$dt = eval {
 			return DateTime::Format::MySQL->parse_datetime($string);
 		};
