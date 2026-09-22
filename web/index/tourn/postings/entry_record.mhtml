@@ -123,6 +123,7 @@
 		unless ($entry) {
 			$ref->{spaceless} = $ref->{code};
 			$ref->{spaceless} =~ s/\s+//g;
+			$ref->{spaceless} =~ s/[\W_]//g;
 			$entry = $ref;
 		}
 
