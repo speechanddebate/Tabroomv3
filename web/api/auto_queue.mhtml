@@ -190,6 +190,7 @@
 		}
 
 		my $tourn = $tourns{$aq->{tourn_id}};
+		next unless $tourn;
 
 		unless ($ts{$tourn->id}) {
 			my %tourn_settings = $tourn->all_settings();

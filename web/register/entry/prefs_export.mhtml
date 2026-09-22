@@ -89,19 +89,48 @@
 		$conflicts_by_id{$_->judge->id} = $_;
 	}
 
-	my @judges = Tab::Judge->search(
-		category => $category->id,
-		active   => 1
-	);
+	my $limiter = "and judge.category = ?";
+	my $limit = $category->id;
 
-	@judges = sort {$a->last cmp $b->last} @judges;
-	@judges = sort {$a->school->short_name cmp $b->school->short_name} @judges;
-	@judges = sort { $rating_by_judge{$a->id} <=> $rating_by_judge{$b->id} } @judges;
+	if ($category_settings{"pref_jpool"}) {
+		$limiter = "and exists (
+			select jpool_judge jpj
+			where jpj.judge = judge.id
+			and jpj.jpool = ?
+		) ";
+		$limit = $category_settings{"pref_jpool"};
+	}
+
+	my $judge_sth = $dbh->prepare("
+		select
+			judge.id, judge.first, judge.last,
+			judge.obligation, judge.hired,
+			school.id school_id, school.name school_name,
+			(SELECT diverse.value
+				from judge_setting diverse
+				where diverse.tag = 'diverse'
+				and diverse.judge = judge.id
+			) as diverse
+
+		from judge
+		where 1=1
+			and $limiter
+			and judge.active = 1
+		order by school.name, judge.last
+	");
+
+	$judge_sth->execute($limit);
+
+	my $judges_ref = $judge_sth->fetchall_hash();
+	my @judges = sort { $rating_by_judge{$a->{id}} <=> $rating_by_judge{$b->{id}} } @{$judges_ref};
 
 	my $event_struck;
 
 	if ($entry) {
-		$event_struck = $m->comp("/funclib/event_strike_judges.mas", event => $entry->event->id, dbh => $dbh);
+		$event_struck = $m->comp("/funclib/event_strike_judges.mas",
+			event => $entry->event->id,
+			dbh   => $dbh
+		);
 	}
 
 	my $filename = "Prefs-".$entry->name."-".Tab::csvdt($now);
@@ -122,34 +151,29 @@
 
 	foreach my $judge (@judges) {
 
-		next if $judge->school->id == $entry->school->id;
-		next if $event_struck->{$judge->id};
+		next if $judge->school_id == $entry->school_id;
+		next if $event_struck->{$judge->{id}};
 
-		print CSVOUT "\"".$judge->first."\",\"".$judge->last."\",\"";
-		print CSVOUT $judge->school->short_name."\"," if $judge->school;
-		print CSVOUT "\"Unaffiliated\"," unless $judge->school;
-		print CSVOUT ($judge->obligation + $judge->hired).",";
+		print CSVOUT "\"".$judge->{first}."\",\"".$judge->{last}."\",\"";
+		print CSVOUT ($judge->{school_name} || "Unaffiliated")."\","
+		print CSVOUT ($judge->{obligation || 0} + {$judge->hired || 0}).",";
 
 		if ($category_settings{"show_diversity"}) {
-			print CSVOUT "Y" if $judge->setting("diverse");
+			print CSVOUT "Y" if $judge->{"diverse"};
 			print CSVOUT ",";
 		};
 
-		if ($conflicts_by_id{$judge->id}) {
-
+		if ($conflicts_by_id{$judge->{id}}) {
 			print CSVOUT "\"Conflict\",";
-
 		} else {
 
-			print CSVOUT "\"".$coach_rating_by_judge{$judge->id}."\"," if $coach_ratings;
-			print CSVOUT "\"".$rating_by_judge{$judge->id}."\",\"".$percentile_by_judge{$judge->id}."\","
+			print CSVOUT "\"".$coach_rating_by_judge{$judge->{id}}."\"," if $coach_ratings;
+			print CSVOUT "\"".$rating_by_judge{$judge->{id}}."\",\"".$percentile_by_judge{$judge->{id}}."\","
 				if $style eq "ordinals";
-
-			print CSVOUT "\"".$rating_by_judge{$judge->id}."\"," unless $style eq "ordinals";
+			print CSVOUT "\"".$rating_by_judge{$judge->{id}}."\"," unless $style eq "ordinals";
 		}
 
 		print CSVOUT "\n";
-
 	}
 
 	close CSVOUT;

@@ -22,7 +22,6 @@
 
 	if (scalar (keys %cookies)) {
 		$clear++;
-		Tab::debuglog("I have ".(scalar (keys %cookies))." cookies so I have cleared the hurdle");
 	}
 
 </%init>

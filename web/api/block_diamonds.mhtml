@@ -3,6 +3,8 @@
 </%args>
 <%init>
 
+	return;
+
 	my $dbh = Tab::DBI->db_Main();
 
 	my $tourn_id    = 35467;
