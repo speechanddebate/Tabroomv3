@@ -415,7 +415,7 @@
 					<td class="smallish nospace">
 %						foreach my $judge_id (@ballots) {
 %							my $judge = $panels{$panel_id}{ballots}{$judge_id};
-							<div class='judgeheight full padleft'>
+							<div class='judgeheight full padleft nowrap'>
 								<% $judge->{judge_last} %>, <% $judge->{judge_first} %>
 							</div>
 %						}
@@ -425,7 +425,7 @@
 %						if ($panel->{rank}) {
 %							foreach my $judge_id (@ballots) {
 %								my $judge = $panels{$panel_id}{ballots}{$judge_id};
-								<div class='judgeheight full padleft'>
+								<div class='nowrap judgeheight full padleft'>
 									<% $judge->{rank} %>
 								</div>
 %							}
@@ -438,7 +438,7 @@
 %								my $judge = $panels{$panel_id}{ballots}{$judge_id};
 %								next unless $judge->{total_points};
 
-								<div class='judgeheight full padleft'>
+								<div class='nowrap judgeheight full padleft'>
 									<% $judge->{total_points} %>
 								</div>
 %							}
@@ -549,7 +549,7 @@
 %						unless ($skip) {
 %							foreach my $judge_id (@ballots) {
 %								my $judge = $panels{$panel_id}{ballots}{$judge_id};
-								<div class='judgeheight full padleft'>
+								<div class='judgeheight nowrap full padleft'>
 									<% $judge->{judge_last} %>, <% $judge->{judge_first} %>
 								</div>
 %							}
@@ -560,7 +560,7 @@
 %						if ($panel->{winloss} > 0 && (not defined $skip)) {
 %							foreach my $judge_id (@ballots) {
 %								my $judge = $panels{$panel_id}{ballots}{$judge_id};
-								<div class='judgeheight full padleft'>
+								<div class='judgeheight nowrap full padleft'>
 									<% $judge->{winloss} > 0 ? "W" : "L" %>
 								</div>
 %							}
@@ -573,7 +573,7 @@
 %								my $judge = $panels{$panel_id}{ballots}{$judge_id};
 %								next unless $judge->{total_points} || $judge->{total_ranks};
 
-								<div class='judgeheight full flexrow'>
+								<div class='judgeheight nowrap full flexrow'>
 %									if ($judge->{point_count} < 2) {
 										<% $judge->{total_points} %>
 %									} elsif ($judge->{point_count}) {
