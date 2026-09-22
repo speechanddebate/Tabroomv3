@@ -1142,16 +1142,16 @@
 				}
 			}
 
-			if ($event_type eq "wsdc") {
+			if ($event->nsda_category == "105") {
 
 				my $round_prep = $round_settings{'wsdc_round_type'};
 </%perl>
 				<div class="row flexrow">
-					<span class="third padleft">
+					<span class="half padleft">
 						Type of round
 					</span>
 
-					<span class="third hover padleft">
+					<span class="quarter hover padleft">
 						<label for="prepped">
 							<input
 								type         = "radio"
@@ -1167,7 +1167,7 @@
 						</label>
 					</span>
 
-					<span class="third hover padleft">
+					<span class="quarter hover padleft">
 						<label for="impromptu">
 							<input
 								type         = "radio"

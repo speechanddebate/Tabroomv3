@@ -15,7 +15,7 @@
 	if ($dt) {
 		#Prevent time zone backscatter
 		$dt = $dt->clone();
-	} else {
+	} elsif ($string) {
 
 		$dt = eval {
 			return DateTime::Format::MySQL->parse_datetime($string);
@@ -24,6 +24,8 @@
 		if ($dt) {
 			$dt->set_time_zone("UTC");
 		}
+	} else {
+		return;
 	}
 
 	unless ($length) {
