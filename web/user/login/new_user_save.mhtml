@@ -54,9 +54,13 @@
 
 	#Only you can prevent nitwit kids
 
-	if (index($email, "mrvpt.com") != -1) {
+	if (
+		(index($email, "mrvpt.com") != -1)
+		|| index($email, "uberip.com") != -1)
+	) {
 		$m->comp("/funclib/abort.mas",
-		message => "mrvpt.com is a throwaway email service that's been used to deface Tabroom and the wiki in the past.  Therefore, you may not use it to create a Tabroom account.");
+			message => "Your domain has been restricted from creating accounts on Tabroom.com due to past patterns of misuse."
+		)
 	}
 
 	$timezone = "UTC" unless $timezone;
