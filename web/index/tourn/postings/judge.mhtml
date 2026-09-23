@@ -19,7 +19,7 @@
 
 	if ($tourn && (not defined $judge)) {
 		my $err = "Judge not found";
-		$m->redirect("index.mhtml?tourn_id=".$tourn->id."&err=$err");
+		$m->redirect("main.mhtml?tourn_id=".$tourn->id."&err=$err");
 		$m->redirect("/index/index.mhtml&err=$err");
 	}
 

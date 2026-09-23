@@ -17,18 +17,25 @@
 
 	<div class="main">
 
-		<h2>
-			<% $webname %> Tournaments
-		</h2>
+		<div class="flexrow">
+			<span class="threequarters nospace padleft">
+				<h4>
+					<% $webname %> Tournaments
+				</h4>
+			</span>
+			<span
+				class ="quarter rightalign padright"
+				id    ="past_tourns_buttonarea"
+			>
+			</span>
+		</div>
 
-		<& /funclib/tablesorter.mas, table => "sortme" &>
+		<& /funclib/tablesorter.mas, table => "past_tourns" &>
 
-		<table cellpadding="4" cellspacing="1" id="sortme">
+		<table id="past_tourns">
 
 			<thead>
-
 				<tr class="yellowrow smallish">
-
 					<th>
 						Year
 					</th>
@@ -44,9 +51,7 @@
 					<th>
 						End
 					</th>
-
 				</tr>
-
 			</thead>
 
 			<tbody>
@@ -60,7 +65,7 @@
 						</td>
 
 						<td>
-							<a class="white" href="index.mhtml?tourn_id=<% $tourn->id %>">
+							<a class="white" href="main.mhtml?tourn_id=<% $tourn->id %>">
 								<% $tourn->name %>
 							</a>
 						</td>

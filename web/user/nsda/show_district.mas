@@ -874,7 +874,7 @@
 					</span>
 					<span class="half padleft nospace">
 						<a
-							href   = "/index/tourn/index.mhtml?tourn_id=<% $past->{tourn_id} %>"
+							href   = "/index/tourn/main.mhtml?tourn_id=<% $past->{tourn_id} %>"
 							class  = "full white marno"
 							target = "_blank"
 						><% $past->{tourn_name} %></a>

@@ -542,7 +542,7 @@
 										<a
 											class  = "plain full marno padvertless hover padleft"
 											target = "_blank"
-											href   = "/index/tourn/index.mhtml?tourn_id=<% $entry->{"tourn_id"}%>"
+											href   = "/index/tourn/main.mhtml?tourn_id=<% $entry->{"tourn_id"}%>"
 										>
 											<% $entry->{"tourn_name"}  %>
 										</a>
@@ -551,7 +551,7 @@
 										<a
 											class  = "plain full marno padvertless hover padleft"
 											target = "_blank"
-											href   = "/index/tourn/index.mhtml?tourn_id=<% $entry->{"tourn_id"}%>"
+											href   = "/index/tourn/main.mhtml?tourn_id=<% $entry->{"tourn_id"}%>"
 										>
 											<% $entry->{"tourn_city"}  %>
 											<% $entry->{"tourn_state"} || $entry->{tourn_country} %>
@@ -837,7 +837,7 @@
 
 										<a 	class  = "plain hover"
 											target = "_blank"
-											href   = "/index/tourn/index.mhtml?tourn_id=<% $tourn_id %>"
+											href   = "/index/tourn/main.mhtml?tourn_id=<% $tourn_id %>"
 										>
 											<div class="nowrap full nospace padvertless">
 												<% $signups{$student_id}{$tourn_id}{"name"} %>
@@ -1052,7 +1052,7 @@
 										<a
 											class  = "white full padvert"
 											target = "_blank"
-											href   = "/index/tourn/index.mhtml?tourn_id=<% $tourn_id %>">
+											href   = "/index/tourn/main.mhtml?tourn_id=<% $tourn_id %>">
 											<% $students{$student_id}{"entries"}{$entry_id}{"tourn_name"} %>
 										</a>
 									</td>

@@ -484,7 +484,7 @@
 
 %		unless ($tourn_settings->{"nsda_nats"}) {
 			<li>
-				<a href="/index/tourn/index.mhtml?tourn_id=<% $tourn->id %>">
+				<a href="/index/tourn/main.mhtml?tourn_id=<% $tourn->id %>">
 					Website
 				</a>
 			</li>

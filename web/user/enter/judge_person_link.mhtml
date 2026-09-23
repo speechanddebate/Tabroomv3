@@ -51,7 +51,7 @@
 
 		<p>
 			If you have questions, please contact the
-			<a href="/index/tourn/index.mhtml?tourn_id=<% $category->tourn->id %>">tournament's points of contact</a>
+			<a href="/index/tourn/main.mhtml?tourn_id=<% $category->tourn->id %>">tournament's points of contact</a>
 		</p>
 
 		<h4>Link <% $judge->first." ".$judge->last %> to a Tabroom login</h4>

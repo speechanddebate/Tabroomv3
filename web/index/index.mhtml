@@ -948,7 +948,7 @@
 									<% $tourns{$tourn_id}{"nats"} ? "semibold bluetext" : "" %>
 									<% $tourns{$tourn_id}{"ncfl"} ? "semibold" : "" %>
 								"
-								href  = "/index/tourn/index.mhtml?tourn_id=<% $tourn_id %>"
+								href  = "/index/tourn/main.mhtml?tourn_id=<% $tourn_id %>"
 							>
 %								if ($tourns{$tourn_id}{"name"} eq "NSDA Last Chance Qualifier") {
 									<span class="semibold full padleft padrightless">
@@ -1029,7 +1029,7 @@
 						<td class="nowrap">
 							<a
 								class="white smaller nospace smallwrap"
-								href="/index/tourn/index.mhtml?tourn_id=<% $tourn_id %>"
+								href="/index/tourn/main.mhtml?tourn_id=<% $tourn_id %>"
 							>
 								<% $tourns{$tourn_id}{"registration"}  %>
 							</a>

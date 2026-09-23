@@ -116,7 +116,7 @@
 %				foreach my $site (@{$sites}) {
 					<a
 						class="<% ($site_id == $site->{id}) ? "dk" : "" %>blue full"
-						href="index.mhtml?site_id=<% $site->{id} %>&tourn_id=<% $tourn->id %>"
+						href="main.mhtml?site_id=<% $site->{id} %>&tourn_id=<% $tourn->id %>"
 					> <% $site->{name} %> </a>
 %				}
 %			}
@@ -149,7 +149,7 @@
 
 			<a
 				class = "<% $ARGS{"whoami"} eq "index" ? "dk" : ""%>green full"
-				href  = "/index/tourn/index.mhtml?tourn_id=<% $tourn->id %>"
+				href  = "/index/tourn/main.mhtml?tourn_id=<% $tourn->id %>"
 			>Invitation Home</a>
 
 %			if ($tourn_settings->{"tmoney_enable"}) {
@@ -227,7 +227,7 @@
 </%perl>
 						<a
 							class="<% $webpage_id == $page->{id} ? "dk" : ""%>yellow full"
-							href="/index/tourn/index.mhtml?webpage_id=<% $page->{id} %>&tourn_id=<% $tourn->id %>"
+							href="/index/tourn/main.mhtml?webpage_id=<% $page->{id} %>&tourn_id=<% $tourn->id %>"
 						><% $page->{title} %></a>
 <%perl>
 					}

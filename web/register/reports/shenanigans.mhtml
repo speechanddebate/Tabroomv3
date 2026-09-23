@@ -433,7 +433,7 @@
 
 						<td class="nospace">
 							<a
-								href   = "/index/tourn/index.mhtml?tourn_id=<% $other_tourn_id %>"
+								href   = "/index/tourn/main.mhtml?tourn_id=<% $other_tourn_id %>"
 								class  = "plain full marno hover"
 								target = "_blank"
 							><% $other_tourn %></a>

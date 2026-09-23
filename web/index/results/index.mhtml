@@ -180,7 +180,7 @@
 						<td class="smallish">
 							<a
 								class = "white full"
-								href  = "/index/tourn/index.mhtml?tourn_id=<% $tourn->{id} %>"
+								href  = "/index/tourn/main.mhtml?tourn_id=<% $tourn->{id} %>"
 							>
 								<% $tourn->{name} %>
 							</a>

@@ -269,14 +269,13 @@
 
 			<a
 				class = "full blue"
-				href  = "/index/tourn/index.mhtml?tourn_id=<% $tourn->id %>"
+				href  = "/index/tourn/main.mhtml?tourn_id=<% $tourn->id %>"
 			>
 				Tournament Website
 			</a>
 
-			<div class="row padvertless martopmore">
-				<span class="quarterspacer"></span>
-				<span class='twofifths'>
+			<div class="row padvertless martopmore flexrow">
+				<span class='half padleft'>
 					Name
 				</span>
 				<span class="half">
@@ -284,9 +283,8 @@
 				</span>
 			</div>
 
-			<div class="row padvertless">
-				<span class="quarterspacer"></span>
-				<span class='twofifths'>
+			<div class="row padvertless flexrow">
+				<span class='half padleft'>
 					Category
 				</span>
 				<span class="half">
@@ -296,9 +294,8 @@
 
 %			if ($category_settings{"self_ratings"}) {
 %				my $rating = $already->ratings(type => "coach")->first;
-				<div class="row padvertless">
-					<span class="quarterspacer"></span>
-					<span class='twofifths'>
+				<div class="row padvertless flexrow">
+					<span class='half padleft'>
 						Rating/Level
 					</span>
 					<span class="half">
@@ -308,23 +305,29 @@
 %			}
 
 %			if ($already->setting("public_signup_at")) {
-				<div class="row padvertless">
-					<span class="quarterspacer"></span>
-					<span class='twofifths'>Registered on</span>
-					<& "/funclib/showdt.mas",
-						length  => "murica_short",
-						dt      => $already->setting("public_signup_at"),
-						tz      => $tz,
-						at      => 1,
-						tz_name => 1
-					&>
+				<div class="row padvertless flexrow">
+					<span class='half padleft'>
+						Registered on
+					</span>
+					<span class="half">
+						<& "/funclib/showdt.mas",
+							length  => "murica_short",
+							dt      => $already->setting("public_signup_at"),
+							tz      => $tz,
+							at      => 1,
+							tz_name => 1
+						&>
+					</span>
 				</div>
 %			}
 
-			<div class="row padvertless">
-				<span class="quarterspacer"></span>
-				<span class='twofifths'>Registered by</span>
-				<% $already->setting("public_signup_by") %>
+			<div class="row padvertless flexrow">
+				<span class='twofifths'>
+					Registered by
+				</span>
+				<span class="half">
+					<% $already->setting("public_signup_by") %>
+				</span>
 			</div>
 
 
@@ -332,8 +335,7 @@
 %				if ($tourn_settings{"mock_trial_registration"}) {
 					<h4 class="martopmore">Rounds</h4>
 %					foreach my $jpool (@jpools) {
-						<div class="row padvert">
-							<span class="spacer"></span>
+						<div class="row padvert padleftmore">
 							<% $jpool->name %>
 						</div>
 %					}
@@ -341,8 +343,7 @@
 %				} else {
 					<h4 class="martopmore">Judging Pools</h4>
 %					foreach my $jpool (@jpools) {
-						<div class="row padvert">
-							<span class="spacer"></span>
+						<div class="row padvert padleftmore">
 							<% $jpool->name %>
 						</div>
 %					}
@@ -421,10 +422,8 @@
 							$_->set_time_zone($tourn->tz);
 						}
 </%perl>
-						<div class="row leftalign">
-							<span class="twofifths semibold padvert">
-								<span class="spacer centeralign">
-								</span>
+						<div class="row leftalign flexrow">
+							<span class="twofifths semibold padvert padleft">
 								<% $shift->name %>
 							</span>
 
@@ -681,11 +680,10 @@
 
 %						foreach my $jpool (@jpools) {
 %							next unless $jpool_by_id{$jpool->id};
-							<div class="ltbordertop full">
+							<div class="ltbordertop full flexrow">
 								<span class="tenth leftalign">
 								</span>
-								<span class="fourfifths leftalign">
-									<span class="spacer"></span>
+								<span class="fourfifths leftalign padleft">
 									<% $jpool->name %>
 								</span>
 							</div>

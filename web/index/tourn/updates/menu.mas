@@ -81,7 +81,7 @@
 </%perl>
 				<a
 					class="<% ($category == $other_category) ? "dk" : "" %>blue full"
-					href="index.mhtml?category_id=<% $other_category->id %>&tourn_id=<% $tourn->id %>"
+					href="main.mhtml?category_id=<% $other_category->id %>&tourn_id=<% $tourn->id %>"
 				>
 					<% $other_category->name %>
 				</a>

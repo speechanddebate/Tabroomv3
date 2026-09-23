@@ -381,12 +381,12 @@
 				<span class="half rightalign padright">
 %					if ($judge->{tourn_webname}) {
 						<a
-							href  = "/index/tourn/index.mhtml?tourn_id=<% $judge->{tourn_id} %>"
+							href  = "/index/tourn/main.mhtml?tourn_id=<% $judge->{tourn_id} %>"
 							class = "plain link-underline hover bluetext"
 						>https://<% $judge->{tourn_webname} %>.tabroom.com</a>
 %					} else {
 						<a
-							href  = "/index/tourn/index.mhtml?tourn_id=<% $judge->{tourn_id} %>"
+							href  = "/index/tourn/main.mhtml?tourn_id=<% $judge->{tourn_id} %>"
 							class = "plain link-underline hover bluetext"
 						>Tournament Tabroom website</a>
 %					}

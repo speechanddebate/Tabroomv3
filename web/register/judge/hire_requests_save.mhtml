@@ -117,7 +117,7 @@
 		$message .= "Tournament information is at http://".$tourn->webname.".tabroom.com\n" 
 			if $tourn->webname;
 
-		$message .= "Tournament information is at ".$Tab::url_prefix."/index/tourn/index.mhtml?tourn_id=".$tourn->id." \n" 
+		$message .= "Tournament information is at ".$Tab::url_prefix."/index/tourn/main.mhtml?tourn_id=".$tourn->id." \n" 
 			unless $tourn->webname;
 
     	foreach my $sendto ($m->comp("/funclib/chapter_admins.mas", chapter => $hire->school->chapter) ) {

@@ -108,7 +108,7 @@
 						</td>
 
 						<td class="smallish">
-							<a class="white" href="/index/tourn/index.mhtml?tourn_id=<% $et->{id} %>">
+							<a class="white" href="/index/tourn/main.mhtml?tourn_id=<% $et->{id} %>">
 								<% $et->{name} %>
 							</a>
 						</td>

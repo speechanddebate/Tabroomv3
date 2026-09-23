@@ -124,7 +124,7 @@
 					<td class="nospace">
 						<a
 							class = "bluetext semibold full padvertless link-underline hover padleft"
-							href  = "/index/tourn/index.mhtml?tourn_id=<% $id %>"
+							href  = "/index/tourn/main.mhtml?tourn_id=<% $id %>"
 							target= "_blank"
 						>
 							<% $name %>

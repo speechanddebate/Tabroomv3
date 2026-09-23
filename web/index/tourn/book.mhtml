@@ -307,7 +307,7 @@
 
 			<a
 				class = "blue full"
-				href  = "/index/tourn/index.mhtml?tourn_id=<% $tourn->id %>"
+				href  = "/index/tourn/main.mhtml?tourn_id=<% $tourn->id %>"
 			>Return to Tournament Tabroom Site</a>
 
 		</div>

@@ -58,7 +58,7 @@
 					<a
 						class  = "bluetext plain hover padvert marno"
 						target = "_blank"
-						href   = "/index/tourn/index.mhtml?tourn_id=<% $tourn->id %>"
+						href   = "/index/tourn/main.mhtml?tourn_id=<% $tourn->id %>"
 					>http://www.tabroom.com</a>
 %				}
 

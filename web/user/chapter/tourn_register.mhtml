@@ -41,7 +41,7 @@
 
 		if ($district) {
 			$err .= "that are members of the ".$district->name." district. <br/> <br />";
-			$m->redirect("/index/tourn/index.mhtml?tourn_id=$tourn_id&err=$err");
+			$m->redirect("/index/tourn/main.mhtml?tourn_id=$tourn_id&err=$err");
 		} else {
 			$err .= "to register for tournaments with. <br /> Please create one before proceeding";
 			$m->redirect("/user/setup.mhtml?err=$err");

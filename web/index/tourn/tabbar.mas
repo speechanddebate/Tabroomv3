@@ -168,12 +168,12 @@
 		<ul id="tabnav">
 
 			<li class="<%
-				($r->uri =~ /tourn\/index.mhtml/ && not defined ($webpage_id))
+				($r->uri =~ /tourn\/main.mhtml/ && not defined ($webpage_id))
 				|| ($r->uri =~ /tourn\/emails.mhtml/ && not defined ($webpage_id))
 				|| $ARGS{"whoami"} eq "invite"
 				? "selected" : ""
 			%>">
-				 <a href="/index/tourn/index.mhtml?tourn_id=<% $tourn->id %>"
+				 <a href="/index/tourn/main.mhtml?tourn_id=<% $tourn->id %>"
 				 	>Invite</a>
 			</li>
 

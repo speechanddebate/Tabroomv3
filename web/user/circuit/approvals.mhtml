@@ -69,7 +69,7 @@
 				<tr class="row">
 
 					<td class="smallish">
-						<a class="white" href="/index/tourn/index.mhtml?tourn_id=<% $tourn->id %>">
+						<a class="white" href="/index/tourn/main.mhtml?tourn_id=<% $tourn->id %>">
 							<% $tourn->name %>
 						</a>
 					</td>
