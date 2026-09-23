@@ -7,9 +7,8 @@
 		return;
 	}
 
-	my $dbh = Tab::DBI->db_Main();
-
 	# Check to make sure I have access to any schools I am the advisor for.
+	my $dbh = Tab::DBI->db_Main();
 
 	my ($roles_ref, $roles_json) = $m->comp(
 		"/funclib/nsda/api_client.mas",
