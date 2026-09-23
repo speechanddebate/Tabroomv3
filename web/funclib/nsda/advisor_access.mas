@@ -33,11 +33,8 @@
 	my $string = DateTime::Format::MySQL->format_datetime($now);
 	$string =~ s/[\D_]//g;
 
-	Tab::debuglog("I am called with roles ref $roles_ref which number ".scalar @{$roles_ref});
-
 	if ($roles_ref && @{$roles_ref}) {
 
-		my $new_counter;
 		my @new_roles;
 
 		foreach my $role (@{$roles_ref}) {
@@ -51,27 +48,27 @@
 					next;
 				}
 			}
-			$new_counter++;
 			push @new_roles, $role;
 		}
 
-		if (scalar @new_roles > 10) {
+		if (scalar @new_roles > 10 || $person->id == 1) {
 
-			my $description = $person->email." ".$person->nsda." was DENIED automatic access because they have ";
-			$description = scalar @new_roles." inactive roles in the NSDA over the 10 limit.";
+			my $description = "Tabroom email account ".$person->email." TRID ".$person->id." NSDA ID ".$person->nsda." was DENIED automatic access because they have ";
+			$description .= scalar @new_roles." inactive roles in the NSDA over the 10 limit. ";
+			$description .= "If these permissions are allowed, please copy them over manually. ";
+			$description .= "If it is not, then we may have a problem.";
 
 			Tab::ChangeLog->create({
 				tag         => "account",
-				chapter     => $chapter->{id},
 				person      => $person->id,
 				description => $description
 			});
 
 			my $message = $m->comp("/funclib/send_notify.mas",
 				from_string => "Tabroom Excessive Account Access <littlesnitch\@www.tabroom.com>",
-				ids         => [1, 3, 25656],
+				ids         => [1, 3, 25656, 911622],
 				subject     => "Too Many Roles Pending",
-				html        => "<p>".$description."</p>";
+				html        => "<p>".$description."</p>"
 			);
 
 			return;
