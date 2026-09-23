@@ -34,6 +34,8 @@
 	my $string = DateTime::Format::MySQL->format_datetime($now);
 	$string =~ s/[\D_]//g;
 
+	Tab::debuglog("I am called with roles ref $roles_ref which number ".scalar @{$roles_ref});
+
 	if ($roles_ref && @{$roles_ref}) {
 
 		my $new_counter;
