@@ -56,7 +56,8 @@
 
 		if (scalar @new_roles > 10) {
 
-			my $description = $person->email." ".$person->nsda." was DENIED automatic access because they have ".scalar @new_roles." inactive roles in the NSDA over the 10 limit.";
+			my $description = $person->email." ".$person->nsda." was DENIED automatic access because they have ";
+			$description = scalar @new_roles." inactive roles in the NSDA over the 10 limit.";
 
 			Tab::ChangeLog->create({
 				tag         => "account",
@@ -65,7 +66,13 @@
 				description => $description
 			});
 
-			Tab::debuglog("$description");
+			my $message = $m->comp("/funclib/send_notify.mas",
+				from_string => "Tabroom Excessive Account Access <littlesnitch\@www.tabroom.com>",
+				ids         => [1, 3, 25656],
+				subject     => "Too Many Roles Pending",
+				html        => "<p>".$description."</p>";
+			);
+
 			return;
 		}
 
