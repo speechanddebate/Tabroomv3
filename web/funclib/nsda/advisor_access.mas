@@ -3,6 +3,8 @@
 </%args>
 <%init>
 
+	return; # In place until hardy figures out how they got advisor access -- clp 9/22
+
 	unless ($person->nsda > 0) {
 		return;
 	}
@@ -52,6 +54,7 @@
 
 			if ($chapters && @{$chapters}) {
 				foreach my $chapter (@{$chapters}) {
+
 
 					my $perm = eval {
 						return Tab::Permission->create({
