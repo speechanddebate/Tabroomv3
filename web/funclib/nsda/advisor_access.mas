@@ -3,8 +3,6 @@
 </%args>
 <%init>
 
-	return; # In place until hardy figures out how they got advisor access -- clp 9/22
-
 	unless ($person->nsda > 0) {
 		return;
 	}
@@ -19,17 +17,18 @@
 	);
 
 	my $already_sth = $dbh->prepare("
-		select chapter.id
-			from chapter
-		where chapter.nsda = ?
-		and NOT EXISTS (
-			select permission.id
-				from permission
-			where permission.person = ?
-				and permission.tag = 'chapter'
-				and permission.chapter = chapter.id
-		)
+		select chapter.id, chapter.nsda
+			from chapter, permission
+		where permission.person = ?
+			and permission.tag = 'chapter'
+			and permission.chapter = chapter.id
+			and chapter.nsda > 0
 	");
+
+	$already_sth->execute($person->id);
+
+	my $already_ref = $already_sth->fetchall_hash();
+	my %already = map {$_->{nsda} => $_->{id}} @{$already_ref};
 
 	my $now = DateTime->now();
 	my $string = DateTime::Format::MySQL->format_datetime($now);
@@ -37,25 +36,46 @@
 
 	if ($roles_ref && @{$roles_ref}) {
 
+		my $new_counter;
+		my @new_roles;
+
 		foreach my $role (@{$roles_ref}) {
-
 			next if $role->{role} ne "Advisor";
-			my $time = $role->{end};
+			next if $already{$role->{school_id}};
 
+			my $time = $role->{end};
 			if ($time) {
 				$time =~ s/[\D_]//g;
 				if ($time < $string) {
 					next;
 				}
 			}
+			$new_counter++;
+			push @new_roles, $role;
+		}
+
+		if (scalar @new_roles > 10) {
+
+			my $description = $person->email." ".$person->nsda." was DENIED automatic access because they have ".scalar @new_roles." inactive roles in the NSDA over the 10 limit.";
+
+			Tab::ChangeLog->create({
+				tag         => "account",
+				chapter     => $chapter->{id},
+				person      => $person->id,
+				description => $description
+			});
+
+			Tab::debuglog("$description");
+			return;
+		}
+
+		foreach my $role (@new_roles) {
 
 			$already_sth->execute($role->{school_id}, $person->id);
 			my $chapters = $already_sth->fetchall_hash();
 
 			if ($chapters && @{$chapters}) {
 				foreach my $chapter (@{$chapters}) {
-
-
 					my $perm = eval {
 						return Tab::Permission->create({
 							person  => $person->id,

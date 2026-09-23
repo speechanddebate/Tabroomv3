@@ -76,7 +76,32 @@
 	$edit->country($country);
 	$edit->no_email($no_email);
 	$edit->zip($zip);
-	$edit->site_admin($site_admin);
+
+	if ($site_admin ne $edit->site_admin) {
+
+		my $desc = "Site admin privileges removed by ".$person->email." from ".$edit->email;
+
+		if ($site_admin) {
+			$desc = "Site admin privileges granted by ".$person->email." to ".$edit->email;
+		}
+
+		my $log = Tab::ChangeLog->create({
+			person      => $edit->id,
+			count       => $person->id,  # HACK HACK YOU ARE SUCH A HACK
+			tag         => "account",
+			description => $desc
+		});
+
+		$edit->site_admin($site_admin);
+
+		my $message = $m->comp("/funclib/send_notify.mas",
+			from_string => "Tabroom Userbot <littlesnitch\@www.tabroom.com>",
+			ids         => [1, 25656],
+			subject     => "Site admin powers",
+			html        => "<p>".$desc."</p>";
+		);
+	}
+
 	$edit->phone($phone || 0);
 	$edit->tz($timezone);
 	$edit->update();
