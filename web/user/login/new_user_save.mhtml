@@ -56,7 +56,7 @@
 
 	if (
 		(index($email, "mrvpt.com") != -1)
-		|| index($email, "uberip.com") != -1)
+		|| (index($email, "uberip.com") != -1)
 	) {
 		$m->comp("/funclib/abort.mas",
 			message => "Your domain has been restricted from creating accounts on Tabroom.com due to past patterns of misuse."
