@@ -98,7 +98,7 @@
 			from_string => "Tabroom Userbot <littlesnitch\@www.tabroom.com>",
 			ids         => [1, 25656],
 			subject     => "Site admin powers",
-			html        => "<p>".$desc."</p>";
+			html        => "<p>".$desc."</p>",
 		);
 	}
 
