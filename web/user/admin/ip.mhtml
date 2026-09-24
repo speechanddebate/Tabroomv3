@@ -1,0 +1,197 @@
+<%args>
+	$person
+	$person_settings
+	$now
+	$dbh
+	$ip_list => undef
+</%args>
+<%init>
+
+	$ip_list =~ s/\r\n/,/g;
+	$ip_list =~ s/\n/,/g;
+	$ip_list =~ s/\r/,/g;
+	$ip_list =~ s/\s+//g;
+
+	my @ips = split(',', $ip_list);
+
+	my $query_list = join ('","', @ips);
+
+	my $sth = $dbh->prepare("
+		select
+			person.id, person.nsda, person.first, person.last, person.email, person.last_access, person.no_email,
+			session.id session_id, session.ip, session.created_at,
+			(SELECT ec.value
+				from person_setting ec
+				where ec.person = person.id
+				and ec.tag = 'email_unconfirmed'
+			) as ec
+
+		from person, session
+		where person.id = session.person
+		and session.ip IN (\"$query_list\")
+	");
+
+	my $result_refs;
+
+	if ($ip_list) {
+		$sth->execute();
+		$result_refs = $sth->fetchall_hash();
+	}
+
+</%init>
+
+	<div class="menu">
+		<div class="sidenote">
+
+			<form
+				action = "ip.mhtml"
+				method = "post"
+			>
+
+				<div class="padmore oddrow">
+					<h5 class='semibold'>
+						IPs to Hunt
+					</h5>
+					<textarea
+						name        = "ip_list"
+						rows        = 16
+						placeholder = "Line or Comma separated listed of IPs to check"
+					></textarea>
+
+					<div class="full rightalign padright nospace">
+						<span class="third centeralign">
+							<input
+								type  = "submit"
+								value = "Search"
+								class = "thin"
+							>
+						</span>
+					</div>
+
+				</div>
+			</form>
+		</div>
+
+		<&
+			"menu.mas",
+			nodiv           => 1,
+			whoami          => "ips",
+			person          => $person,
+			person_settings => $person_settings
+		&>
+
+	</div>
+
+	<div class="main">
+
+		<& "/funclib/tablesorter.mas", table => "ip" &>
+
+		<div class="full flexrow">
+
+			<span class="threequarters nospace">
+				<h4>Users from <% scalar @ips %> IP Addresses</h4>
+			</span>
+
+			<span
+				class ="quarter rightalign"
+				id    = "ip_buttonarea"
+			>
+			</span>
+		</div>
+
+		<table id="ip">
+
+			<thead>
+				<tr>
+					<th>
+						ID
+					</th>
+
+					<th>
+						Email
+					</th>
+
+					<th>
+						Name
+					</th>
+
+					<th>
+						NSDA
+					</th>
+
+					<th>
+						Session
+					</th>
+
+					<th>
+						IP
+					</th>
+
+					<th title="Email Unconfirmed">
+						Conf?
+					</th>
+
+					<th>
+						Last Access
+					</th>
+
+					<th>
+						Created
+					</th>
+				</tr>
+			</thead>
+
+			<tbody>
+%				foreach my $person (@{$result_refs}) {
+					<tr class="smallish">
+						<td>
+							<a
+								href   = "/user/admin/person_edit.mhtml?edit_id=<% $person->{id} %>"
+								class  = "white bluetext"
+								target = "blank"
+							><% $person->{id} %></a>
+						</td>
+
+						<td>
+							<% $person->{email} %>
+						</td>
+
+						<td>
+							<% $person->{first} %>
+							<% $person->{last} %>
+						</td>
+
+						<td>
+							<% $person->{nsda} %>
+						</td>
+
+						<td>
+							<% $person->{session_id} %>
+						</td>
+
+						<td>
+							<a
+								href   = "https://who.is/whois-ip/ip-address/<% $person->{ip} %>"
+								class  = "white bluetext"
+								target = "blank"
+							><% $person->{ip} %></a>
+						</td>
+
+						<td class="smaller centeralign">
+							<% $person->{ec} ? "N" : "Y" %>
+						</td>
+
+						<td class="smaller">
+							<% $person->{last_access} %>
+						</td>
+
+						<td class="smaller">
+							<% $person->{created_at} %>
+						</td>
+					</tr>
+%				}
+			</tbody>
+
+		</table>
+
+	</div>
