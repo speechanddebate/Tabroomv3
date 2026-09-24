@@ -12,21 +12,22 @@
 			judge.last,
 			school.name school,
 			category.abbr category,
-			online_hybrid.value online,
-			chapter_judge.diet as diet
+			chapter_judge.diet as diet,
+			(
+				select online_hybrid.value
+				from judge_setting online_hybrid
+				where online_hybrid.tag = "online_hybrid"
+				and online_hybrid.judge = judge.id
+			) online
 
 		from (chapter_judge, judge, category)
 
 			left join school on school.id = judge.school
 
-			left join judge_setting online_hybrid
-				on online_hybrid.tag = "online_hybrid"
-				and online_hybrid.judge = judge
-
 		where category.tourn = ?
 			and judge.category = category.id
 			and judge.chapter_judge = chapter_judge.id
-			and chapter_judge.diet is not null
+			and chapter_judge.diet is NOT NULL
 			and chapter_judge.diet != ""
 		group by judge.id
 		order by judge.last
@@ -42,16 +43,18 @@
 			student.last,
 			event.abbr as abbr,
 			school.name as school,
-			online_hybrid.value online,
-			diet.value diet
+			entry.id as entry_id,
+			diet.value diet,
+			(
+				select online_hybrid.value
+				from entry_setting online_hybrid
+				where online_hybrid.tag = 'online_hybrid'
+				and online_hybrid.entry = entry.id
+			) online
 
 		from (student, entry_student, entry, event, student_setting diet)
 
 			left join school on school.id = entry.school
-
-			left join entry_setting online_hybrid
-				on online_hybrid.tag = 'online_hybrid'
-				and online_hybrid.entry = entry.id
 
 		where event.tourn = ?
 			and entry.event = event.id
@@ -128,11 +131,17 @@
 %				foreach my $student (@{$students}) {
 					<tr>
 						<td>
-							<% $student->{first} %>
+							<a
+								href  ="/register/entry/edit.mhtml?entry_id=<% $student->{id} %>"
+								class ="plain"
+							><% $student->{first} %></a>
 						</td>
 
 						<td>
-							<% $student->{last} %>
+							<a
+								href  ="/register/entry/edit.mhtml?entry_id=<% $student->{id} %>"
+								class ="plain"
+							><% $student->{first} %></a>
 						</td>
 
 						<td class="centeralign">
@@ -156,11 +165,17 @@
 %				foreach my $judge (@{$judges}) {
 					<tr>
 						<td>
-							<% $judge->{first} %>
+							<a
+								href  ="/register/judge/edit.mhtml?judge_id=<% $judge->{id} %>"
+								class ="plain"
+							><% $judge->{first} %></a>
 						</td>
 
 						<td>
-							<% $judge->{last} %>
+							<a
+								href  ="/register/judge/edit.mhtml?judge_id=<% $judge->{id} %>"
+								class ="plain"
+							><% $judge->{last} %></a>
 						</td>
 
 						<td class="centeralign">
