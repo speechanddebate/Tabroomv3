@@ -93,10 +93,18 @@
 		$m->abort();
 	}
 
-	my $chapter = $school->chapter;
+	my $dbh = Tab::DBI->db_Main();
 
-	my $school_state = $school->state;
-	$school_state = $chapter->state if $chapter && (not $school_state);
+	my $location_sth = $dbh->prepare("
+		select COALESCE(NULLIF(school.state, ''), chapter.state), chapter.country
+		from school
+			left join chapter on chapter.id = school.chapter
+		where school.id = ?
+	");
+
+	$location_sth->execute($school->id);
+	my ($school_state, $school_country) = $location_sth->fetchrow_array();
+	$location_sth->finish();
 
 	my $memo;
 	my $amount;
@@ -152,7 +160,7 @@
 		$output{"school_id"}      = $school->id;
 		$output{"school_name"}    = $school->name;
 		$output{"school_state"}   = $school_state;
-		$output{"school_country"} = $chapter ? $chapter->country : undef;
+		$output{"school_country"} = $school_country;
 		$output{"tourn_id"}       = $tourn->id;
 		$output{"tourn_name"}     = $tourn->name;
 		$output{"tourn_state"}    = $tourn->state;
@@ -203,7 +211,7 @@
 			$output{"school_id"}      = $school->id;
 			$output{"school_name"}    = $school->name;
 			$output{"school_state"}   = $school_state;
-			$output{"school_country"} = $chapter ? $chapter->country : undef;
+			$output{"school_country"} = $school_country;
 			$output{"tourn_id"}       = $tourn->id;
 			$output{"tourn_name"}     = $tourn->name;
 			$output{"tourn_state"}    = $tourn->state;
@@ -221,8 +229,6 @@
 				return => "yep"
 			);
 		}
-
-		my $dbh = Tab::DBI->db_Main();
 
 		my $sth = $dbh->prepare("
 			select
