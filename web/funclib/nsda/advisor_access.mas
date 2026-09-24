@@ -76,27 +76,24 @@
 
 		foreach my $role (@new_roles) {
 
-			$already_sth->execute($role->{school_id}, $person->id);
-			my $chapters = $already_sth->fetchall_hash();
+			my @chapters = Tab::Chapter->create( nsda => $role->{school_id} );
 
-			if ($chapters && @{$chapters}) {
-				foreach my $chapter (@{$chapters}) {
-					my $perm = eval {
-						return Tab::Permission->create({
-							person  => $person->id,
-							tag     => "chapter",
-							chapter => $chapter->{id}
-						});
-					};
+			foreach my $chapter (@chapters) {
+				my $perm = eval {
+					return Tab::Permission->create({
+						person  => $person->id,
+						tag     => "chapter",
+						chapter => $chapter->id
+					});
+				};
 
-					if ($perm) {
-						Tab::ChangeLog->create({
-							tag         => "chapter",
-							chapter     => $chapter->{id},
-							person      => $person->id,
-							description => $person->email." ".$person->nsda." was given automatic access because they are an NSDA advisor to school ID ".$role->{school_id}." end date ".$role->{end},
-						});
-					}
+				if ($perm) {
+					Tab::ChangeLog->create({
+						tag         => "chapter",
+						chapter     => $chapter->{id},
+						person      => $person->id,
+						description => $person->email." ".$person->nsda." was given automatic access because they are an NSDA advisor to school ID ".$role->{school_id}." end date ".$role->{end},
+					});
 				}
 			}
 		}
