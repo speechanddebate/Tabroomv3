@@ -93,6 +93,11 @@
 		$m->abort();
 	}
 
+	my $chapter = $school->chapter;
+
+	my $school_state = $school->state;
+	$school_state = $chapter->state if $chapter && (not $school_state);
+
 	my $memo;
 	my $amount;
 	my $payment;
@@ -144,10 +149,14 @@
 			memo    => $memo
 		);
 
-		$output{"school_id"}   = $school->id;
-		$output{"school_name"} = $school->name;
-		$output{"tourn_id"}    = $tourn->id;
-		$output{"tourn_name"}  = $tourn->name;
+		$output{"school_id"}      = $school->id;
+		$output{"school_name"}    = $school->name;
+		$output{"school_state"}   = $school_state;
+		$output{"school_country"} = $chapter ? $chapter->country : undef;
+		$output{"tourn_id"}       = $tourn->id;
+		$output{"tourn_name"}     = $tourn->name;
+		$output{"tourn_state"}    = $tourn->state;
+		$output{"tourn_country"}  = $tourn->country;
 
 		$output{"tourn_start"} = $m->comp('/funclib/showdt.mas',
 			dt     => $tourn->start,
@@ -189,13 +198,16 @@
 
 		if ($feline_ref) {
 
-			$output{"line_items"}   = $feline_ref;
-			$output{"total"}        = $total;
-			$output{"school_id"}    = $school->id;
-			$output{"school_name"}  = $school->name;
-			$output{"school_state"} = $school->state;
-			$output{"tourn_id"}     = $tourn->id;
-			$output{"tourn_name"}   = $tourn->name;
+			$output{"line_items"}     = $feline_ref;
+			$output{"total"}          = $total;
+			$output{"school_id"}      = $school->id;
+			$output{"school_name"}    = $school->name;
+			$output{"school_state"}   = $school_state;
+			$output{"school_country"} = $chapter ? $chapter->country : undef;
+			$output{"tourn_id"}       = $tourn->id;
+			$output{"tourn_name"}     = $tourn->name;
+			$output{"tourn_state"}    = $tourn->state;
+			$output{"tourn_country"}  = $tourn->country;
 
 			$output{"tourn_start"} = $m->comp('/funclib/showdt.mas',
 				dt     => $tourn->start,
