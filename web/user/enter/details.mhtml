@@ -366,7 +366,7 @@
 %			next unless $event_settings{"breakout_".$breakout."_selfreg"};
 
 			<label for="breakout_<% $breakout %>">
-				<div class="row hover">
+				<div class="row hover flexrow">
 					<span class="threequarter nowrap">
 						<% $event_settings{"breakout_".$breakout."_label"} %> breakout eligible:
 					</span>
@@ -646,8 +646,8 @@
 %		if ($event_settings{"online_hybrid"}) {
 %			$save++;
 			<label for="online_hybrid">
-				<div class="row hover">
-					<span class="third semibold">
+				<div class="row hover flexrow">
+					<span class="third semibold padleft">
 						Entry will compete online
 					</span>
 
@@ -671,8 +671,8 @@
 %		if ($event_settings{"online_mode"}) {
 %			$save++;
 			<label for="ada">
-				<div class="row hover">
-					<span class="third semibold">
+				<div class="row hover flexrow">
+					<span class="third semibold padleft">
 						Assign to ADA/Accessible Rooms
 					</span>
 
@@ -691,7 +691,7 @@
 
 %		if ($event_settings{"ask_for_po"}) {
 			<label for="po_nominee">
-				<div class="row hover">
+				<div class="row hover flexrow">
 					<span class="fifth semibold">
 						Self-nominate for Presiding Officer
 					</span>
@@ -756,31 +756,34 @@
 		) {
 </%perl>
 
-			<span class="half nospace">
-				<h5 class="martopmore">
-					Link to performance video
-				</h5>
-			</span>
+			<div class="full flexrow martopmore">
 
-			<span
-				class="half nospace rightalign semibold bluetext italic test_pls <%
-					$entry_settings{"video_link_tested"}
-						? "hidden"
-						: ""
-			%>">
-				Please test this link after saving
-			</span>
+				<span class="half nospace">
+					<h5>
+						Link to performance video
+					</h5>
+				</span>
 
-			<span class="half nospace rightalign semibold greentext italic tested_thx <%
-					$entry_settings{"video_link_tested"}
-						? ""
-						: "hidden"
-			%>">
-				Link tested!
-			</span>
+				<span
+					class="half rightalign semibold bluetext italic test_pls <%
+						$entry_settings{"video_link_tested"}
+							? "hidden"
+							: ""
+				%>">
+					Please test this link after saving
+				</span>
 
-			<div class="row centeralign padvert">
-				<span class="fivesixths nospace">
+				<span class="half rightalign semibold greentext italic tested_thx <%
+						$entry_settings{"video_link_tested"}
+							? ""
+							: "hidden"
+				%>">
+					Link tested!
+				</span>
+			</div>
+
+			<div class="row centeralign padvert flexrow">
+				<span class="fivesixths nospace flexrow">
 %					if ($now < $script_deadline) {
 						<input
 							type        = "url"
@@ -789,11 +792,31 @@
 							placeholder = "Enter full video URL here"
 						>
 %					} else {
-						<% $entry_settings{"video_link"} %>
+
+						<span class="half explain leftalign grow padleft">
+							Upload deadline was <& "/funclib/showdt.mas",
+								dt     => $script_deadline,
+								tz     => $tourn->tz,
+								tzname => 1,
+								format => "murica_short"
+							&>
+						</span>
+%						if ($entry_settings{"video_link"}) {
+							<span class="half padleft">
+								<a
+									href         ="<% $entry_settings{"video_link"} %>"
+									class        ="redtext white underline"
+									target       ="_blank"
+									entry_id     = "<% $entry->id %>"
+									setting_name = "video_link_tested"
+									onClick      = "postSwitch(this, 'entry_switch.mhtml'); return true;"
+								><% $entry_settings{"video_link"} %></a>
+							</span>
+%						}
 %					}
 				</span>
 
-				<span class="twenty centeralign nospace">
+				<span class="twenty centeralign grow">
 %					if ($entry_settings{"video_link"}) {
 						<a
 							class        = "fa fa-lg fa-link buttonwhite bluetext"
@@ -806,7 +829,7 @@
 %					}
 				</span>
 
-				<span class="twenty centeralign nospace">
+				<span class="twenty centeralign grow">
 					<a
 						title="Link HAS been tested!"
 						class="fa fa-lg fa-check greentext tested_thx <%
