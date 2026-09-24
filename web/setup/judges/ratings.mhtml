@@ -89,6 +89,10 @@
 		>
 
 <%perl>
+		my $strikeword = "prefs";
+		$strikeword = "strikes" if $tourn_settings->{"nsda_district"};
+
+
 		if (
 			(not defined $tourn_settings->{"mock_trial_registration"})
 			&& (
@@ -97,8 +101,6 @@
 			)
 		) {
 
-		my $strikeword = "prefs";
-		$strikeword = "strikes" if $tourn_settings->{"nsda_district"};
 </%perl>
 
 			<h5>
@@ -261,8 +263,9 @@
 					</span>
 				</div>
 %			}
+%		}
 
-%			unless ($tourn_settings->{"nsda_district"} || $tourn_settings->{"mock_trial_registration"}) {
+%			unless ($tourn_settings->{"nsda_district"}) {
 				<span class="pagehalf">
 					<script>
 						function checkPrefs () {
@@ -371,73 +374,74 @@
 							</label>
 %						}
 
-					<div class="row flexrow ">
-						<span class="half padleft">
-							Use Mutually Preferred Judging
-						</span>
+%					if (not defined ($tourn_settings->{"mock_trial_registration"})) {
+						<div class="row flexrow ">
+							<span class="half padleft">
+								Use Mutually Preferred Judging
+							</span>
 
-						<span class="half padright">
-							<select
-								name     = "prefs"
-								id       = "prefs"
-								onChange = 'checkPrefs();'
-							>
-								<option value="">
-									None
-								</option>
-
-								<option value="tiered" <% $prefs eq "tiered" ? "selected" : "" %>>
-									Tiers (by whole judge)
-								</option>
-
-%								if ($category_settings->{"rounds_per"}) {
-									<option value="tiered_round" <% $prefs eq "tiered_round" ? "selected" : "" %>>
-										Tiers (by round obligation)
+							<span class="half padright">
+								<select
+									name     = "prefs"
+									id       = "prefs"
+									onChange = 'checkPrefs();'
+								>
+									<option value="">
+										None
 									</option>
-%								}
 
-								<option value="ordinals" <% $prefs eq "ordinals" ? "selected" : "" %>>
-									Ordinals
-								</option>
-
-								<option value="caps" <% $prefs eq "caps" ? "selected" : "" %>>
-									Whole Number Caps (NDT Elim)
-								</option>
-							</select>
-						</span>
-					</div>
-
-					<div class ="row flexrow tiered ordinals strikes"
-						title  ="Without this, all judges in the category will appear.  Use this to have judges in other categories appear on this pref sheet."
-					>
-						<span class="half padleft">
-							Use a judge pool for prefs
-						</span>
-
-%						my $pref_jpool = eval { return Tab::JPool->retrieve($category_settings->{pref_jpool}); };
-
-						<span class="half padright">
-							<select name="pref_jpool">
-								<option value="">All <% $category->abbr %> judges</option>
-%								foreach my $jpool ($category->jpools) {
-									<option
-										value="<% $jpool->id %>"
-										<% $jpool->id == $category_settings->{'pref_jpool'} ? "selected" : "" %>
-									><% $jpool->name %></option>
-%								}
-
-%								if ($pref_jpool && $pref_jpool->category != $category->id) {
-									<option
-										value="<% $pref_jpool->id %>"
-										selected
-									><% $pref_jpool->name %> from <% $pref_jpool->category->abbr %>
-									at <% $pref_jpool->category->tourn->start->year %>
-										<% $pref_jpool->category->tourn->name %>
+									<option value="tiered" <% $prefs eq "tiered" ? "selected" : "" %>>
+										Tiers (by whole judge)
 									</option>
-%								}
-							</select>
-						</span>
-					</div>
+
+%									if ($category_settings->{"rounds_per"}) {
+										<option value="tiered_round" <% $prefs eq "tiered_round" ? "selected" : "" %>>
+											Tiers (by round obligation)
+										</option>
+%									}
+
+									<option value="ordinals" <% $prefs eq "ordinals" ? "selected" : "" %>>
+										Ordinals
+									</option>
+
+									<option value="caps" <% $prefs eq "caps" ? "selected" : "" %>>
+										Whole Number Caps (NDT Elim)
+									</option>
+								</select>
+							</span>
+						</div>
+
+						<div class ="row flexrow tiered ordinals strikes"
+							title  ="Without this, all judges in the category will appear.  Use this to have judges in other categories appear on this pref sheet."
+						>
+							<span class="half padleft">
+								Use a judge pool for prefs
+							</span>
+
+%							my $pref_jpool = eval { return Tab::JPool->retrieve($category_settings->{pref_jpool}); };
+
+							<span class="half padright">
+								<select name="pref_jpool">
+									<option value="">All <% $category->abbr %> judges</option>
+%									foreach my $jpool ($category->jpools) {
+										<option
+											value="<% $jpool->id %>"
+											<% $jpool->id == $category_settings->{'pref_jpool'} ? "selected" : "" %>
+										><% $jpool->name %></option>
+%									}
+
+%									if ($pref_jpool && $pref_jpool->category != $category->id) {
+										<option
+											value="<% $pref_jpool->id %>"
+											selected
+										><% $pref_jpool->name %> from <% $pref_jpool->category->abbr %>
+										at <% $pref_jpool->category->tourn->start->year %>
+											<% $pref_jpool->category->tourn->name %>
+										</option>
+%									}
+								</select>
+							</span>
+						</div>
 
 					<label for="cumulate_prefs">
 						<div class="row flexrow tiered hover">
@@ -496,7 +500,18 @@
 						</div>
 					</label>
 				</span>
+%				}
 %			}
+
+<%perl>
+		if (
+			(not defined $tourn_settings->{"mock_trial_registration"})
+			&& (
+				(not defined $tourn_settings->{"nsda_district"})
+				|| (defined $tourn_settings->{"nsda_strikes"})
+			)
+		) {
+</%perl>
 
 			<span class="pagehalf">
 
@@ -620,8 +635,8 @@
 						</span>
 					</div>
 				</label>
-			</span>
 %		}
+		</span>
 
 <%perl>
 		unless (
