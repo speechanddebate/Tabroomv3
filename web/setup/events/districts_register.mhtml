@@ -395,45 +395,18 @@
 				</span>
 %			}
 
-<%perl>
-			if (
-				$event->nsda_category == 108
-				|| $person->site_admin
-			) {
-</%perl>
-				<span class="pagehalf right">
-					<span class="half nospace">
-						<h5>
-							Entry Caps
-						</h5>
+			<span class="pagehalf right">
+
+				<h5>
+					Entry Caps
+				</h5>
+
+				<div class="row flexrow">
+					<span class="twothirds padleft">
+						Per-School Cap
 					</span>
-					<span class="half nospace rightalign semibold redtext italic">
-						<% $event->nsda_category == 108 ? "BQ Only" : "Site Admin Only" %>
-					</span>
-
-					<div class="row flexrow">
-						<span class="threequarters padleft">
-							Event-Wide Cap
-						</span>
-
-						<span class="quarter centeralign">
-							<input
-								id       = "total_cap"
-								type     = "text"
-								class    = "thin"
-								name     = "cap"
-								onChange = "waitlistExists();"
-								size     = "5"
-								value    = "<% $event_settings{"cap"} %>"
-							>
-						</span>
-					</div>
-
-					<div class="row flexrow">
-						<span class="threequarters padleft">
-							Per-School Cap
-						</span>
-						<span class="quarter centeralign">
+					<span class="third centeralign">
+%						if ($person->site_admin) {
 							<input
 								id       = "school_cap"
 								type     = "text"
@@ -443,10 +416,14 @@
 								size     = "5"
 								value    = "<% $event_settings{"school_cap"} %>"
 							>
-						</span>
-					</div>
-				</span>
-%			}
+%						} else {
+							<span class="italic semibold padvert martopless">
+								<% $event_settings{"school_cap"} %> entries per school
+							</span>
+%						}
+					</span>
+				</div>
+			</span>
 		</div>
 
 		<div class="liblrow rightalign full marvertno">

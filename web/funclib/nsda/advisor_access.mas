@@ -76,7 +76,7 @@
 
 		foreach my $role (@new_roles) {
 
-			my @chapters = Tab::Chapter->create( nsda => $role->{school_id} );
+			my @chapters = Tab::Chapter->search( nsda => $role->{school_id} );
 
 			foreach my $chapter (@chapters) {
 				my $perm = eval {

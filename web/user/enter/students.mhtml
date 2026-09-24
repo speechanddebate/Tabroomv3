@@ -94,9 +94,6 @@
 
 	my $nsda_district = $tourn_settings{"nsda_district"};
 
-	my $district_limit;
-	my $district_count;
-
 	my %district_entry = ();
 	my %evweekend      = ();
 	my %weekends       = ();
@@ -128,25 +125,6 @@
 			$weekends{$weekend_id}{"freeze_deadline"} = $weekend->freeze_deadline->set_time_zone($tz);
 			$weekends{$weekend_id}{"judge_deadline"}  = $weekend->judge_deadline->set_time_zone($tz);
 			$weekends{$weekend_id}{"fine_deadline"}   = $weekend->fine_deadline->set_time_zone($tz);
-
-		}
-
-		if ($event) {
-
-			my $is_house++ if $event->abbr eq "HSE";
-			my $is_senate++ if $event->abbr eq "SEN";
-
-			$district_limit = $m->comp(
-				"/funclib/nsda/entry_limits.mas",
-				chapter => $chapter,
-				house   => $is_house,
-				senate  => $is_senate
-			);
-
-			%district_entry = $m->comp(
-				"/funclib/district_entry.mas",
-				chapter  => $chapter
-			);
 
 		}
 
@@ -294,7 +272,6 @@
 
 						<select
 							onChange = "showOneEvent();"
-							class    = "fixedbig marno"
 							id       = "showMeBaby"
 						>
 							<option value="ALL">All</option>
@@ -302,20 +279,16 @@
 							EVENT:
 							foreach my $event_id ( @sorted_entries ) {
 
-								my $weekend_id = $evweekend{$event_id}
-									if $nsda_district;
-
-								next EVENT if $weekend_id && $weekend_id eq "nope";
-
-								next EVENT if $weekend_id
-									&& $now < $weekends{$weekend_id}{"reg_start"};
+								if ($evweekend{$event_id}) {
+									my $weekend_id = $evweekend{$event_id};
+									next EVENT if $weekend_id && $weekend_id eq "nope";
+									next EVENT if $weekend_id && $now < $weekends{$weekend_id}{"reg_start"};
+								}
 </%perl>
-
 								<option
 									value="<% $event_id %>"
 								><% $events_by_id{$event_id}->abbr %></option>
 %							}
-
 						</select>
 					</span>
 
@@ -324,18 +297,22 @@
 						class   = "buttonwhite button bluetext marleft eventbutton thin invert tenth centeralign"
 						onClick = "showEventByButton();"
 						id      = "button_ALL"
-					>
-						ALL
-					</a>
+					>ALL</a>
+<%perl>
+					EVENT:
+					foreach my $event_id ( @sorted_entries ) {
 
-%					foreach my $event_id ( @sorted_entries ) {
+						if ($evweekend{$event_id}) {
+							my $weekend_id = $evweekend{$event_id};
+							next EVENT if $weekend_id && $weekend_id eq "nope";
+							next EVENT if $weekend_id && $now < $weekends{$weekend_id}{"reg_start"};
+						}
+</%perl>
 						<a
 							class   = "buttonwhite bluetext marleft eventbutton thin hover tenth centeralign"
 							onClick = "showEventByButton(<% $event_id %>)"
 							id      = "button_<% $event_id %>"
-						>
-							<% $events_by_id{$event_id}->abbr %>
-						</a>
+						><% $events_by_id{$event_id}->abbr %></a>
 %					}
 %				}
 
@@ -903,20 +880,20 @@
 
 		</div>
 
-<%perl>
-		if ($event) {
+%		if ($event) {
 
-			if ($event->nsda_category == 108) {
-				undef $nsda_district;
-				undef $district_limit;
-			}
-
-			my $weekend = $weekends{$evweekend{$event->id}}{'object'}
-				if $tourn_settings{'nsda_district'};
-
-</%perl>
+%			my $weekend = $weekends{$evweekend{$event->id}}{'object'};
 
 			<div class="sidenote">
+
+%				if ($event->abbr eq "HSE" && $event_settings{'house_chambers'}) {
+					<h4 class="martopmore">House Chamber Blocs</h4>
+					<a
+						href="nsda_congress_delegations.mhtml?school_id=<% $school->id %>"
+						class="yellow full"
+					>Assign Representatives to Chambers</a>
+%				}
+
 
 				<h4><% $event->abbr %> Deadlines</h4>
 <%perl>
@@ -1008,59 +985,6 @@
 					</div>
 %				}
 
-%				if ($district_limit) {
-
-<%perl>
-					$district_limit += 2
-						if $event->type ne "congress"
-						&& $district_entry{"entry_bonus"};
-
-					$district_count = $district_entry{"house_total"}
-						if $event->abbr eq "HSE";
-
-					$district_count = $district_entry{"senate_total"}
-						if $event->abbr eq "SEN";
-
-					$district_count = $district_entry{"entry_total"}
-						if $event->type ne "congress"
-						&& $event->abbr ne "BQ";
-</%perl>
-
-					<div class="full row padvertless marno">
-						<span class="threefifths semibold">
-							NSDA Degrees
-						</span>
-						<span class="twofifths">
-							<% $chapter->setting('nsda_strength') %>
-						</span>
-					</div>
-
-					<div class="full row padvertless marno">
-						<span class="threefifths semibold">
-							<% $event && $event->type eq "congress"
-								? $event->abbr." Districts cap"
-								: "Districts slots usage"
-							%>
-						</span>
-						<span class="twofifths">
-							<% $district_count %> /
-							<% $district_limit %>
-							<%	($event->type ne "congress" && $district_entry{"entry_bonus"})
-								? '<span class="inline semibold redtext">+2 bonus slots</span>'
-								: ""
-							%>
-						</span>
-					</div>
-
-%					if ($event->abbr eq "HSE" && $event->setting('house_chambers')) {
-						<h4 class="martopmore">House Chamber Blocs</h4>
-						<a
-							href="nsda_congress_delegations.mhtml?school_id=<% $school->id %>"
-							class="yellow full"
-						>Assign Representatives to Chambers</a>
-%					}
-%				}
-
 %				if ($event_settings{$event_id}{"cap"}) {
 					<div class="full row padvertless marno">
 						<span class="threefifths semibold">
@@ -1133,8 +1057,6 @@
 				$reg_over++ if $now > $tourn->reg_end;
 			}
 
-			$reg_over++ if $nsda_district && $district_count >= $district_limit;
-
 			my $waitlist_cap_hit;
 			my $cap_hit;
 			my $nsda_school_cap;
@@ -1145,33 +1067,15 @@
 			my @waitlist = @{$entries_by_event{$event_id}{"waitlist"}}
 				if $entries_by_event{$event_id}{"waitlist"};
 
-			if ($nsda_district) {
+			if ($event_settings{$event_id}{"school_cap"} > 0) {
 
-				if ($event_settings{$event_id}{"school_cap"}) {
-					$nsda_school_cap++
-						if (scalar @already + scalar @waitlist) >= $event_settings{$event_id}{"school_cap"};
-
-					$reg_over++ if $nsda_school_cap;
+				if ( (scalar @already + scalar @waitlist) >= $event_settings{$event_id}{"school_cap"}) {
+					$waitlist{$event_id}++;
+					if ($event_settings{$event_id}{"no_waitlist"}) {
+						$reg_over++;
+					}
 				}
-
-			} elsif (
-				$event_settings{$event_id}{"no_waitlist"}
-				&& ($event_settings{$event_id}{"school_cap"} > 0)
-			) {
-
-				$waitlist_cap_hit++
-					if (scalar @already + scalar @waitlist) >=
-					$event_settings{$event_id}{"school_cap"};
-
-				$reg_over++ if $waitlist_cap_hit;
-
-			} elsif ($event_settings{$event_id}{"school_cap"} > 0) {
-
-				$waitlist{$event_id}++
-					if (scalar @already + scalar @waitlist) >= $event_settings{$event_id}{"school_cap"};
 			}
-
-			my $nsda_cap++ if $nsda_district && $district_count >= $district_limit;
 
 			unless ($reg_over) {
 
@@ -1397,7 +1301,7 @@
 <%perl>
 						if ($waitlist_cap_hit) {
 							if ($event_settings{$event_id}{"no_waitlist"}) {
-								$m->print("Your entry limit has been reached <br />");
+								$m->print("Your institution's entry limit has been reached <br />");
 							} else {
 								$m->print("Your entry and waitlist limit has been reached <br />");
 							}
@@ -1426,14 +1330,6 @@
 							if ($event_deadline && $now > $event_deadline) {
 								$m->print("<p class='centeralign redtext semibold padvert'>Event entry deadline has passed</p>");
 							}
-						}
-
-						if ($nsda_school_cap) {
-							$m->print("Your school entry limit for this event has been reached<br />");
-						}
-
-						if ($nsda_cap) {
-							$m->print("Entry limit reached based on your Chapter Degrees <br />");
 						}
 </%perl>
 
