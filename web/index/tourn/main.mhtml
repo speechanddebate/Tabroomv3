@@ -9,6 +9,15 @@
 </%args>
 <%init>
 
+	if ($webname && not defined $tourn_id ) {
+		$m->redirect("/index/tourn/past.mhtml?webname=$webname");
+	}
+
+	if ($tourn_id < 37500 && (not defined $person)) {
+		my $err = "You must log in to access this area";
+		$m->redirect("/user/login/login.mhtml?err=$err");
+	}
+
 	my $key = $tourn_id."-".$site_id."-".$webpage_id;
 
 	if ($ARGS{"invalidate"}) {
@@ -18,10 +27,6 @@
 			key        => $key,
 			expires_in => '5m',
 		);
-	}
-
-	if ($webname && not defined $tourn_id ) {
-		$m->redirect("/index/tourn/past.mhtml?webname=$webname");
 	}
 
     my $tourn;

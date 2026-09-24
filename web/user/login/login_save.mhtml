@@ -1,7 +1,6 @@
 <%args>
 	$username   => undef
 	$password   => undef
-	$tourn_id   => undef
 	$session_id => undef
 	$url        => undef
 	$salt       => undef
@@ -201,7 +200,8 @@
 	}
 
     $m->redirect("https://$url") if $url;
-    $m->redirect("/index/register.mhtml?tourn_id=$tourn_id") if $tourn_id;
+    $m->redirect("/index/tourn/main.mhtml?tourn_id=$ARGS{tourn_id}") if $ARGS{tourn_id} && $ARGS{index};
+    $m->redirect("/index/register.mhtml?tourn_id=$ARGS{tourn_id}") if $ARGS{tourn_id};
     $m->redirect("/user/home.mhtml");
 
 </%init>

@@ -8,7 +8,7 @@
 <%init>
 
 	unless ($person) {
-		my $err = "Because of the prevalance of ineffecient AI spiders putting high levels of load on Tabroom, you must now log in to access that area.";
+		my $err = "You must log in to access this area";
 		$m->redirect("/user/login/login.mhtml?err=$err");
 	}
 

@@ -905,7 +905,7 @@
 							<td class="smallish nospace">
 								<a
 									class="white padvert marno"
-									href="/index/tourn/index?tourn_id=<% $tourn_id %>"
+									href="/index/tourn/main.mhtml?tourn_id=<% $tourn_id %>"
 								>
 									<% $open_tourns{$tourn_id}{name} %>
 									<% $open_tourns{$tourn_id}{hidden} %>
