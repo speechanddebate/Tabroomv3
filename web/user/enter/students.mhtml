@@ -125,8 +125,7 @@
 			$weekends{$weekend_id}{"fine_deadline"}   = $weekend->fine_deadline->set_time_zone($tz);
 
 		}
-
-	} else {
+	}
 
 	foreach my $event ($tourn->events) {
 		$waitlist{$event->id} = $m->comp(
@@ -237,7 +236,6 @@
 				$(".roster").addClass("hidden");
 				$("."+eventID).removeClass("hidden");
 			}
-
 		}
 
 	</script>
@@ -1355,8 +1353,6 @@
 
 			</div>
 %		}
-
-
 %		}
 	</div>
 
