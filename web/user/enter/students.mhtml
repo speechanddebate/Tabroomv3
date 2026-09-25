@@ -92,8 +92,6 @@
 		$event_settings{$event->id} = \%es;
 	}
 
-	my $nsda_district = $tourn_settings{"nsda_district"};
-
 	my %district_entry = ();
 	my %evweekend      = ();
 	my %weekends       = ();
@@ -102,7 +100,7 @@
 
 	my @weekends;
 
-	if ($nsda_district) {
+	if ($tourn_settings{nsda_district} || $tourn_settings{multi_weekend} ) {
 
 		foreach my $event ($tourn->events) {
 			$evweekend{$event->id} = $event_settings{$event->id}{"weekend"};
@@ -130,13 +128,12 @@
 
 	} else {
 
-		foreach my $event ($tourn->events) {
-			$waitlist{$event->id} = $m->comp(
-				"/funclib/waitlist_status.mas",
-					event  => $event,
-					school => $school
-			);
-		}
+	foreach my $event ($tourn->events) {
+		$waitlist{$event->id} = $m->comp(
+			"/funclib/waitlist_status.mas",
+				event  => $event,
+				school => $school
+		);
 	}
 
 	my %release_form = eval {
@@ -298,6 +295,7 @@
 						onClick = "showEventByButton();"
 						id      = "button_ALL"
 					>ALL</a>
+
 <%perl>
 					EVENT:
 					foreach my $event_id ( @sorted_entries ) {
@@ -331,7 +329,7 @@
 
 		</div>
 
-%		if ($drop_deadline && $now > $drop_deadline && (not defined $nsda_district))  {
+%		if ($drop_deadline && $now > $drop_deadline && (not defined $evweekend{$event_id}))  {
 
 			<h5 class="redtext centeralign semibold padvertno martopless">
 				Drops &amp; name change deadline has passed
@@ -384,9 +382,7 @@
 			my @waitlist = @{$entries_by_event{$event_id}{"waitlist"}}
 				if $entries_by_event{$event_id}{"waitlist"};
 
-			my $weekend_id = $evweekend{$event_id}
-				if $nsda_district;
-
+			my $weekend_id = $evweekend{$event_id};
 			next EVENT if $weekend_id && $weekend_id eq "nope";
 
 			my $event_drop_deadline;
@@ -710,10 +706,7 @@
 											)
 										) {
 
-											if (
-												$nsda_district
-												&& $weekends{$evweekend{$event->id}}{"drop_deadline"}
-											){
+											if ($weekends{$evweekend{$event->id}}{"drop_deadline"}){
 												next if $now > $weekends{$evweekend{$event->id}}{"drop_deadline"};
 											}
 </%perl>
@@ -862,9 +855,7 @@
 						foreach my $oevent (@events) {
 
 							my $oevent_id = $oevent->id;
-
-							my $weekend_id = $evweekend{$oevent_id}
-								if $nsda_district;
+							my $weekend_id = $evweekend{$oevent_id};
 
 							next EVENT if $weekend_id && $weekend_id eq "nope";
 							next EVENT if $weekend_id && $now < $weekends{$weekend_id}{"reg_start"};
@@ -1199,13 +1190,13 @@
 					</a>
 %				}
 
-%				if ($nsda_district) {
+%				if ($tourn_settings{nsda_district}) {
 
 					<h6 class="martop">Missing competitors?</h6>
 
 					<p class="explain">
 						Only competitors eligible to enter District Tournaments
-						will appear on the above list.  Use the Check
+						will appear on the above list. Use this Check
 						Eligibility page to see why someone may be missing.
 					</p>
 
@@ -1230,7 +1221,7 @@
 <%perl>
 				}
 
-				unless ($nsda_district || $tourn_settings{"mock_trial_registration"}) {
+				unless ($tourn_settings{nsda_district} || $tourn_settings{"mock_trial_registration"}) {
 
 					if ($event_settings{$event_id}{"cap"}
 						|| $event_settings{$event_id}{"school_cap"}
