@@ -26,7 +26,10 @@
 
 		if ($ARGS{tourn_id}) {
 
-			$tourn = Tab::Tourn->retrieve($tourn->id);
+			$tourn = Tab::Tourn->retrieve($ARGS{tourn_id});
+			unless ($tourn) {
+				$m->comp("/funclib/abort.mas", message => "No valid tournament found with that ID");
+			}
 
 			unless (Tab::TournCircuit->search(
 				circuit => $circuit->id,
@@ -39,6 +42,9 @@
 		if ($ARGS{chapter_id}) {
 
 			$chapter = Tab::Chapter->retrieve($ARGS{chapter_id});
+			unless ($chapter) {
+				$m->comp("/funclib/abort.mas", message => "No valid institution found with that ID");
+			}
 
 			unless (Tab::ChapterCircuit->search(
 				chapter => $chapter->id,

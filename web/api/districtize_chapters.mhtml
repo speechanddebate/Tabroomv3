@@ -60,14 +60,9 @@
 
 		select chapter.id, chapter.name, chapter.nsda,
 			district.id,
-			nsda_strength.value,
 			nsda_charter.value,
 			nsda_paid.value
 		from (chapter, district)
-
-			left join chapter_setting nsda_strength
-				on nsda_strength.tag = 'nsda_strength'
-				and nsda_strength.chapter = chapter.id
 
 			left join chapter_setting nsda_charter
 				on nsda_charter.tag = 'nsda_charter'
@@ -89,7 +84,7 @@
 	my $clean_sth = $dbh->prepare("
 		delete from chapter_setting
 			where chapter = ?
-			and tag in ('nsda_paid', 'nsda_strength', 'nsda_charter')
+			and tag in ('nsda_paid', 'nsda_charter')
 	");
 
 	my $sync_sth = $dbh->prepare("
@@ -97,7 +92,6 @@
 	");
 
 	$sth->execute();
-
 	$m->clear_buffer();
 
 	while (
@@ -130,9 +124,6 @@
 				}
 
 				$clean_sth->execute($chapter_id);
-
-				$sync_sth->execute($chapter_id, "nsda_strength", $members{$district}{$nsda}{"strength"})
-					if $members{$district}{$nsda}{"strength"};
 
 				$sync_sth->execute($chapter_id, "nsda_paid", $members{$district}{$nsda}{"paid"})
 					if $members{$district}{$nsda}{"paid"};
