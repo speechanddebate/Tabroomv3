@@ -2,11 +2,8 @@ package Tab;
 use utf8;
 use Text::Unidecode;
 
-# Path to your LaTeX binaries
-$latex_path_prefix="/usr/bin";
-
 # FQDN of your server.  Do NOT include http://
-$hostname = "www.tabroom.com";
+$hostname = "local.tabroom.com";
 
 # Debugging status.  Set to a non-zero number to increase logging levels
 my $debug;
@@ -14,7 +11,7 @@ my $debug;
 #URL Prefix of the server
 $url_prefix = "https://$hostname" if $hostname eq "www.tabroom.com";
 $url_prefix = "http://$hostname" unless $url_prefix;
-$url_domain = "tabroom.com";
+$url_domain = ".tabroom.com";
 
 #Static cookie-free URL
 $static_url = "http://static.tabroom.com" if $hostname eq "www.tabroom.com";
@@ -24,84 +21,109 @@ $static_url = $url_prefix unless $static_url;
 $admin_email = "help\@tabroom.com";
 $toc_email = "tocbids\@tabroom.com";
 
-# Upload size limit in bytes (after the multiply)
-$upload_limit = 25 * 1000 * 1000;
+# Upload size limit in bytes
+$upload_limit = "15728640";
 
 #Email SMTP server.
 $smtp_server ="localhost";
-$admin_smtp_server = "localhost";
 
 #Database name
 $dbname = "tabroom";
 #Database host.  "localhost" will use the mysql local socket, not the network
-$dbhost = "host.docker.internal";
+$dbhost = "localhost";
 #Database username
 $dbuser = "tabroom";
 #Database password
-$dbpass = "C3Eil-aiQuaiseigoo4hee2YooG";
-#Token login random string
-$string	= "tohfi1aeph9LienaKae1aeY3jua+Lahy2iek";
+$dbpass = "DataBasePassword";
+
+#Token random string
+$string	= "MakeThisRandomWithPWGENOrSomething";
+
+#Servers in the rotation for cache invalidation, comma separated
+$servers = "local";
 
 #GeoIP data
-$geoip = "/var/lib/geoip/GeoLite2-City.mmdb";
-$geoisp = "/var/lib/geoip/GeoIP2-ISP.mmdb";
+$geoip = "/var/lib/GeoIP/GeoLite2-City.mmdb";
 
-#Share API endpoint
-$share_api_endpoint = "/v1/share";
-$docshare_key = "";
-
-#NSDA Jitsi Server key
-$jitsi_key = "";
+#NSDA Campus Server key
+$jitsi_key = " ";
 $jitsi_uri = "https://campus.speechanddebate.org";
 
 # NSDA Store checkout details
 $nsda_store_api = "https://www.speechanddebate.org/store/wp-json/cocart/v2/cart/add-item";
 $nsda_store_redirect = "https://www.speechanddebate.org/store/cart?cocart-load-cart=";
 $nsda_product_codes = {
-    tabroom          => "96778",
-    campus           => "98031",
-    campus_observers => "98032"
+	tabroom          => "96778",
+	campus           => "98031",
+	campus_observers => "98032"
 };
 
 # NSDA API Key
-$nsda_api_user     = "10382636";
-$nsda_api_key      = "";
-$nsda_api_endpoint = "https://api.speechanddebate.org";
+$nsda_api_user = "10382636";
+#Testing API
+$nsda_api_key = "SomethingGoesHere";
+$nsda_api_endpoint = "https://api-test.speechanddebate.org";
 $nsda_api_version  = "/v2";
 
-#Hacky API key
-$hacky_api_key     = "";
+#NSDA Calendar Database name
+$calendar_dbname = $dbname;
+#NSDA Calendar Database host.  "localhost" will use the mysql local socket, not the network
+$calendar_dbhost = $dbhost;
+#NSDA Calendar Database username
+$calendar_dbuser = $dbuser;
+#NSDA Calendar Database password
+$calendar_dbpass = $dbpass;
+
+#NSDA Points Database name
+$points_dbname = "points_host";
+#NSDA Points Database host.  "localhost" will use the mysql local socket, not the network
+$points_dbhost = "points_database";
+#NSDA Points Database username
+$points_dbuser = "points_user";
+#NSDA Points Database password
+$points_dbpass = "nicetry_schmuck";
+#NSDA Points password salt
+$points_salt = "itsasecret_notyours";
+
+#NSDA Nationals Registration Database name
+$nationals_dbname = "nationals_host";
+#NSDA Nationals Registration Database host.  "localhost" will use the mysql local socket, not the network
+$nationals_dbhost = "nationals_database";
+#NSDA Nationals Registration Database username
+$nationals_dbuser = "nationals_user";
+#NSDA Nationals Registration Database password
+$nationals_dbpass = "nicetry_schmuck";
+#NSDA Nationals Registration password salt
+$nationals_salt = "its_my_secret_not_yours";
+
+# Path to your LaTeX binaries
+$latex_path_prefix="/usr/bin";
 
 #Component root
 $file_root = '/www/tabroom/web/';
-$data_dir = '/www/tabroom/web/mason/cache';
+$data_dir  = '/cache/mason';
 
 # S3 file storage
 $s3_config = $file_root."lib/s3.config";
-$s3_cmd    = "$latex_path_prefix/s3cmd --config $s3_config ";
+$s3_cmd = "$latex_path_prefix/s3cmd --config $s3_config ";
 $s3_bucket = "s3://tabroom-files";
-$s3_base   = "https://s3.amazonaws.com/tabroom-files";
-$s3_url    = $s3_base."/tourns";
+$s3_url = "http://tabroom-files.s3-website-us-east-1.amazonaws.com/tourns";
 
 # Discourse SSO
-$discourse_secret = "";
+$discourse_secret = "replacewithrandomkeymatchingdiscoursesetting";
 
 #NAUDL Salesforce API integration
-$naudl_username         = 'salesforce@tabroom.com';
-$naudl_password         = '';
-$naudl_token            = 'h3MOVRHXGcAlXmeweOuG3K0s';
-$naudl_host             = 'https://cs45.salesforce.com';
-$naudl_client_id        = '';
-$naudl_client_secret    = '';
-
-$naudl_tourn_endpoint   = '/services/apexrest/v.1/TournamentService';
-$naudl_student_endpoint = '/services/apexrest/v.1/StudentServiceTabroom';
-$naudl_sta_endpoint     = '/services/apexrest/v.1/STATabroomService';
+$naudl_username         = 'somethingfrom@salesforce.com';
+$naudl_password         = 'YouHaveToWrestleLukeHillForIt';
+$naudl_tourn_endpoint   = 'tournament_service_url';
+$naudl_student_endpoint = 'student_service_tabroom_url';
+$naudl_sta_endpoint     = 'sta_tabroom_service_url';
 
 ######  You shouldn't have to change anything below this line  ##########
 
 #Cookie domain
-$cookie_domain = $hostname;
+$cookie_domain = $url_domain;
+$cookie_name = "TabroomLocal";
 
 # Path to gzip for entryression
 $bzip2 = "$latex_path_prefix/bzip2";
@@ -127,7 +149,7 @@ $perl_lib = $file_root.'/lib';
 
 sub debuglog {
 	my $string = unidecode(shift);
-	Sys::Syslog::setlogsock('unix');
+	Sys::Syslog::setlogsock({ type => "tcp", host => $loghost, port => 514 });
 	Sys::Syslog::openlog ('tabroom','ndelay','local3');
 	Sys::Syslog::syslog('debug',$string);
 	Sys::Syslog::closelog;
@@ -136,16 +158,17 @@ sub debuglog {
 
 sub log {
 	my $string = unidecode(shift);
-	Sys::Syslog::setlogsock('unix');
+	Sys::Syslog::setlogsock({ type => "tcp", host => $loghost, port => 514 });
 	Sys::Syslog::openlog ('tabroom','ndelay','local5');
 	Sys::Syslog::syslog('info',$string);
 	Sys::Syslog::closelog;
 	return;
 }
 
+
 sub eventlog {
 	my $string = shift;
-	`$Tab::log $string`;
+	`$Tab::eventlog $string`;
 }
 
 # Function to sanitize LaTeX strings
@@ -158,6 +181,9 @@ sub texify {
 	$string =~ s/\\/\\\\/g;
 	$string =~ s/#/\\#/g;
 	$string =~ s/\&/\\\&/g;
+	$string =~ s/%/\%/g;
+	$string =~ s/\%/\\\%/g;
+
 	$string =~ s/\$/\\\$/g;
 	$string =~ s/\£/\\pounds/g;
 	$string =~ s/\€/\\euro/g;
@@ -189,14 +215,19 @@ sub school_year {
 
 }
 
-sub phoneme {
-	my $phone = shift;
-	if (length($phone) == 10) {
-		my ($area, $exch, $number) = unpack "A3A3A4", $phone;
-		return "($area) $exch-$number";
-	} else  {
-		return $phone;
+sub phone {
+	my $number = shift;
+	$number =~ s/[\D_]//g;
+
+	if (length($number) == 10) {
+		$number =~ s/^(\d{3})(\d{3})(\d{4})$/($1)\ $2-$3/;
 	}
+	return $number;
+}
+
+sub phoneme {
+	#Real friggin brilliant, write the same subfunction 2x.
+	Tab::phone(shift);
 }
 
 sub niceshortdt {
@@ -454,20 +485,13 @@ sub tzname {
 	return $tz_ob->short_name_for_datetime( $now )
 }
 
-sub phone {
-	my $number = shift;
-	$number =~ s/^(\d{3})(\d{3})(\d{4})$/($1)\ $2-$3/;
-	return $number;
-}
-
 
 sub short_name  {
 
 	my ($name, $limit) = @_;
-
 	return unless $name;
-
 	chomp $name;
+	$name =~ s/\.$//g;
     $name =~ s/\s+$//;  #trailing spaces
 
 	#screw these people.
@@ -480,8 +504,22 @@ sub short_name  {
 	$name = "NewSkool" if $name eq "The New School";
 	$name = "BCAC" if $name eq "BC Academy";
 
-	$name =~ s/\.$//g;
-    $name =~ s/\s+$//;  #trailing spaces
+	if ($name eq "Air Academy High School"
+		|| $name eq "Air Academy HS"
+	) {
+		$name = "AirAcademy";
+	}
+
+	$name = "Milton AC" if $name eq "Milton Academy";
+	$name = "Milton AC" if $name eq "MiltonAcademy";
+
+	$name = "Milton Hi" if $name eq "Milton High School";
+	$name = "Milton Hi" if $name eq "MiltonHigh";
+	$name = "Milton Hi" if $name eq "Milton HS";
+
+	$name = "Cary AC" if $name eq "Cary Academy";
+	$name = "Cary Hi" if $name eq "Cary High School";
+	$name = "Cary Hi" if $name eq "Cary HS";
 
 	$name =~ s/College Prep H.S.//g;
 	$name =~ s/College Prep HS//g;
@@ -506,7 +544,6 @@ sub short_name  {
 	$name =~ s/ Schools$//g;
 	$name =~ s/ schools$//g;
 	$name =~ s/ High$//g;
-
 
     $name =~ s/\s+$//;  #trailing spaces
 	$name =~ s/\.$//g;
@@ -537,31 +574,44 @@ sub short_name  {
 	$name =~ s/ Schools$//g;
 	$name =~ s/ schools$//g;
 	$name =~ s/ Sr$//g;
+	$name =~ s/ sr$//g;
 
 	$name =~ s/ Preparatory$/ Prep/g;
 
-
 	#Why do people do this of all things?
-	$name =~ s/ Speech and Debate Club$//g;
 	$name =~ s/ Club$//g;
+	$name =~ s/ Team$//g;
+	$name =~ s/ Society$//g;
+	$name =~ s/ Speech and Debate$//g;
 	$name =~ s/ Forensics$//g;
+	$name =~ s/ Forensic$//g;
 	$name =~ s/ Speech$//g;
 	$name =~ s/ Debate$//g;
 	$name =~ s/ \&$//g;
 	$name =~ s/ and$//g;
 	$name =~ s/ \+$//g;
-	$name =~ s/ Speech$//g;
-	$name =~ s/ Debate$//g;
 	$name =~ s/ Parliamentary$//g;
 
 	$name =~ s/Public\ Charter//g;
 	$name =~ s/ Charter\ Public//g;
-	$name =~ s/University\ of//g;
+	$name =~ s/^The University\ of//g;
+	$name =~ s/^The University\ Of//g;
+	$name =~ s/^University\ of//g;
+	$name =~ s/^University\ Of//g;
+	$name =~ s/^The College\ of//g;
+	$name =~ s/^The College\ Of//g;
+	$name =~ s/^College\ of//g;
+	$name =~ s/^College\ Of//g;
+	$name =~ s/Technological/Tech/g;
+	$name =~ s/Technology/Tech/g;
+	$name =~ s/Community College/Community/g;
 	$name =~ s/California State University,/CSU/g;
 	$name =~ s/California State University/CSU/g;
+	$name =~ s/State University/State/g;
 	$name =~ s/California,/UC/g;
 	$name =~ s/ University$//g;
 	$name =~ s/ College$//g;
+	$name =~ s/ CC$//g;
 	$name =~ s/State\ University,/State\ /g;
 	$name =~ s/^The //g;
 	$name =~ s/^Saint\ /St\ /g;
@@ -569,12 +619,19 @@ sub short_name  {
 	$name =~ s/H\.\ S\./HS/g;
 	$name =~ s/High\ School/HS/g;
 	$name = "Boston College" if $name eq "BC";
-	$name = "Boston Uni" if $name eq "BU";
+	$name = "Boston Univ" if $name eq "BU";
 	$name = "College Prep" if $name eq "CP";  #Sometimes it's the whole school name.  Oops.
 	$name =~ s/ CP //g;
 	$name =~ s/ CP$//g;
 	$name =~ s/NewSkool/New School/g;
 	$name =~ s/BCAC/BC Academy/g;
+
+	$name = "Cary Acad" if $name eq "Cary AC";
+	$name = "Cary HS" if $name eq "Cary Hi";
+
+	$name = "Milton Acad" if $name eq "Milton AC";
+	$name = "Milton HS" if $name eq "Milton Hi";
+	$name = "Air Academy" if $name eq "AirAcademy";
 
     $name =~ s/^\s+//;  #leading spaces
     $name =~ s/\s+$//;  #trailing spaces
@@ -584,7 +641,4 @@ sub short_name  {
     }
 
     return $name;
-
 }
-
-
