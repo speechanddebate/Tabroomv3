@@ -204,7 +204,7 @@
 			}
 		}
 
-		Tab::eventlog("Sending ".scalar @tos." messages");
+		Tab::log("Sending ".scalar @tos." messages");
 	}
 
 	return;

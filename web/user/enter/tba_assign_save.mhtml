@@ -83,10 +83,7 @@
 	$entry->code($code);
 
 	$entry->update();
-
 	my $msg = "Entry ".$entry->name." assigned to a TBA slot.  Code is $code";
-
-	Tab::eventlog("$msg");
 
 	$m->redirect("details.mhtml?school_id=".$school->id."&entry_id=".$entry->id."&err=$err") if $err;
 	$m->redirect("students.mhtml?school_id=".$school->id."&event_id=".$event->id."&msg=$msg");

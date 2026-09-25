@@ -33,7 +33,7 @@
 		person      => $person->id
 	);
 
-	system "$Tab::eventlogger $description";
+	$Tab::log($description);
 
 	$entry->delete;
 

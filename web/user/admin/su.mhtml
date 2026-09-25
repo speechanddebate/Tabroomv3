@@ -8,14 +8,13 @@
 	my $become = Tab::Person->retrieve($su_id);
 
 	$m->abort unless $become && $become->id;
-
 	my $log = $person->first." ".$person->last." has become ".$become->first." ".$become->last;
 
 	$session->su($person->id);
 	$session->person($become->id);
 	$session->update;
 
-    system "$Tab::eventlog $log";
+	$Tab::log($log);
 
 	my $msg = "Presto!  You are become ".$become->first." ".$become->last.".  Use the Return to Self link above to undo it";
 
