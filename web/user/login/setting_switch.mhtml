@@ -14,15 +14,22 @@
 		fontsize => 1,
 	});
 
-	my $banned_properties = ({
-		site_admin     => 1,
-		nsda           => 1,
-		password       => 1,
-		accesses       => 1,
-		last_access    => 1,
-		pass_timestamp => 1,
-		timestamp      => 1,
-		tz             => 1,
+	my $allowed_properties = ({
+		email          => 1
+		first          => 1
+		middle         => 1
+		last           => 1
+		gender         => 1
+		pronoun        => 1
+		no_email       => 1
+		street         => 1
+		city           => 1
+		state          => 1
+		zip            => 1
+		postal         => 1
+		country        => 1
+		tz             => 1
+		phone          => 1
 	});
 
 	unless ($person) {
@@ -42,7 +49,7 @@
 
 	unless ($person->site_admin) {
 		if (
-			($property_name && $banned_properties->{$property_name})
+			($property_name && (not defined $allowed_properties->{$property_name}))
 			|| ($setting_name && (not defined $allowed_settings->{$setting_name}))
 		) {
 			$m->comp("/funclib/abort.mas",
