@@ -20,9 +20,7 @@
 	}
 
 	my $entry_code = $entry->code;
-
 	my @students = $entry->students;
-
 	my $description = "Entry ".$entry->code." TOTALLY DELETED in ".$entry->event->abbr;;
 
 	my $change = $m->comp("/funclib/log.mas",
@@ -33,9 +31,7 @@
 		person      => $person->id
 	);
 
-	$Tab::log($description);
-
-	$entry->delete;
+	$entry->delete();
 
 	if ($school && $school->setting("individuals")) {
 		$school->setting("individuals", $school->setting("individuals") - scalar @students)

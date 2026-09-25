@@ -14,7 +14,7 @@
 	$session->person($become->id);
 	$session->update;
 
-	$Tab::log($log);
+	Tab::log($log);
 
 	my $msg = "Presto!  You are become ".$become->first." ".$become->last.".  Use the Return to Self link above to undo it";
 

@@ -16,7 +16,7 @@
 
 			my $sth = $dbh->prepare("update session set person = ?, su = NULL where id = ?");
 			$sth->execute($become->id, $session->id);
-			$Tab::log($log);
+			Tab::log($log);
 			$msg = "Presto!  Identity crisis resolved.  You are back to your original self.  Or....are you?";
 
 		} else {
