@@ -17,6 +17,11 @@
 		$m->abort;
 	}
 
+	if ($ARGS{tourn_id} && $ARGS{tourn_id} < 37500 && (not defined $session)) {
+		my $err = "You must log in to access this area";
+		$m->redirect("/user/login/login.mhtml?err=$err");
+	}
+
 	my $event = Tab::Event->retrieve($event_id) if $event_id;
 
 	if ($event && (not defined $tourn_id)) {
