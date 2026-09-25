@@ -445,12 +445,12 @@
 							<a
 								class         = "buttonwhite bluetext invert thin"
 								name          = "side"
-								target_id     = "<% $entry_id %>"
+								entry_id      = "<% $entry_id %>"
 								property_name = "side"
 								setting_name  = "<% $flip_status %>"
 								option_one    = "side_<% $entry_id %>_1"
 								option_two    = "side_<% $entry_id %>_2"
-								related_thing = "<% $panel_id %>"
+								panel_id      = "<% $panel_id %>"
 								onClick       = "postConfirm(
 									'This choice is final. Are you sure?',
 									this,
@@ -607,12 +607,12 @@
 								<a
 									class         = "buttonwhite bluetext invert thin"
 									name          = "order"
-									target_id     = "<% $entry_id %>"
+									entry_id      = "<% $entry_id %>"
 									property_name = "order"
 									setting_name  = "<% $flip_status %>"
 									option_one    = "order_<% $entry_id %>_1"
 									option_two    = "order_<% $entry_id %>_2"
-									related_thing = "<% $panel_id %>"
+									panel_id      = "<% $panel_id %>"
 									onClick       = "postConfirm(
 										'This choice is final. Are you sure?',
 										this,

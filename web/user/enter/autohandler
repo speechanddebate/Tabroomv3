@@ -21,138 +21,154 @@
 		|| $r->uri eq "/user/enter/flip_save.mhtml"
 	) {
 		$m->call_next();
-	}
 
-	my $school;
+	} else {
 
-	if ($school_id && $school_id == int($school_id)) {
-		$school = Tab::School->retrieve($school_id);
-	} elsif ($school_id) {
-		my $test = eval{
-			return shift @{$school_id};
-		};
-		if ($test && $test == int($test)) {
-			$school_id = $test;
+		my $school;
+
+		if ($school_id && $school_id == int($school_id)) {
 			$school = Tab::School->retrieve($school_id);
+		} elsif ($school_id) {
+			my $test = eval{
+				return shift @{$school_id};
+			};
+			if ($test && $test == int($test)) {
+				$school_id = $test;
+				$school = Tab::School->retrieve($school_id);
+			}
 		}
-	}
 
-	my $entry;
+		my $entry;
 
-	if ($entry_id && $entry_id == int($entry_id)) {
-		$entry = Tab::Entry->retrieve($entry_id);
-	} elsif ($entry_id) {
-		my $test = eval{
-			return shift @{$entry_id};
-		};
-		if ($test && $test == int($test)) {
-			$entry_id = $test;
+		if ($entry_id && $entry_id == int($entry_id)) {
 			$entry = Tab::Entry->retrieve($entry_id);
+		} elsif ($entry_id) {
+			my $test = eval{
+				return shift @{$entry_id};
+			};
+			if ($test && $test == int($test)) {
+				$entry_id = $test;
+				$entry = Tab::Entry->retrieve($entry_id);
+			}
 		}
-	}
 
-	if ($entry && not defined $school) {
-		$school = $entry->school;
-	}
+		if ($entry && not defined $school) {
+			$school = $entry->school;
+		}
 
-	my $judge;
+		my $judge;
 
-	if ($judge_id && $judge_id == int($judge_id)) {
-		$judge = Tab::Judge->retrieve($judge_id);
-	} elsif ($judge_id) {
-		my $test = eval{
-			return shift @{$judge_id};
-		};
-		if ($test && $test == int($test)) {
-			$judge_id = $test;
+		if ($judge_id && $judge_id == int($judge_id)) {
 			$judge = Tab::Judge->retrieve($judge_id);
+		} elsif ($judge_id) {
+			my $test = eval{
+				return shift @{$judge_id};
+			};
+			if ($test && $test == int($test)) {
+				$judge_id = $test;
+				$judge = Tab::Judge->retrieve($judge_id);
+			}
 		}
-	}
 
-	if ($judge && not defined $school) {
-		$school = $judge->school;
-	}
+		if ($judge && not defined $school) {
+			$school = $judge->school;
+		}
 
-	my $chapter;
+		my $chapter;
 
-	if ($school) {
-		$chapter = $school->chapter;
-		unless ($person->site_admin) {
-			if ($chapter) {
+		if ($school) {
+			$chapter = $school->chapter;
+			unless ($person->site_admin) {
+				if ($chapter) {
+					unless ($perms->{chapter}{$chapter->id} eq "chapter") {
+						$m->print('{ "error": true, "message": "No chapter permissions found for entry ID '.$entry_id.'"}');
+						$m->abort();
+					}
+				} else {
+					$m->print('{ "error": true, "message": "No chapter found for entry ID '.$entry_id.'"}');
+					$m->abort();
+				}
+			}
+		} elsif ($chapter_id) {
+			$chapter = Tab::Chapter->retrieve($chapter_id);
+
+			unless ($person->site_admin) {
 				unless ($perms->{chapter}{$chapter->id} eq "chapter") {
 					$m->print('{ "error": true, "message": "No chapter permissions found for entry ID '.$entry_id.'"}');
 					$m->abort();
 				}
-			} else {
-				$m->print('{ "error": true, "message": "No chapter found for entry ID '.$entry_id.'"}');
-				$m->abort();
 			}
 		}
-	} elsif ($chapter_id) {
-		$chapter = Tab::Chapter->retrieve($chapter_id);
 
-		unless ($person->site_admin) {
-			unless ($perms->{chapter}{$chapter->id} eq "chapter") {
-				$m->print('{ "error": true, "message": "No chapter permissions found for entry ID '.$entry_id.'"}');
+		if (
+			$r->uri eq "/user/enter/create.mhtml"
+			|| $r->uri eq "/user/enter/school_switch.mhtml"
+			|| $r->uri eq "/user/enter/entry_switch.mhtml"
+			|| $r->uri eq "/user/enter/details_save.mhtml"
+			|| $r->uri eq "/user/enter/nats/entry_switch.mhtml"
+			|| $r->uri eq "/user/enter/nats/conflict_rm.mhtml"
+			|| $r->uri eq "/user/enter/nats/supp_drop.mhtml"
+			|| $r->uri eq "/user/enter/nats/ada_switch.mhtml"
+			|| $r->uri eq "/user/enter/observer_rm.mhtml"
+			|| $r->uri eq "/user/enter/observer_add.mhtml"
+		) {
+			$m->call_next( school => $school );
+			return;
+		}
+
+		if ($r->uri eq "/user/enter/nsda_roster_check.mhtml" && (not defined $school_id)) {
+			$m->call_next();
+			return;
+		}
+
+		my $tourn = Tab::Tourn->retrieve($tourn_id) if $tourn_id;
+		$tourn = $school->tourn if $school && (not defined $tourn);
+
+		$school = Tab::School->search(
+			chapter => $chapter,
+			tourn   => $tourn_id
+		)->first unless $school;
+
+		unless ($school) {
+			$m->redirect("/user/home.mhtml?err=School $school_id does not exist yet.  Please register.  URL ".$r->uri);
+		}
+
+		if ($school->chapter > 0) {
+			$chapter = $school->chapter;
+		} else {
+
+			my $dbh = Tab::DBI->db_Main();
+
+			my $sth = $dbh->prepare("
+				select permission.id
+					from permission, school
+				where school.id = ?
+					and school.district = permission.district
+					and permission.tag in ('wsdc', 'chair')
+					and permission.person = ?
+			");
+
+			$sth->execute($school->id, $person->id);
+
+			my $ok = $sth->fetchrow_array();
+
+
+			if ($ok) {
+
+				$m->call_next(
+					entry  => $entry,
+					school => $school,
+					tourn  => $tourn,
+					perms  => $perms
+				);
+
 				$m->abort();
 			}
+
+			$sth->finish;
 		}
-	}
 
-	if (
-		$r->uri eq "/user/enter/create.mhtml"
-		|| $r->uri eq "/user/enter/school_switch.mhtml"
-		|| $r->uri eq "/user/enter/entry_switch.mhtml"
-		|| $r->uri eq "/user/enter/details_save.mhtml"
-		|| $r->uri eq "/user/enter/nats/entry_switch.mhtml"
-		|| $r->uri eq "/user/enter/nats/conflict_rm.mhtml"
-		|| $r->uri eq "/user/enter/nats/supp_drop.mhtml"
-		|| $r->uri eq "/user/enter/nats/ada_switch.mhtml"
-		|| $r->uri eq "/user/enter/observer_rm.mhtml"
-		|| $r->uri eq "/user/enter/observer_add.mhtml"
-	) {
-		$m->call_next( school => $school );
-		return;
-	}
-
-	if ($r->uri eq "/user/enter/nsda_roster_check.mhtml" && (not defined $school_id)) {
-		$m->call_next();
-		return;
-	}
-
-	my $tourn = Tab::Tourn->retrieve($tourn_id) if $tourn_id;
-	$tourn = $school->tourn if $school && (not defined $tourn);
-
-	$school = Tab::School->search(
-		chapter => $chapter,
-		tourn   => $tourn_id
-	)->first unless $school;
-
-	unless ($school) {
-		$m->redirect("/user/home.mhtml?err=School $school_id does not exist yet.  Please register.  URL ".$r->uri);
-	}
-
-	if ($school->chapter > 0) {
-		$chapter = $school->chapter;
-	} else {
-
-		my $dbh = Tab::DBI->db_Main();
-
-		my $sth = $dbh->prepare("
-			select permission.id
-				from permission, school
-			where school.id = ?
-				and school.district = permission.district
-				and permission.tag in ('wsdc', 'chair')
-				and permission.person = ?
-		");
-
-		$sth->execute($school->id, $person->id);
-
-		my $ok = $sth->fetchrow_array();
-
-
-		if ($ok) {
+		if ($person->site_admin || ($perms->{"chapter"}{$chapter} eq "chapter")) {
 
 			$m->call_next(
 				entry  => $entry,
@@ -161,61 +177,46 @@
 				perms  => $perms
 			);
 
-			$m->abort();
-		}
+		} elsif ($perms->{"chapter"}{$chapter} eq "prefs") {
 
-		$sth->finish;
-	}
+			$m->call_next(
+				entry  => $entry,
+				school => $school,
+				tourn  => $tourn,
+				prefs  => 1,
+				perms  => $perms
+			);
 
-	if ($person->site_admin || ($perms->{"chapter"}{$chapter} eq "chapter")) {
+		} elsif ($entry && $school && $chapter->setting("self_prefs")) {
 
-		$m->call_next(
-			entry  => $entry,
-			school => $school,
-			tourn  => $tourn,
-			perms  => $perms
-		);
+			my $yay;
 
-	} elsif ($perms->{"chapter"}{$chapter} eq "prefs") {
-
-		$m->call_next(
-			entry  => $entry,
-			school => $school,
-			tourn  => $tourn,
-			prefs  => 1,
-			perms  => $perms
-		);
-
-	} elsif ($entry && $school && $chapter->setting("self_prefs")) {
-
-		my $yay;
-
-		unless ( $r->uri =~ /\/ratings\// ) {
-			$m->print("You can only access ratings & your pref sheet, not other pages");
-			$m->abort();
-		}
-
-		foreach my $student ($entry->students) {
-
-			if ($student->person && $student->person->id == $person->id) {
-				$m->call_next(
-					entry  => $entry,
-					tourn  => $tourn,
-					school => $school,
-					prefs  => 2
-				);
-				$yay++;
+			unless ( $r->uri =~ /\/ratings\// ) {
+				$m->print("You can only access ratings & your pref sheet, not other pages");
+				$m->abort();
 			}
+
+			foreach my $student ($entry->students) {
+
+				if ($student->person && $student->person->id == $person->id) {
+					$m->call_next(
+						entry  => $entry,
+						tourn  => $tourn,
+						school => $school,
+						prefs  => 2
+					);
+					$yay++;
+				}
+			}
+
+			$m->redirect("/user/home.mhtml?err=You are not authorized to edit that pref sheet") unless $yay;
+
+		} else {
+
+			$m->redirect("/user/home.mhtml?err=You are not authorized to access that school");
+
 		}
-
-		$m->redirect("/user/home.mhtml?err=You are not authorized to edit that pref sheet") unless $yay;
-
-	} else {
-
-		$m->redirect("/user/home.mhtml?err=You are not authorized to access that school");
-
 	}
-
 
 </%init>
 

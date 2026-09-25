@@ -1,7 +1,7 @@
 <%args>
 	$person
-	$target_id         => undef
-	$related_thing     => undef
+	$entry_id          => undef
+	$panel_id          => undef
 	$property_name     => undef
 	$option_one        => undef
 	$option_two        => undef
@@ -18,15 +18,15 @@
         $m->abort();
 	}
 
-    unless ($target_id) {
+    unless ($entry_id) {
         $m->print('{ "error": true, "message": "No Entry ID sent for flip target"}');
         $m->abort();
     }
 
-	my $entry = Tab::Entry->retrieve($target_id);
+	my $entry = Tab::Entry->retrieve($entry_id);
 
 	unless ($entry) {
-        $m->print('{ "error": true, "message": "No valid entry found for ID '.$target_id.'"}');
+        $m->print('{ "error": true, "message": "No valid entry found for ID '.$entry_id.'"}');
         $m->abort();
 	}
 
@@ -78,7 +78,7 @@
         $m->abort();
 	}
 
-    unless ($related_thing) {
+    unless ($panel_id) {
         $m->print('{
 			"error": true,
 			"message": "No Section ID sent for flip"
@@ -86,12 +86,12 @@
         $m->abort();
     }
 
-	my $panel = Tab::Panel->retrieve($related_thing);
+	my $panel = Tab::Panel->retrieve($panel_id);
 
 	unless ($panel) {
         $m->print('{
 			"error": true,
-			"message": "No valid section found for ID '.$related_thing.'"
+			"message": "No valid section found for ID '.$panel_id.'"
 		}');
         $m->abort();
 	}
@@ -143,7 +143,7 @@
 
 	if ($flip_status eq "winner") {
 
-		unless ($flip_winner eq $target_id) {
+		unless ($flip_winner eq $entry_id) {
 			$m->print('{
 				"error": true,
 				"message": "You are not the winner of the flip"}');
@@ -152,7 +152,7 @@
 
 	} elsif ($flip_status eq "loser") {
 
-		if ($flip_winner eq $target_id) {
+		if ($flip_winner eq $entry_id) {
 			$m->print('{
 				"error": true,
 				"message": "You are the winner of the flip and your choice window expired"}');
