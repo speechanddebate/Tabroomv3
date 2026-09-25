@@ -7,12 +7,6 @@
 </%args>
 <%init>
 
-	my $region = Tab::Region->retrieve($region_id);
-
-	unless ($perms->{"region"}{$region_id}) {
-		$m->print("You are not authorized to view that region");
-		$m->abort;
-	}
 
 	my $tourn = Tab::Tourn->retrieve($tourn_id) if $tourn_id;
 	my $chapter = Tab::Chapter->retrieve($chapter_id) if $chapter_id;

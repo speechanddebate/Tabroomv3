@@ -1,19 +1,18 @@
 <%args>
-	$chapter_id
-	$region_id
 	$email
 	$person
+	$chapter_id
+	$region
 </%args>
 <%init>
 
 	$email =~tr/[A-Z]/[a-z]/;
 
 	my $chapter = Tab::Chapter->retrieve($chapter_id);
-	my $region = Tab::Region->retrieve($region_id);
 
-	unless (Tab::ChapterCircuit->search( region => $region_id, chapter => $chapter_id)) {
+	unless (Tab::ChapterCircuit->search( region => $region->id, chapter => $chapter_id)) {
         my $err = "You are not authorized to edit ". $chapter->name ;
-        $m->redirect("/user/region/tournaments.mhtml?region_id=$region_id&err=$err");
+        $m->redirect("/user/region/tournaments.mhtml?region_id=$region&err=$err");
 	}
 
 	my $admin = Tab::Person->search( email => $email )->first;
@@ -21,7 +20,7 @@
 	unless ($admin) {
 		my $err = "The email $email has no login on this system.  ";
 		$err .= "The coach must sign up for an account first before access to this chapter can be granted.";
-        $m->redirect("/user/region/tournaments.mhtml?region_id=$region_id&err=$err");
+        $m->redirect("/user/region/tournaments.mhtml?region_id=$region&err=$err");
 	}
 
 	my $coach = Tab::Permission->search(
@@ -41,7 +40,15 @@
 	}
 
 	my $msg = $admin->first." ".$admin->last." has been given access to ". $chapter->name;
+	$msg .= "By region admin ".$person->email;
 
-    $m->redirect("/user/region/tournaments.mhtml?region_id=$region_id&chapter_id=$chapter_id&msg=$msg");
+	Tab::ChangeLog->create({
+		tag         => "chapter",
+		chapter     => $chapter->id,
+		person      => $person->id,
+		description => $msg
+	});
+
+    $m->redirect("/user/region/tournaments.mhtml?region_id=$region&chapter_id=$chapter_id&msg=$msg");
 
 </%init>
