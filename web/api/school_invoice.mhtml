@@ -93,6 +93,19 @@
 		$m->abort();
 	}
 
+	my $dbh = Tab::DBI->db_Main();
+
+	my $location_sth = $dbh->prepare("
+		select COALESCE(NULLIF(school.state, ''), chapter.state), chapter.country
+		from school
+			left join chapter on chapter.id = school.chapter
+		where school.id = ?
+	");
+
+	$location_sth->execute($school->id);
+	my ($school_state, $school_country) = $location_sth->fetchrow_array();
+	$location_sth->finish();
+
 	my $memo;
 	my $amount;
 	my $payment;
@@ -144,10 +157,14 @@
 			memo    => $memo
 		);
 
-		$output{"school_id"}   = $school->id;
-		$output{"school_name"} = $school->name;
-		$output{"tourn_id"}    = $tourn->id;
-		$output{"tourn_name"}  = $tourn->name;
+		$output{"school_id"}      = $school->id;
+		$output{"school_name"}    = $school->name;
+		$output{"school_state"}   = $school_state;
+		$output{"school_country"} = $school_country;
+		$output{"tourn_id"}       = $tourn->id;
+		$output{"tourn_name"}     = $tourn->name;
+		$output{"tourn_state"}    = $tourn->state;
+		$output{"tourn_country"}  = $tourn->country;
 
 		$output{"tourn_start"} = $m->comp('/funclib/showdt.mas',
 			dt     => $tourn->start,
@@ -189,13 +206,16 @@
 
 		if ($feline_ref) {
 
-			$output{"line_items"}   = $feline_ref;
-			$output{"total"}        = $total;
-			$output{"school_id"}    = $school->id;
-			$output{"school_name"}  = $school->name;
-			$output{"school_state"} = $school->state;
-			$output{"tourn_id"}     = $tourn->id;
-			$output{"tourn_name"}   = $tourn->name;
+			$output{"line_items"}     = $feline_ref;
+			$output{"total"}          = $total;
+			$output{"school_id"}      = $school->id;
+			$output{"school_name"}    = $school->name;
+			$output{"school_state"}   = $school_state;
+			$output{"school_country"} = $school_country;
+			$output{"tourn_id"}       = $tourn->id;
+			$output{"tourn_name"}     = $tourn->name;
+			$output{"tourn_state"}    = $tourn->state;
+			$output{"tourn_country"}  = $tourn->country;
 
 			$output{"tourn_start"} = $m->comp('/funclib/showdt.mas',
 				dt     => $tourn->start,
@@ -209,8 +229,6 @@
 				return => "yep"
 			);
 		}
-
-		my $dbh = Tab::DBI->db_Main();
 
 		my $sth = $dbh->prepare("
 			select
