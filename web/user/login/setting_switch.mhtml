@@ -15,21 +15,21 @@
 	});
 
 	my $allowed_properties = ({
-		email          => 1
-		first          => 1
-		middle         => 1
-		last           => 1
-		gender         => 1
-		pronoun        => 1
-		no_email       => 1
-		street         => 1
-		city           => 1
-		state          => 1
-		zip            => 1
-		postal         => 1
-		country        => 1
-		tz             => 1
-		phone          => 1
+		first    => 1,
+		middle   => 1,
+		last     => 1,
+		email    => 1,
+		gender   => 1,
+		pronoun  => 1,
+		no_email => 1,
+		street   => 1,
+		city     => 1,
+		state    => 1,
+		zip      => 1,
+		postal   => 1,
+		country  => 1,
+		tz       => 1,
+		phone    => 1
 	});
 
 	unless ($person) {
