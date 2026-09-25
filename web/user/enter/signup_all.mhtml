@@ -37,6 +37,19 @@
 		$m->abort();
 	}
 
+	my $chapter = $school->chapter;
+
+	unless ($person->site_admin) {
+		if ($chapter) {
+			unless ($perms->{chapter}{$chapter->id} eq "chapter") {
+				$m->print('{ "error": true, "message": "No chapter permissions found for entry ID '.$entry_id.'"}');
+				$m->abort();
+			}
+		} else {
+			$m->print('{ "error": true, "message": "No chapter found for entry ID '.$entry_id.'"}');
+			$m->abort();
+		}
+	}
 
 	my $errs;
 	my $msg;
@@ -47,10 +60,10 @@
 
 		# If this is districts, check those limits
 
-		my $event = $entry->event;
-		my $school = $entry->school;
+		my $event   = $entry->event;
+		my $school  = $entry->school;
 		my $chapter = $school->chapter;
-		my $tourn = $school->tourn;
+		my $tourn   = $school->tourn;
 
 		my $is_house;
 		my $is_senate;
@@ -73,18 +86,9 @@
 				"/funclib/district_entry.mas",
 				chapter  => $chapter
 			);
-
-		}
-
-		if ($event->nsda_category == 108) {
-			undef $district_limit;
 		}
 
 		if ($district_limit) {
-
-			if ($event->type ne "congress" && $district_entry{"entry_bonus"}) {
-				$district_limit += 2;
-			}
 
 			my $district_count;
 
@@ -102,7 +106,6 @@
 		}
 
 		foreach my $student ($entry->students) {
-
 			my %ok_events = $m->comp(
 				"/funclib/student_clear_events.mas",
 					student => $student,
@@ -110,13 +113,10 @@
 			);
 
 			unless ($ok_events{$entry->event->id}) {
-
 				$errs .=  $student->first." ".$student->last." is not eligible ";
 				$errs .= "to enter in ".$entry->event->name." due to double ";
 				$errs .= "entry restrictions ";
-
 			}
-
 		}
 
 		next if $errs;

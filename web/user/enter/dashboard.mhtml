@@ -1527,7 +1527,6 @@
 %			}
 
 %			foreach my $room_id (keys %{$rooms{"coach"}}) {
-
 				<span class="third leftalign">
 					<span class="threequarters semibold bluetext">
 						<span class="halfspace"></span>

@@ -1,7 +1,8 @@
 <%args>
 	$person
 	$perms
-	$student_id      => undef
+	$school
+	$student_id     => undef
 	$tourn_id       => undef
 	$property_value => 0
 	$flag           => undef
@@ -38,9 +39,11 @@
 		where entry.event = event.id
 			and event.tourn = ?
 			and exists (
-				select es.id from entry_student es
+				select es.id from entry_student es, entry
 				where es.entry = entry.id
-				and es.student = ?
+					and es.student = ?
+					and es.entry = entry.id
+					and entry.school = ?
 			)
 			and exists (
 				select es2.id
@@ -48,6 +51,7 @@
 				where es2.entry = entry.id
 					and es2.student = ada.student
 					and ada.tag = 'ada'
+					and es2.entry = entry.id
 			)
 	");
 
@@ -57,9 +61,11 @@
 		where entry.event = event.id
 			and event.tourn = ?
 			and exists (
-				select es.id from entry_student es
+				select es.id from entry_student es, entry
 				where es.entry = entry.id
-				and es.student = ?
+					and es.student = ?
+					and es.entry = entry.id
+					and entry.school = ?
 			)
 			and not exists (
 				select es2.id
@@ -71,13 +77,11 @@
 	");
 
 	if ($property_value > 0 ) {
-
 		$student->setting('ada', 1);
-		$sth->execute($tourn, $student->id);
-
+		$sth->execute($tourn, $student->id, $school->id);
 	} else {
 		$student->setting('ada', 0);
-		$nope_sth->execute($tourn, $student->id);
+		$nope_sth->execute($tourn, $student->id, $school->id);
 	}
 
 	my %response;

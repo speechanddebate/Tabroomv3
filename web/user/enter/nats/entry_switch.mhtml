@@ -1,11 +1,11 @@
 <%args>
 	$person
 	$perms
-	$entry_id      => undef
-	$property_name  => undef
+	$entry_id       => undef
 	$setting_name   => undef
-	$property_value => 0
+	$property_value => undef
 	$flag           => undef
+	$now
 </%args>
 <%init>
 
@@ -17,7 +17,7 @@
 		$m->abort();
 	}
 
-	unless ($property_name || $setting_name) {
+	unless ($setting_name) {
 		$m->print('{ "error": \1, "message": "No property to change sent"}');
 		$m->abort();
 	}
@@ -38,8 +38,6 @@
 	my $event = $entry->event;
 	my $supp  = $event->setting("supp");
 	my $tourn = $event->tourn;
-
-	my $now = DateTime->now();
 
 	if ($setting_name) {
 
@@ -151,12 +149,6 @@
 			$entry->setting($setting_name, $person->id);
 			$response{"hideAll"} = "test_pls";
 			$response{"showAll"} = "tested_thx";
-
-		} else {
-
-			$entry->setting($setting_name, $property_value);
-			$message .= " not " unless $property_value;
-			$message .= $setting_name;
 		}
 	}
 

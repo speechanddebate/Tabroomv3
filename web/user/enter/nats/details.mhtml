@@ -487,6 +487,7 @@
 								setting_name => "ada",
 								student_id   => $student->id,
 								tourn_id     => $tourn->id,
+								school_id    => $school->id,
 								url          => "ada_switch.mhtml",
 								value        => $ada,
 							&>

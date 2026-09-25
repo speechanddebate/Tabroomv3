@@ -12,26 +12,97 @@
 
 	if (
 		$r->uri eq "/user/enter/strike_cards.mhtml"
-		|| $r->uri eq "/user/enter/strike_cards.mhtml"
-		|| $r->uri eq "/user/enter/create.mhtml"
+		|| $r->uri eq "/user/enter/strike_card_save.mhtml"
+		|| $r->uri eq "/user/enter/signup_switch.mhtml"
+		|| $r->uri eq "/user/enter/signup_all.mhtml"
+		|| $r->uri eq "/user/enter/ratings/conflict_switch.mhtml"
+		|| $r->uri eq "/user/enter/ratings/strike_switch.mhtml"
+		|| $r->uri eq "/user/enter/flip.mhtml"
+		|| $r->uri eq "/user/enter/flip_save.mhtml"
+	) {
+		$m->call_next();
+	}
+
+	my $school;
+
+	if ($school_id && $school_id == int($school_id)) {
+		$school = Tab::School->retrieve($school_id);
+	} elsif ($school_id) {
+		my $test = eval{
+			return shift @{$school_id};
+		};
+		if ($test && $test == int($test)) {
+			$school_id = $test;
+			$school = Tab::School->retrieve($school_id);
+		}
+	}
+
+	my $entry;
+
+	if ($entry_id && $entry_id == int($entry_id)) {
+		$entry = Tab::Entry->retrieve($entry_id);
+	} elsif ($entry_id) {
+		my $test = eval{
+			return shift @{$entry_id};
+		};
+		if ($test && $test == int($test)) {
+			$entry_id = $test;
+			$entry = Tab::Entry->retrieve($entry_id);
+		}
+	}
+
+	if ($entry && not defined $school) {
+		$school = $entry->school;
+	}
+
+	my $judge;
+
+	if ($judge_id && $judge_id == int($judge_id)) {
+		$judge = Tab::Judge->retrieve($judge_id);
+	} elsif ($judge_id) {
+		my $test = eval{
+			return shift @{$judge_id};
+		};
+		if ($test && $test == int($test)) {
+			$judge_id = $test;
+			$judge = Tab::Judge->retrieve($judge_id);
+		}
+	}
+
+	if ($judge && not defined $school) {
+		$school = $judge->school;
+	}
+
+	my $chapter;
+
+	if ($school) {
+		$chapter = $school->chapter;
+		unless ($person->site_admin) {
+			if ($chapter) {
+				unless ($perms->{chapter}{$chapter->id} eq "chapter") {
+					$m->print('{ "error": true, "message": "No chapter permissions found for entry ID '.$entry_id.'"}');
+					$m->abort();
+				}
+			} else {
+				$m->print('{ "error": true, "message": "No chapter found for entry ID '.$entry_id.'"}');
+				$m->abort();
+			}
+		}
+	}
+
+	if (
+		$r->uri eq "/user/enter/create.mhtml"
 		|| $r->uri eq "/user/enter/school_switch.mhtml"
 		|| $r->uri eq "/user/enter/entry_switch.mhtml"
+		|| $r->uri eq "/user/enter/details_save.mhtml"
 		|| $r->uri eq "/user/enter/nats/entry_switch.mhtml"
 		|| $r->uri eq "/user/enter/nats/conflict_rm.mhtml"
 		|| $r->uri eq "/user/enter/nats/supp_drop.mhtml"
-		|| $r->uri eq "/user/enter/signup_switch.mhtml"
-		|| $r->uri eq "/user/enter/signup_all.mhtml"
+		|| $r->uri eq "/user/enter/nats/ada_switch.mhtml"
 		|| $r->uri eq "/user/enter/observer_rm.mhtml"
 		|| $r->uri eq "/user/enter/observer_add.mhtml"
-		|| $r->uri eq "/user/enter/ratings/conflict_switch.mhtml"
-		|| $r->uri eq "/user/enter/ratings/strike_switch.mhtml"
-		|| $r->uri eq "/user/enter/strike_card_save.mhtml"
-		|| $r->uri eq "/user/enter/flip.mhtml"
-		|| $r->uri eq "/user/enter/nats/ada_switch.mhtml"
-		|| $r->uri eq "/user/enter/flip_save.mhtml"
-		|| $r->uri eq "/user/enter/details_save.mhtml"
 	) {
-		$m->call_next;
+		$m->call_next( school => $school );
 		return;
 	}
 
@@ -41,31 +112,6 @@
 	}
 
 	my $tourn = Tab::Tourn->retrieve($tourn_id) if $tourn_id;
-	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
-	my $judge = Tab::Judge->retrieve($judge_id) if $judge_id;
-
-	my $school;
-
-	if ($school_id == int($school_id)) {
-
-		$school = Tab::School->retrieve($school_id);
-
-	} elsif ($school_id) {
-
-		my $test = eval{
-			return shift @{$school_id};
-		};
-
-		if ($test && $test == int($test)) {
-			$school_id = $test;
-			$school = Tab::School->retrieve($school_id);
-		}
-	}
-
-	my $chapter = Tab::Chapter->retrieve($chapter_id) if $chapter_id;
-
-	$school = $entry->school if $entry && (not defined $school);
-	$school = $judge->school if $judge && (not defined $school);
 	$tourn = $school->tourn if $school && (not defined $tourn);
 
 	$school = Tab::School->search(

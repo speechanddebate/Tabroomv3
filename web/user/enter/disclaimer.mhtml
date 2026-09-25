@@ -14,6 +14,8 @@
 
 		<h2><% $tourn->name %></h2>
 
+		<div class="bluebordertop"></div>
+
 		<h5>Notes/Disclaimer</h5>
 
 %		if ($tourn_settings{"nsda_district"}) {
@@ -44,25 +46,32 @@
 
 		</script>
 
-		<div class="padleftmore padrightmore padtop borderredthin martopmore bluetext semibold">
-			<% $tourn_settings{"disclaimer"} %>
-		</div>
+		<div class="centeralign flexrow">
+			<span class="leftalign ninetenths padleftmore padrightmore padtop">
 
-		<div class='centeralign padvert'>
-			<label
-				for   = "disclaimer"
-				class = "yellowhover padtop padbottom padleftmore padrightmore"
-			>
-				<span class="inline padright semibold italic">
-					I have read and agree to the above
-				</span>
-				<input
-					id       = "disclaimer"
-					class    = "disclaimers marbottom"
-					type     = "checkbox"
-					onChange = "checkAllTheseDisclaimers();"
-				>
-			</label>
+				<div class="full borderredthin martopmore bluetext semibold padleftmore padrightmore">
+					<% $tourn_settings{"disclaimer"} %>
+				</div>
+
+				<div class='ltbluebordertop flexrow nospace oddrow'>
+					<label
+						for   = "disclaimer"
+						class = "flexrow"
+					>
+						<span class="fourfifths rightalign padright semibold italic">
+							I have read and agree to the above
+						</span>
+						<span class="fifth centeralign">
+							<input
+								id       = "disclaimer"
+								class    = "disclaimers"
+								type     = "checkbox"
+								onChange = "checkAllTheseDisclaimers();"
+							>
+						</span>
+					</label>
+				</div>
+			</span>
 		</div>
 
 %		if ($tourn_settings{"tedious_second_disclaimer"}) {

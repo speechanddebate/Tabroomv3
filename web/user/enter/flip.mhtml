@@ -1,14 +1,13 @@
 <%args>
 	$person
 	$person_settings
+	$dbh
+	$now
 </%args>
 <%init>
 
 	my @rounds;
 	my %panels;
-
-	my $dbh = Tab::DBI->db_Main();
-	my $now = DateTime->now();
 
 </%init>
 

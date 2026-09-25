@@ -17,7 +17,7 @@
 		$m->abort();
 	}
 
-	unless ($property_name || $setting_name) {
+	unless ($setting_name) {
 		$m->print('{ "error": true, "message": "No property to change sent"}');
 		$m->abort();
 	}
@@ -31,32 +31,19 @@
 
 	my $message;
 
-	if ($property_name) {
-
-		$message .= " not " if $property_value == 0;
-		$message .= $property_name;
-
-		$school->$property_name($property_value);
-		$school->update;
-
-	} elsif ($setting_name) {
-
-		$school->setting($setting_name, $property_value);
+	if ($setting_name) {
 
 		if ($setting_name eq "signup_active") {
 			$message = "Signup sheet activated";
 			$message = "Signup sheet de-activated" if $property_value == 0;
-		}
-
-		$message = "Setting ".$setting_name." has been marked ".$property_value;
-
-		if ($setting_name eq "yet_another_disclaimer_form") {
+			$school->setting($setting_name, $property_value);
+		} elsif ($setting_name eq "yet_another_disclaimer_form") {
+			$message = "Setting ".$setting_name." has been marked ".$property_value;
 			$message = "Thank you!";
 		}
 	}
 
 	$m->print('{ "error": false, "message": "'.$message.'"}');
-
 	$m->abort();
 
 </%init>
