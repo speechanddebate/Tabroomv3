@@ -88,6 +88,15 @@
 				$m->abort();
 			}
 		}
+	} elsif ($chapter_id) {
+		$chapter = Tab::Chapter->retrieve($chapter_id);
+
+		unless ($person->site_admin) {
+			unless ($perms->{chapter}{$chapter->id} eq "chapter") {
+				$m->print('{ "error": true, "message": "No chapter permissions found for entry ID '.$entry_id.'"}');
+				$m->abort();
+			}
+		}
 	}
 
 	if (
@@ -124,9 +133,7 @@
 	}
 
 	if ($school->chapter > 0) {
-
 		$chapter = $school->chapter;
-
 	} else {
 
 		my $dbh = Tab::DBI->db_Main();
