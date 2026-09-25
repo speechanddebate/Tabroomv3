@@ -1,8 +1,8 @@
 <%args>
 	$person
-	$target_id      => undef
+	$chapter
+	$circuit        => undef
 	$property_name  => undef
-	$setting_name   => undef
 	$property_value => 0
 	$flag           => undef
 </%args>
@@ -11,20 +11,13 @@
 	$m->clear_buffer();
 	$r->content_type('application/json');
 
-	unless ($target_id) {
-		$m->print('{ "error": true, "message": "No chapter ID sent"}');
-		$m->abort();
-	}
-
-	unless ($property_name || $setting_name) {
+	unless ($property_name || $circuit) {
 		$m->print('{ "error": true, "message": "No property to change sent"}');
 		$m->abort();
 	}
 
-	my $chapter = Tab::Chapter->retrieve($target_id);
-
 	unless ($chapter) {
-		$m->print('{ "error": true, "message": "No entry found for ID '.$target_id.'"}');
+		$m->print('{ "error": true, "message": "No entry found for ID '.$ARGS{chapter_id}.'"}');
 		$m->abort();
 	}
 
@@ -34,7 +27,7 @@
 
 		my $membership = Tab::ChapterCircuit->search(
 			chapter => $chapter->id,
-			circuit => $setting_name
+			circuit => $circuit->id
 		)->first;
 
 		if ($membership) {
@@ -52,7 +45,7 @@
 		foreach my $membership (
 			Tab::ChapterCircuit->search(
 				chapter => $chapter->id,
-				circuit => $setting_name
+				circuit => $circuit->id
 			)
 		) {
 			$membership->delete();

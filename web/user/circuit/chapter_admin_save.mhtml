@@ -8,6 +8,14 @@
 <%init>
 
 	my $chapter = Tab::Chapter->retrieve($chapter_id);
+
+	unless (Tab::ChapterCircuit->search(
+		chapter => $chapter->id,
+		circuit => $circuit->id
+	)) {
+		$m->comp("/funclib/abort.mas", message => "That chapter is not a member of that circuit.";
+	}
+
 	my $msg;
 	my $err;
 

@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$circuit
 	$all  => undef
 	$name => undef
@@ -14,8 +15,6 @@
 		$name =~ s/[\W_]//g;
 		$limit = " and chapter.name like '".$name."%' "
 	}
-
-	my $dbh = Tab::DBI->db_Main();
 
 	my $sth = $dbh->prepare("
 		select
@@ -65,10 +64,9 @@
 
 		<& "/funclib/tablesorter.mas", table => "members" &>
 
-			<div class="nospace martopmore">
-
+			<div class="flexrow">
 				<span class="half marno">
-					<h4><% scalar( keys %chapters ) %> Members found</h4>
+					<h4><% scalar( keys %chapters ) %> Member Institutions</h4>
 				</span>
 
 				<span
@@ -76,7 +74,6 @@
 					id    = "members_buttonarea"
 				>
 				</span>
-
 			</div>
 
 			<table id="members">
@@ -154,8 +151,8 @@
 									type          = "checkbox"
 									value         = "1"
 									property_name = "full_member"
-									target_id     = "<% $id %>"
-									setting_name  = "<% $circuit->id %>"
+									chapter_id     = "<% $id %>"
+									circuit_id     = "<% $circuit->id %>"
 									onChange      = "postSwitch( this, 'member_switch.mhtml');"
 									<% $chapters{$id}{full} ? 'checked="checked"' : "" %>
 								>
@@ -167,8 +164,8 @@
 						<td class="centeralign">
 							<a
 								class         = "buttonwhite redtext fa fa-sm fa-trash"
-								target_id     = "<% $id %>"
-								setting_name  = "<% $circuit->id %>"
+								chapter_id    = "<% $id %>"
+								circuit_id    = "<% $circuit->id %>"
 								on_success    = "destroy"
 								property_name = "rm_member"
 								onClick       = "postSwitch(this, 'member_switch.mhtml');"

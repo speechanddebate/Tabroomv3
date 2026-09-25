@@ -1,4 +1,5 @@
 <%args>
+	$circuit
 	$tourn_id
 	$admin_id
 	$tag
@@ -14,13 +15,17 @@
 	my $tourn = Tab::Tourn->retrieve($tourn_id);
 	return unless $tourn;
 
-	my $already = Tab::Permission->search(tourn => $tourn->id, person => $admin->id, tag => $tag);
+	my $already = Tab::Permission->search(
+		tourn  => $tourn->id,
+		person => $admin->id,
+		tag    => $tag
+	);
 
-	if ($already) { 
+	if ($already) {
 
 		$already->delete if $inactive;
 
-	} elsif (not defined $inactive) { 
+	} elsif (not defined $inactive) {
 
 		Tab::Permission->create({
 			tourn  => $tourn->id,
@@ -30,8 +35,16 @@
 
 	}
 
+	my $msg = "Permissions for ".$admin->email." change to $tag by circuit admin ".$person->email;
+
+	Tab::ChangeLog->create({
+		tag         => "tabbing",
+		tourn       => $tourn_id,
+		person      => $person,
+		description => $msg
+	});
+
 	return;
 
 </%init>
-
 

@@ -21,6 +21,33 @@
 
 	if ($circuit) {
 
+		my $tourn;
+		my $chapter;
+
+		if ($ARGS{tourn_id}) {
+
+			$tourn = Tab::Tourn->retrieve($tourn->id);
+
+			unless (Tab::TournCircuit->search(
+				circuit => $circuit->id,
+				tourn   => $tourn->id
+			)) {
+				$m->comp("/funclib/abort.mas", message => "That tournament is not a member of that circuit.");
+			}
+		}
+
+		if ($ARGS{chapter_id}) {
+
+			$chapter = Tab::Chapter->retrieve($ARGS{chapter_id});
+
+			unless (Tab::ChapterCircuit->search(
+				chapter => $chapter->id,
+				circuit => $circuit->id
+			)) {
+				$m->comp("/funclib/abort.mas", message => "That chapter is not a member of that circuit.");
+			}
+		}
+
 		unless ($person->site_admin || $perms->{'circuit'}{$circuit_id}) {
 			$m->comp("/funclib/abort.mas", message => "You do not to have access to alter that circuit.");
 			$m->abort();
@@ -28,6 +55,8 @@
 
 		$m->call_next(
 			circuit     => $circuit,
+			chapter     => $chapter,
+			tourn       => $tourn,
 			sweep_award => $sweep_award,
 			sweep_set   => $sweep_set,
 			person      => $person
@@ -35,9 +64,9 @@
 
 	} else {
 
-		undef $sweep_award;
-		undef $sweep_set;
-		$m->call_next();
+		$m->comp("/funclib/abort.mas", message => "You sent an request without a circuit ID");
+		$m->abort();
+
 	}
 
 </%init>
