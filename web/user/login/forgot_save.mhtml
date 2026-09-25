@@ -42,7 +42,7 @@
 		$err = "No valid password change key found";
 		$wipe_sth->execute($target->id);
 
-	} elsif ($target_settings{"pass_changekey"} != $key) {
+	} elsif ($target_settings{"pass_changekey"} ne $key) {
 
 		$err = "No valid password change key found";
 		$wipe_sth->execute($target->id);
@@ -84,7 +84,7 @@
 
 	my $current = $ARGS{"person"};
 
-	if ($current > 0 && $current->site_admin && $current != $target) {
+	if ($current > 0 && $current->site_admin && $current ne $target) {
 		$target->setting('force_password_change', 1);
 	} else {
 		$target->setting('force_password_change', 0);
