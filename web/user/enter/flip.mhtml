@@ -327,7 +327,7 @@
 					</span>
 					<span class="threetenths rightalign">
 						<span class='centeralign padright padleft'>
-							Round start<br />
+							<div class="semibold">Round start</div>
 %							if ($start_time) {
 								<& "/funclib/showdt.mas",
 									string => $start_time,
@@ -384,28 +384,17 @@
 
 					<div
 						id    = "<% $entry_id %>_side"
-						class = "row"
+						class = "row flexrow padvert"
 					>
-
-						<span class="eighth">
+						<span class="third semibold rightalign redtext padvert">
+							Sides chosen:
 						</span>
 
-						<span class="eighth semibold rightalign redtext padsetting">
-						</span>
-
-						<span class="fifth semibold redtext padsetting">
-							Sides chosen!
-						</span>
-
-						<span class="eighth semibold rightalign bluetext">
+						<span class="third semibold centeralign bluetext">
 							Your Side:
-						</span>
-
-						<span class="sixth semibold bluetext">
 							<% $ballot_side == 1 ? $aff_string : "" %>
 							<% $ballot_side == 2 ? $neg_string : "" %>
 						</span>
-
 					</div>
 <%perl>
 				} elsif (
@@ -419,9 +408,8 @@
 						id    = "<% $entry_id %>_side"
 						class = "row <% $entry_id %> flexrow"
 					>
-
 						<span class="third semibold rightalign redtext">
-							Choose side
+							Choose side:
 						</span>
 
 						<span class="sixth semibold centeralign yellowhover">
@@ -530,17 +518,14 @@
 
 						<div
 							id    = "<% $entry_id %>_order"
-							class = "row flexrow"
+							class = "row flexrow padvert"
 						>
-							<span class="third semibold redtext padsetting">
-								Speaking position chosen
+							<span class="third semibold rightalign redtext padvert">
+								Speaking position chosen:
 							</span>
 
-							<span class="third semibold rightalign bluetext marleftmuchmore">
+							<span class="third semibold centeralign bluetext">
 								Your Position:
-							</span>
-
-							<span class="third semibold bluetext">
 								<% $ballot_order == 1 ? "First" : "" %>
 								<% $ballot_order == 2 ? "Second" : "" %>
 							</span>
@@ -558,7 +543,7 @@
 							class = "row <% $entry_id %> flexrow"
 						>
 							<span class="third semibold rightalign redtext">
-								Or, position
+								Choose Speaker Position:
 							</span>
 
 							<span class="sixth semibold centeralign yellowhover">
