@@ -13,6 +13,18 @@
 
 	<div class="main">
 
+		<script>
+			function clearOrder(entryId) {
+				$(`#order_${entryId}_1`).prop('checked', false);
+				$(`#order_${entryId}_2`).prop('checked', false);
+			}
+
+			function clearSide(entryId) {
+				$(`#side_${entryId}_1`).prop('checked', false);
+				$(`#side_${entryId}_2`).prop('checked', false);
+			}
+		</script>
+
 		<h4>Coinflips</h4>
 <%perl>
 
@@ -289,34 +301,53 @@
 				return %{JSON::decode_json($flip)};
 			};
 
+			my $function;
+
+			if ($days > 0 || $hours > 0 || $seconds > 0) {
+				$function = "pullUrl('/api/flip_monitor.mhtml', 'location.reload();')";
+			}
+
 </%perl>
-			<div class='odd padleftmore ltbordervert marbottommore'>
+			<div class='odd padleftmore ltbordervert marbottommore bluebordertop'>
 
-				<span class="half">
-					<h5><% $entry_code %></h5>
-				</span>
-				<span class="half rightalign semibold bigger redtext">
-					<% $event_abbr %>
-				</span>
-
-				<div class="row padsetting">
-
-					<span class="eighth semibold">
+				<div class="full flexrow">
+					<span class="twofifths nospace padtopless">
+						<h5><% $entry_code %></h5>
+					</span>
+					<span class="threetenths semibold">
+						<% $event_abbr %>
 						<% $round_label
 							? $round_label
 							: "Round ".$round_name
 						%>
 						<% $round_flighted > 1
-							? "<br />Flight ".$panel_flight
+							? "Flight ".$panel_flight
 							: ""
 						%>
 					</span>
-
-					<span class="eighth semibold rightalign">
-						Flip deadline
+					<span class="threetenths rightalign">
+						<span class='centeralign padright padleft'>
+							Round start<br />
+%							if ($start_time) {
+								<& "/funclib/showdt.mas",
+									string => $start_time,
+									tz     => $tz,
+									tzname => "yasqueen"
+								&>
+%							} else {
+								<& "/funclib/showdt.mas",
+									string => $timeslot_start,
+									tz     => $tz,
+									tzname => "yasqueen"
+								&>
+%							}
+						</span>
 					</span>
+				</div>
 
-					<span class="fifth">
+				<div class="row padsetting flexrow">
+					<span class="twofifths padleftmore semibold">
+						Flip deadline:
 						<& "/funclib/showdt.mas",
 							dt     => $flip_dt,
 							tz     => $tz,
@@ -324,33 +355,29 @@
 						&>
 					</span>
 
-					<span class="eighth semibold rightalign">
-						Round start
+					<span class="threetenths flexrow orangetext bigger">
+						<span class="padright semibold">
+							Time left
+						</span>
+
+						<span class="padright semibold padbottomless">
+							<& "/funclib/stopwatch.mas",
+								label       => $entry_id."_side_deadline",
+								inline      => "true",
+								autostart   => "true",
+								no_sections => "true",
+								duration    => $time_left,
+								finish      => $function
+							&>
+						</span>
 					</span>
 
-					<span class="fifth">
-%						if ($start_time) {
-							<& "/funclib/showdt.mas",
-								string => $start_time,
-								tz     => $tz,
-								tzname => "yasqueen"
-							&>
-%						} else {
-							<& "/funclib/showdt.mas",
-								string => $timeslot_start,
-								tz     => $tz,
-								tzname => "yasqueen"
-							&>
-%						}
-					</span>
-
-					<span class="fifth semibold rightalign <% $flip_winner == $entry_id ? "greentext" : "redtext" %>">
+					<span class="threetenths semibold rightalign <% $flip_winner == $entry_id ? "greentext" : "redtext" %> padrightmore">
 						<% $flip_winner  == $entry_id
 							? "You WON the flip"
 							: "You LOST the flip"
 						%>
 					</span>
-
 				</div>
 
 %				if ($flip_status eq "done" || $flip{"side_locked"} || (not defined $flip_status)) {
@@ -387,61 +414,53 @@
 					|| ($flip_status eq "loser" && ($flip_winner != $entry_id))
 				) {
 
-
-					my $function;
-
-					if ($days > 0 || $hours > 0 || $seconds > 0) {
-						$function = "pullUrl('/api/flip_monitor.mhtml', 'location.reload();')";
-					}
-
 </%perl>
 					<div
 						id    = "<% $entry_id %>_side"
-						class = "row <% $entry_id %>"
+						class = "row <% $entry_id %> flexrow"
 					>
 
-						<span class="tenth semibold rightalign">
-						</span>
-
-						<span class="sixth semibold rightalign redtext">
+						<span class="third semibold rightalign redtext">
 							Choose side
 						</span>
 
-						<label for="side_<% $entry_id %>_1">
-							<span class="sixth semibold centeralign yellowhover">
+						<span class="sixth semibold centeralign yellowhover">
+							<label for="side_<% $entry_id %>_1">
 								<span class="half nospace">
 									<% $aff_string %>
 								</span>
-								<span class="quarter nospace padtop">
+								<span class="quarter">
 									<input
-										type  = 'radio'
-										class = "notfirst"
-										name  = "side_<% $entry_id %>"
-										id    = "side_<% $entry_id %>_1"
-										value = "1"
+										type    = 'radio'
+										class   = "notfirst"
+										name    = "side_<% $entry_id %>"
+										id      = "side_<% $entry_id %>_1"
+										onClick = "clearOrder('<% $entry_id %>')";
+										value   = "1"
 									>
 								</span>
-							</span>
-						</label>
+							</label>
+						</span>
 
-						<label for="side_<% $entry_id %>_2">
-							<span class="sixth semibold centeralign yellowhover">
+						<span class="sixth semibold centeralign yellowhover">
+							<label for="side_<% $entry_id %>_2">
 								<span class="half nospace">
 									<% $neg_string %>
 								</span>
-								<span class="quarter nospace padtop">
+								<span class="quarter">
 									<input
-										type  = 'radio'
-										class = "notfirst"
-										name  = "side_<% $entry_id %>"
-										id    = "side_<% $entry_id %>_2"
-										value = "2"
+										type    = 'radio'
+										class   = "notfirst"
+										name    = "side_<% $entry_id %>"
+										id      = "side_<% $entry_id %>_2"
+										onClick = "clearOrder('<% $entry_id %>')";
+										value   = "2"
 									>
 								</span>
-							</span>
-						</label>
+							</label>
+						</span>
 
-						<span class="sixth semibold rightalign marno">
+						<span class="third semibold leftalign marno padleftmore">
 							<a
 								class         = "buttonwhite bluetext invert thin"
 								name          = "side"
@@ -458,21 +477,6 @@
 								);"
 							>Confirm</a>
 						</span>
-
-						<span class="sixth semibold rightalign orangetext marno">
-							Time left
-						</span>
-
-						<span class="tenth semibold orangetext bigger marno rightalign true">
-							<& "/funclib/stopwatch.mas",
-								label       => $entry_id."_side_deadline",
-								inline      => "true",
-								autostart   => "true",
-								no_sections => "true",
-								duration    => $time_left,
-								finish      => $function
-							&>
-						</span>
 					</div>
 <%perl>
 				} else {
@@ -481,20 +485,22 @@
 						$time_left->add(seconds => 2);
 					}
 
-					my $function;
+					undef $function;
 
-					if ($days > 0 || $hours > 0 || $seconds > 0) {
-						$function = "location.reload();";
+					if (
+						$flip_status eq "anyone"
+						|| ($flip_status eq "winner" && $flip_winner == $entry_id)
+						|| ($flip_status eq "loser" && ($flip_winner != $entry_id))
+					) {
+						if ($days > 0 || $hours > 0 || $seconds > 0) {
+							$function = "location.reload();";
+						}
 					}
 </%perl>
 					<div
 						id    = "<% $entry_id %>_side"
-						class = "padvertless row <% $entry_id %>"
+						class = "padvertless row <% $entry_id %> flexrow"
 					>
-
-						<span class="seventh marleftmore padleft semibold rightalign">
-						</span>
-
 						<span class="third marrightmore semibold orangetext padsetting">
 							Opponent's Choice
 						</span>
@@ -524,21 +530,17 @@
 
 						<div
 							id    = "<% $entry_id %>_order"
-							class = "row"
+							class = "row flexrow"
 						>
-
-							<span class="eighth marleftmore marrightmore">
-							</span>
-
-							<span class="quarter semibold redtext padsetting">
+							<span class="third semibold redtext padsetting">
 								Speaking position chosen
 							</span>
 
-							<span class="fifth semibold rightalign bluetext marleftmuchmore">
+							<span class="third semibold rightalign bluetext marleftmuchmore">
 								Your Position:
 							</span>
 
-							<span class="sixth semibold bluetext">
+							<span class="third semibold bluetext">
 								<% $ballot_order == 1 ? "First" : "" %>
 								<% $ballot_order == 2 ? "Second" : "" %>
 							</span>
@@ -550,60 +552,52 @@
 						|| ($flip_status eq "winner" && $flip_winner == $entry_id)
 						|| ($flip_status eq "loser" && ($flip_winner != $entry_id))
 					) {
-
-						my $function;
-
-						if ($days > 0 || $hours > 0 || $seconds > 0) {
-							$function = "pullUrl('/api/flip_monitor.mhtml', 'location.reload();')";
-						}
 </%perl>
 						<div
 							id    = "<% $entry_id %>_order"
-							class = "row <% $entry_id %>"
+							class = "row <% $entry_id %> flexrow"
 						>
-
-							<span class="tenth semibold rightalign">
-							</span>
-
-							<span class="sixth semibold rightalign redtext">
+							<span class="third semibold rightalign redtext">
 								Or, position
 							</span>
 
-							<label for="order_<% $entry_id %>_1">
-								<span class="sixth semibold centeralign yellowhover">
+							<span class="sixth semibold centeralign yellowhover">
+								<label for="order_<% $entry_id %>_1">
 									<span class="half nospace">
 										First
 									</span>
-									<span class="quarter nospace padtop">
+									<span class="quarter">
 										<input
-											type  = 'radio'
-											class = "notfirst"
-											name  = "order_<% $entry_id %>"
-											id    = "order_<% $entry_id %>_1"
-											value = "1"
+											type    = 'radio'
+											class   = "notfirst"
+											name    = "order_<% $entry_id %>"
+											id      = "order_<% $entry_id %>_1"
+											onClick = "clearSide('<% $entry_id %>')";
+											value   = "1"
 										>
 									</span>
-								</span>
-							</label>
+								</label>
+							</span>
 
-							<label for="order_<% $entry_id %>_2">
-								<span class="sixth semibold centeralign yellowhover">
+							<span class="sixth semibold centeralign yellowhover">
+								<label for="order_<% $entry_id %>_2">
 									<span class="half nospace">
 										Second
 									</span>
-									<span class="quarter nospace padtop">
+									<span class="quarter">
 										<input
-											type  = 'radio'
-											class = "notfirst"
-											name  = "order_<% $entry_id %>"
-											id    = "order_<% $entry_id %>_2"
-											value = "2"
+											type    = 'radio'
+											class   = "notfirst"
+											name    = "order_<% $entry_id %>"
+											id      = "order_<% $entry_id %>_2"
+											onClick = "clearSide('<% $entry_id %>')";
+											value   = "2"
 										>
 									</span>
-								</span>
-							</label>
+								</label>
+							</span>
 
-							<span class="sixth semibold rightalign marno">
+							<span class="third semibold leftalign marno padleftmore">
 								<a
 									class         = "buttonwhite bluetext invert thin"
 									name          = "order"
@@ -621,11 +615,6 @@
 								>Confirm</a>
 							</span>
 
-							<span class="sixth semibold rightalign orangetext marno">
-							</span>
-
-							<span class="tenth semibold orangetext bigger marno rightalign true">
-							</span>
 						</div>
 %					}
 %				}
