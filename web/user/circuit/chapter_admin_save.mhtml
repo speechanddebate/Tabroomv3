@@ -13,7 +13,7 @@
 		chapter => $chapter->id,
 		circuit => $circuit->id
 	)) {
-		$m->comp("/funclib/abort.mas", message => "That chapter is not a member of that circuit.";
+		$m->comp("/funclib/abort.mas", message => "That chapter is not a member of that circuit.");
 	}
 
 	my $msg;

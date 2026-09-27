@@ -349,11 +349,13 @@
 						eval {$_->delete(); };
 					}
 
-					Tab::Score->create({
-						ballot   => $po_ballot->id,
-						value    => $ARGS{"po_rank_".$po_entry->id},
-						tag      => "rank"
-					});
+					if ($ARGS{"po_rank_".$po_entry->id}) {
+						Tab::Score->create({
+							ballot   => $po_ballot->id,
+							value    => $ARGS{"po_rank_".$po_entry->id},
+							tag      => "rank"
+						});
+					}
 				}
 			}
 		}

@@ -143,12 +143,14 @@
 				$panel->letter
 			)->first;
 
-			foreach my $ballot ($po_panel->ballots( judge => $judge)) {
-				unless ($ballot->audit) {
-					$ballot->audit(1);
-					$ballot->audited_by($person->id);
-					$ballot->update();
-					$change++;
+			if ($po_panel) {
+				foreach my $ballot ($po_panel->ballots( judge => $judge)) {
+					unless ($ballot->audit) {
+						$ballot->audit(1);
+						$ballot->audited_by($person->id);
+						$ballot->update();
+						$change++;
+					}
 				}
 			}
 		}
