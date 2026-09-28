@@ -90,12 +90,14 @@
 
 		if ($done{$student_id}) {
 
-			unless($done{$student_id}{"event"}) {
-				$done{$student_id}{"event"} = $event_code;
-			}
+			foreach my $tag ("event", "supp") {
 
-			unless($done{$student_id}{"supp"}) {
-				$done{$student_id}{"supp"} = $supp_code;
+				my $code = $tag eq "event" ? $event_code : $supp_code;
+				next unless $code;
+				next if grep { $_ eq $code } split(/,/, $done{$student_id}{$tag});
+
+				$done{$student_id}{$tag} .= "," if $done{$student_id}{$tag};
+				$done{$student_id}{$tag} .= $code;
 			}
 
 		} else {
@@ -223,11 +225,11 @@
 		my @people;
 
 		if ($chapters{$chapter_id}{"students"}) {
-			push @people, sort {$_->{"last"} cmp $_->{"last"}} @{$chapters{$chapter_id}{"students"}};
+			push @people, sort {$a->{"last"} cmp $b->{"last"}} @{$chapters{$chapter_id}{"students"}};
 		}
 
 		if ($chapters{$chapter_id}{"judges"}) {
-			push @people, sort {$_->{"last"} cmp $_->{"last"}} @{$chapters{$chapter_id}{"judges"}};
+			push @people, sort {$a->{"last"} cmp $b->{"last"}} @{$chapters{$chapter_id}{"judges"}};
 		}
 
 		foreach my $person (@people) {
@@ -249,13 +251,15 @@
 			$m->print('"'.$person->{"state"}.'"');
 			$m->print(',');
 
-			if ($person->{'event'} eq "ATTN") { 
+			if ($person->{'event'} && not grep { $_ ne "ATTN" } split(/,/, $person->{'event'})) {
 				$m->print('"attendee"');
 				$m->print(',');
 			} elsif ($person->{'event'}) {
 				$m->print('"'.$person->{"type"}.'"');
 				$m->print(',');
-				$m->print('"'.$person->{"event"}.'"');
+				$m->print('"'.$person->{"event"});
+				$m->print(','.$person->{"supp"}) if $person->{"supp"};
+				$m->print('"');
 			} else {
 				$m->print('"supp only"');
 				$m->print(',');
