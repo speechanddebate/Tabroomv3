@@ -3,6 +3,7 @@
 	$label              => undef
 	$new_form           => undef
 	$entry_release_form => undef
+	$judge_release_form => undef
 </%args>
 <%init>
 
@@ -54,6 +55,24 @@
 		$tourn->setting("entry_release", $filename);
 		$msg = "Entry release form template has been uploaded";
 
+	} elsif ($judge_release_form) {
+
+		my $req = Apache2::Request->new($r);
+		my $upload = $req->upload("judge_release_form");
+		my $filename  = $upload->filename;
+
+		$filename =~ s/[^\w.]//g;
+		$filename =~ s/\.(?=.*\.)//g;
+		$filename =~ s/\s//g;
+		$filename = substr($filename, 0, 120);
+
+		my $filetemp = $upload->tempname;
+
+		if ($filename && $filetemp) {
+			system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$filename;
+			$tourn->setting("judge_release", $filename);
+			$msg = "Judge form template has been uploaded";
+		}
 	}
 
 	# Da fuq even is this?

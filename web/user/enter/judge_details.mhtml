@@ -1038,6 +1038,16 @@
 
 	<div class="menu">
 
+%		if ($judge->school == $school->id) {
+			<& "/funclib/judge_release.mas",
+				judge          => $judge,
+				tourn          => $tourn,
+				tourn_settings => \%tourn_settings,
+				action         => "judge_release_upload.mhtml",
+				hidden         => { school_id => $school->id }
+			&>
+%		}
+
 		<div class="sidenote">
 
 			<h4>Active Conflicts</h4>

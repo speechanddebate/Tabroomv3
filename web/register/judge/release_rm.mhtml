@@ -1,0 +1,39 @@
+<%args>
+	$person
+	$tourn
+	$judge_id => undef
+</%args>
+<%init>
+
+	my $judge = Tab::Judge->retrieve($judge_id) if $judge_id;
+
+	unless ($judge && $judge->category && $judge->category->tourn == $tourn->id) {
+		$m->comp("/funclib/abort.mas",
+			message => "No judge found with ID ".int($judge_id)." in this tournament"
+		);
+	}
+
+	my $filename = $judge->setting("judge_release");
+	my $msg = "No judge form on file for ".$judge->first." ".$judge->last;
+
+	if ($filename) {
+
+		system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$judge->id."/".$filename;
+
+		$judge->setting("judge_release", 0);
+		$judge->setting("judge_release_at", 0);
+		$judge->setting("judge_release_by", 0);
+
+		$m->comp("/funclib/log.mas",
+			type        => "registration",
+			tourn       => $tourn->id,
+			person      => $person->id,
+			description => "Judge form ".$filename." deleted for ".$judge->first." ".$judge->last
+		);
+
+		$msg = "Judge form deleted for ".$judge->first." ".$judge->last;
+	}
+
+	$m->redirect("edit.mhtml?judge_id=".$judge->id."&msg=$msg");
+
+</%init>

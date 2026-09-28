@@ -1,0 +1,32 @@
+<%args>
+	$person
+	$judge => undef
+</%args>
+<%init>
+
+	unless ($judge && ($person->site_admin || $judge->person == $person->id)) {
+		$m->comp("/funclib/abort.mas", message => "No judge record found");
+	}
+
+	my $tourn = $judge->category->tourn;
+
+	unless ($tourn->setting("judge_release")) {
+		$m->comp("/funclib/abort.mas", message => $tourn->name." does not ask judges for a form");
+	}
+
+	my $req = Apache2::Request->new($r);
+
+	my $filename = $m->comp("/funclib/judge_release_save.mas",
+		judge    => $judge,
+		tourn    => $tourn,
+		person   => $person,
+		upload   => $req->upload("judge_release_form"),
+		deadline => 1
+	);
+
+	my $msg = $filename ? "Your form has been uploaded" : "";
+	my $err = $filename ? "" : "No valid upload processed";
+
+	$m->redirect("release.mhtml?judge_id=".$judge->id."&msg=$msg&err=$err");
+
+</%init>

@@ -21,6 +21,14 @@
 		$tourn->setting("entry_release", 0);
 		$message = "Entry release form deleted";
 
+	} elsif ($target_id eq "judge_release") {
+
+		my $filename = $tourn_settings->{"judge_release"};
+		system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$filename;
+
+		$tourn->setting("judge_release", 0);
+		$message = "Judge form template deleted";
+
 	} else {
 
 		my $form = Tab::File->retrieve($target_id);
