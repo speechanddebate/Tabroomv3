@@ -205,6 +205,114 @@
 %		}
 
 <%perl>
+		if (
+			$tourn_settings{"entry_upload"}
+			&& (grep { not defined $_->event->setting("skip_entry_upload") } @entries)
+		) {
+
+			my %eligibility_forms = eval {
+				return %{JSON::decode_json($school->setting("eligibility_forms"))};
+			};
+
+			my $release_deadline = $m->comp("/funclib/release_deadline.mas",
+				tourn   => $tourn,
+				entries => \@entries
+			);
+</%perl>
+			<div class="sidenote">
+
+				<h4>Eligibility Documentation</h4>
+
+%				if ($tourn_settings{"entry_upload_text"}) {
+					<p class="smallish">
+						<% $tourn_settings{"entry_upload_text"} %>
+					</p>
+%				}
+
+%				if ($eligibility_forms{$student->id}) {
+					<div class="ltbordertop">
+						<span class="fa fa-lg fa-check fa-lg greentext fifth centeralign marvertno">
+						</span>
+
+						<span class="fourfifths padvertless">
+							<a
+								class = "greentext semibold link-underline"
+								href  = "<% $Tab::s3_url %>/<% $tourn->id."/eligibility/".$school->id."/".$student->id."/".$eligibility_forms{$student->id} %>"
+							> <% $eligibility_forms{$student->id} %> </a>
+						</span>
+					</div>
+
+%				} else {
+					<div class="ltbordertop">
+						<span
+							class="fa fa-2x fa-times redtext marno sixth centeralign"
+						></span>
+
+						<span class="semibold redtext padvert threequarters">
+							Not Complete
+						</span>
+					</div>
+%				}
+
+%				if ((not defined $release_deadline) || $now < $release_deadline) {
+					<form
+						action  = "release_upload.mhtml"
+						enctype = "multipart/form-data"
+						method  = "post"
+					>
+
+						<input type = "hidden"
+							name    = "school_id"
+							value   = "<% $school->id %>"
+						>
+
+						<input type = "hidden"
+							name    = "student_id"
+							value   = "<% $student->id %>"
+						>
+
+						<div class="full ltbordertop">
+							<div class="uploader dynamic">
+								<input
+									type     = "file"
+									name     = "eligibility_form"
+									id       = "eligibility_form"
+									style    = "opacity: 0;"
+									onchange = "uploaderName(
+										'eligibility_form',
+										'eligibility_form_file'
+									)"
+								>
+
+								<span
+									id  = "eligibility_form_file"
+									class = "filename"
+									style = "-webkit-user-select: none;"
+								>Upload File</span>
+
+								<span
+									class = "action"
+									style = "-webkit-user-select: none;"
+								>Choose File</span>
+							</div>
+						</div>
+
+						<div class="liblrow rightalign padvertless">
+							<span class="centeralign third nospace">
+								<input type="submit" class="thin" value="Upload">
+							</span>
+						</div>
+
+					</form>
+%				} else {
+					<p class="semibold redtext centeralign">
+						The deadline for eligibility uploads has passed.
+					</p>
+%				}
+			</div>
+%		}
+
+<%perl>
 		my $notfirst;
 
 		foreach my $event_id (@ok_event_keys) {

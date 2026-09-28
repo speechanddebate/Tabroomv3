@@ -1,0 +1,30 @@
+<%args>
+	$tourn
+	$entries => undef
+</%args>
+<%init>
+
+	my $release_deadline = $tourn->setting("release_deadline");
+	my $drop_deadline = $tourn->setting("drop_deadline") || $tourn->reg_end;
+
+	if ($tourn->setting("nsda_district") && $entries) {
+
+		foreach my $entry (@{$entries}) {
+
+			my $weekend = Tab::Weekend->retrieve($entry->event->setting("weekend"));
+			next unless $weekend;
+
+			my $deadline = $weekend->drop_deadline || $weekend->reg_end;
+			next unless $deadline;
+
+			if ((not defined $release_deadline) || $deadline < $release_deadline) {
+				$release_deadline = $deadline;
+			}
+		}
+	}
+
+	$release_deadline = $drop_deadline unless $release_deadline;
+
+	return $release_deadline;
+
+</%init>
