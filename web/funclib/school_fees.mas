@@ -111,6 +111,7 @@
 			$schools->{"concession_fee_discount"}{$school_id} = $school_settings->{$school_id}{'concession_fee_discount'};
 			$schools->{"individuals"}{$school_id}             = $school_settings->{$school_id}{'individuals'};
 			$schools->{"entry_fee_discount"}{$school_id}      = $school_settings->{$school_id}{'entry_fee_discount'};
+			$schools->{"entry_fee_percent_off"}{$school_id}   = $school_settings->{$school_id}{'entry_fee_percent_off'};
 			$schools->{"judge_surcharge"}{$school_id}         = $school_settings->{$school_id}{'judge_surcharge'};
 
 		} else {
@@ -129,6 +130,7 @@
 			$schools->{"concession_fee_discount"}{$school_id} = $school->setting('concession_fee_discount');
 			$schools->{"individuals"}{$school_id}             = $school->setting('individuals');
 			$schools->{"entry_fee_discount"}{$school_id}      = $school->setting('entry_fee_discount');
+			$schools->{"entry_fee_percent_off"}{$school_id}   = $school->setting('entry_fee_percent_off');
 			$schools->{"judge_surcharge"}{$school_id}         = $school->setting('judge_surcharge');
 		}
 	}
@@ -1217,6 +1219,23 @@
 	my %totals = ();
 
 	if ($entry_fees) {
+
+		if ($schools->{"entry_fee_percent_off"}{$school_id}) {
+			my $discount = $only_entry_fees * ($schools->{"entry_fee_percent_off"}{$school_id} / 100);
+			$discount = nearest(.01, $discount);
+			$only_entry_fees -= $discount;
+			$total_entry_fees -= $discount;
+			$total -= $discount;
+
+			my %discount_line = ();
+			$discount_line{"name"} = $schools->{"entry_fee_percent_off"}{$school_id}."% discount to entry fees";
+			$discount_line{"short_name"} = $schools->{"entry_fee_percent_off"}{$school_id}."% off entry fees";
+			$discount_line{"quantity"} = 1;
+			$discount_line{"per_unit"} = $discount;
+			$discount_line{"fee"} = -1 * $discount;
+			push (@felines, {%discount_line});
+		}
+
 		if ($schools->{"all_fee_discount"}{$school_id}) {
 			my $discount = $total_entry_fees * ($schools->{"all_fee_discount"}{$school_id} / 100);
 			$discount = nearest(.01, $discount);
