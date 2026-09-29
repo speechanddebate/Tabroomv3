@@ -195,7 +195,7 @@
 		my ($message, $panel) = @_;
 
 		my $client = REST::Client->new(
-			 host => $Tab::url_prefix
+			 host => $Tab::app_url_prefix
 		);
 
 		my %send_message = (

@@ -592,7 +592,7 @@
 			&& (not defined $tourn_settings{'nsda_nats'})
 		) {
 
-			$m->print("Pairing ".$round->realname." of ".$aq->{event_name}." <br />");
+			$m->print("Posting prelim results for ".$round->realname." of ".$aq->{event_name}." <br />");
 			$m->flush_buffer();
 
 			my $description = "Auto-created prelim results sheets for ".$aq->{event_abbr};
