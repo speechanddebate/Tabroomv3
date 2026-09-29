@@ -24,6 +24,14 @@
 
 	$prune_sth->execute();
 
+	$prune_sth = $dbh->prepare("
+		delete fa.* from panel_setting fa
+			where fa.tag = 'flip_at'
+			and fa.value_date  < (NOW() - INTERVAL 1 HOUR)
+	");
+
+	$prune_sth->execute();
+
 	my $sth = $dbh->prepare("
 		select
 			panel.id,
