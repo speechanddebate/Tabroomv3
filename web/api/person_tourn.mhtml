@@ -4,6 +4,8 @@
 </%args>
 <%init>
 
+	return;
+
     # Written by ATH, Apr. 2020
     use JSON;
     my $json = JSON->new->allow_nonref;
