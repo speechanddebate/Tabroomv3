@@ -16,7 +16,6 @@
 		$m->redirect("new_user.mhtml?err=$err");
 	}
 
-
 	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
 	my $key = $ip.$now->day_of_year.$now->hour.$Tab::string;
 	my $sha_check = crypt($key, '$6$'.$salt);

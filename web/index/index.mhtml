@@ -287,11 +287,16 @@
 		}
 
 		unless ($msnats || $nats || $ncfl) {
-			my $duration = $cache{"date"}{$tourn_end} - $cache{"date"}{$tourn_start};
-			if (
-				$duration->in_units('months') > 0
-				|| $duration->in_units('days') > 6
-			) {
+			if ($cache{"date"}{$tourn_end} - $cache{"date"}{$tourn_start}) {
+				my $duration = $cache{"date"}{$tourn_end} - $cache{"date"}{$tourn_start};
+
+				if (
+					$duration->in_units('months') > 0
+					|| $duration->in_units('days') > 6
+				) {
+					$tourns{$tourn_id}{"sort_nuke"} = 1;
+				}
+			} else {
 				$tourns{$tourn_id}{"sort_nuke"} = 1;
 			}
 		}

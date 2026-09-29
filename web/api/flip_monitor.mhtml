@@ -3,6 +3,15 @@
 </%args>
 <%init>
 
+	$m->print("You are here, ".$ENV{HTTP_X_FORWARDED_FOR}."\n");
+
+	if ($ENV{HTTP_X_FORWARDED_FOR} eq "127.0.0.1") {
+		$m->print("The call....is coming from INSIDE THE HOUSE\n");
+	}
+
+	$m->flush_buffer();
+	$m->abort();
+
 	my $dbh = Tab::DBI->db_Main();
 	my $limit;
 

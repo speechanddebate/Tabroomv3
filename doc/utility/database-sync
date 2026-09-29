@@ -33,17 +33,17 @@ if [[ ${hostname} != ${prodserver1} ]]; then
 		cp -L /backup/tabroom/latest/tabroom.tar /tmp/tabroom.tar
 	else
 		echo "Downloading latest database backup"
-		aws s3 cp s3://nsda-backups/00-latest/tabroom.tar  /tmp/tabroom.tar
+		b2 file download b2://nsda-backups/00-latest/tabroom.tar  /tmp/tabroom.tar
 	fi
 
 	echo "Opening data archive"
 	tar xvf /tmp/tabroom.tar -C /tmp/
 
 	echo "Deleting old tabroom database"
-	mysqladmin -u ${user} -f drop ${database}
+	mariadb-admin -u ${user} -f drop ${database}
 
 	echo "Creating new blank tabroom database"
-	mysqladmin -u ${user} create ${database}
+	mariadb-admin -u ${user} create ${database}
 
 	echo "Loading datafile into new database"
 	myloader --defaults-extra-file ~/.my.cnf --directory /tmp/tabroom -v 4 --threads 32 --database ${database}
