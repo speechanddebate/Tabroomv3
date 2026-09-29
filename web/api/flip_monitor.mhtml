@@ -3,9 +3,11 @@
 </%args>
 <%init>
 
-	$m->print("You are here, ".$ENV{HTTP_X_FORWARDED_FOR}."\n");
+	my $ip = $ENV{HTTP_X_FORWARDED_FOR} || $ENV{REMOTE_ADDR};
 
-	if ($ENV{HTTP_X_FORWARDED_FOR} eq "127.0.0.1") {
+	$m->print("You are here, ".$ip."\n\n");
+
+	if ($ip eq "127.0.0.1" || (index ($ip, "172.18") != -1)) {
 		$m->print("The call....is coming from INSIDE THE HOUSE\n");
 	}
 
