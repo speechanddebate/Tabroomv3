@@ -1,13 +1,19 @@
 <%args>
+	$api_key => undef
 	$room_id   => undef
 	$person_id => undef
 	$tourn_id  => undef
+	$person   => undef
+	$session  => undef
 </%args>
 <%init>
 
+	unless ($person && $session && $session->id > 0) {
+		$m->comp("local_only.mas");
+	}
+
     $m->clear_buffer();
     $r->content_type('application/json');
-
 
 	my %sections;
 	my $done;
@@ -214,9 +220,6 @@
 		$m->print(JSON::encode_json(\%output));
 		$m->abort();
 	}
-
-	;
-
 
 	unless ($done) {
 		my %output = (

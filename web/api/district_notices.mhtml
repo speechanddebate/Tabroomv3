@@ -1,27 +1,17 @@
 <%args>
-
+	$person   => undef
+	$session  => undef
 </%args>
 <%init>
+
+	unless ($person && $session && $session->id > 0) {
+		$m->comp("local_only.mas");
+	}
 
 	# Apparently we're not doing this anymore. Maybe someday the way we run
 	# everything won't change every ten minutes. Not holding my breath.
 
 	return;
-
-
-	# Piss off, LinkedIn.
-	my $remote_ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{"REMOTE_ADDR"};
-
-	unless (
-		$remote_ip eq "127.0.0.1"
-		|| $remote_ip eq "172.105.148.25"
-		|| (index($remote_ip, "10.19.25") != -1)
-		|| (index($remote_ip, "10.19.26") != -1)
-	) {
-		$m->print('{ "error": true, "message": "Access Denied to External Hosts"}');
-		$m->abort();
-	}
-
 
 	my $tz = "America/Chicago";
 

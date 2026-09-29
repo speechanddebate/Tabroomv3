@@ -3,6 +3,8 @@
 </%args>
 <%init>
 
+	$m->comp("local_only.mas");
+
 	use List::Util 'shuffle';
 	use REST::Client;
 	use MIME::Base64;

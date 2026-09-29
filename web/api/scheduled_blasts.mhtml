@@ -3,6 +3,10 @@
 </%args>
 <%init>
 
+	return;
+
+	# Legacy code moved to Masoncards JS
+
 	Tab::RoundSetting->set_sql(
 		passed => '
 			select * from round_setting

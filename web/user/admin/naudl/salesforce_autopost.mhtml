@@ -7,8 +7,14 @@
 	$download        => undef
 	$now
 	$dbh
+	$person   => undef
+	$session  => undef
 </%args>
 <%init>
+
+	unless ($person && $session && $session->id > 0) {
+		$m->comp("/api/local_only.mas");
+	}
 
 	use MIME::Base64;
 	use REST::Client;

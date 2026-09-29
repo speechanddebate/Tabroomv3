@@ -1,8 +1,14 @@
 <%args>
 	$chapter_id  => undef
 	$district_id => undef
+	$person   => undef
+	$session  => undef
 </%args>
 <%init>
+
+	unless ($person && $session && $session->id > 0) {
+		$m->comp("local_only.mas");
+	}
 
 	my $limit;
 
