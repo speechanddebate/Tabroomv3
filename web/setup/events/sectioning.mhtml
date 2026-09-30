@@ -416,6 +416,28 @@
 								</span>
 							</div>
 						</label>
+
+						<div
+							class ="hover row flexrow"
+							id    ="option_set_speaker_order"
+							title = "Use this option when all rounds are flip but the speaker order is set"
+						>
+							<label for="set_speaker_order">
+								<span class="fivesixths padleft">
+									Speaker order is fixed
+								</span>
+
+								<span class="sixth centeralign">
+									<& "/funclib/bool_switch.mas",
+										tag      => "set_speaker_order",
+										value    => $event_settings->{"set_speaker_order"},
+										event_id => $event,
+										function => "checkFlip();",
+										smaller  => 1,
+									&>
+								</span>
+							</label>
+						</div>
 %					}
 
 					<label for="school_debates_self">
@@ -1247,8 +1269,11 @@
 				function checkFlip() {
 					if ($("#no_side_constraints").prop("checked") ) {
 						$(".no_side_constraints").addClass('itooamhidden');
+						$("#option_set_speaker_order").removeClass('hidden');
 					} else {
+						$("#set_speaker_order").prop("checked", false);
 						$(".no_side_constraints").removeClass('itooamhidden');
+						$("#option_set_speaker_order").addClass('hidden');
 					}
 					fixVisual();
 				}

@@ -515,7 +515,6 @@
 
 					if ($flip_status eq "done" || $flip{"order_locked"}) {
 </%perl>
-
 						<div
 							id    = "<% $entry_id %>_order"
 							class = "row flexrow padvert"

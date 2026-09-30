@@ -91,6 +91,7 @@
 
 	if ($setting_name eq "no_side_constraints" && $property_value == 1) {
 		$event->setting("allow_repeat_prelim_side", 0);
+		$event->setting("set_speaker_order", 0);
 	}
 
 	my @setvalues;

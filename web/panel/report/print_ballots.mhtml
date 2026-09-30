@@ -580,14 +580,12 @@
 		}
 
 		foreach my $round_id (keys (%rounds)) {
-
 			next unless $rounds{$round_id}{event_type} eq "wsdc";
 			my $event_id = $rounds{$round_id}{'event_id'};
 
 			$rounds{$round_id}{ws_scores} = $ws_stuff{$event_id}{ws_scores} ;
 			$rounds{$round_id}{max_points} = $ws_stuff{$event_id}{max_points} ;
 			$rounds{$round_id}{min_points} = $ws_stuff{$event_id}{min_points} ;
-
 		}
 	}
 

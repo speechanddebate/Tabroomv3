@@ -11,13 +11,13 @@
 	if ($panel) {
 		$panel_id = $panel->id;
 	}
+
 	if ($round) {
 		$round_id = $round->id;
 	}
 
 	$round_id = int($round_id);
 	$panel_id = int($panel_id);
-
 	my $limit;
 
 	if ($panel_id > 0) {
@@ -45,10 +45,10 @@
 
 		where ballot.panel = panel.id
 			and panel.bye != 1
-			and ballot.entry = es.entry
-			and es.student = student.id
+			and ballot.entry   = es.entry
+			and es.student     = student.id
 			and student.person = sp.id
-			and sp.no_email = 0
+			and sp.no_email    = 0
 			$limit
 	");
 
@@ -60,13 +60,13 @@
 
 		where 1=1
 
-			and panel.round      = ?
-			and panel.id         = ballot.panel
-			and ballot.entry     = entry.id
-			and entry.school     = school.id
-			and school.id        = contact.school
-			and contact.person   = person.id
-			and person.no_email  = 0
+			and panel.round     = ?
+			and panel.id        = ballot.panel
+			and ballot.entry    = entry.id
+			and entry.school    = school.id
+			and school.id       = contact.school
+			and contact.person  = person.id
+			and person.no_email = 0
 
 			and panel.bye != 1
 

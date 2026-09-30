@@ -1681,7 +1681,13 @@
 
 %							if ($event_type eq "mock_trial") {
 
-%							} elsif ($event_type ne "wsdc" && $event_settings{"no_side_constraints"}) {
+<%perl>
+							} elsif (
+								$event_type ne "wsdc"
+								&& $event_settings{"no_side_constraints"}
+								&& (not defined $event_settings{"set_speaker_order"})
+							) {
+</%perl>
 								<th>
 									Speaking Position
 								</th>
@@ -2023,6 +2029,7 @@
 									</td>
 <%perl>
 									if ($event_settings{"no_side_constraints"}
+										&& (not defined $event_settings{"set_speaker_order"})
 										&& (not defined $event_settings{"flip_online"})
 										&& ($event_type ne "mock_trial")
 									) {
@@ -2059,9 +2066,13 @@
 
 											</select>
 										</td>
-
-%									} elsif ($event_settings{"no_side_constraints"} && $event_settings{"flip_online"}) {
-
+<%perl>
+									} elsif (
+										$event_settings{"no_side_constraints"}
+										&& $event_settings{"flip_online"}
+										&& (not defined $event_settings{"set_speaker_order"})
+									) {
+</%perl>
 										<td class='centeralign'>
 											<% $ballot->speakerorder == 1 ? "1st Speakers" : ""%>
 											<% $ballot->speakerorder == 2 ? "2nd Speakers" : ""%>
