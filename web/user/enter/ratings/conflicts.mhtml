@@ -267,8 +267,8 @@
 										type        = "checkbox"
 										value       = "1"
 										id          = "<% $judge->id %>_conflict"
-										entry_id    = "<% $entry_id ? "entry" %>"
-										school_id   = "<% $school_id ? "school" %>"
+										entry_id    = "<% $entry_id ? $entry_id : "" %>"
+										school_id   = "<% $school ? $school->id : "" %>"
 										judge_id    = "<% $judge->id %>"
 										onChange    = "postSwitch( this, 'conflict_switch.mhtml');"
 										<% $conflicts_by_id{$judge->id} ? 'checked="checked"' : "" %>

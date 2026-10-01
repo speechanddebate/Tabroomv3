@@ -4,7 +4,7 @@
 	$perms
 	$judge_id       => undef
 	$entry_id       => undef
-	$school_id      => undef
+	$school         => undef
 	$property_value => undef
 </%args>
 <%init>
@@ -17,15 +17,13 @@
 		$m->abort();
 	}
 
-	unless ($property_name) {
+	unless ($entry_id || $school) {
 		$m->print('{ "error": true, "message": "No entry ID sent"}');
 		$m->abort();
 	}
 
 	my $judge = Tab::Judge->retrieve($judge_id);
-
 	my $entry = Tab::Entry->retrieve($entry_id);
-	my $school = Tab::School->retrieve($school_id);
 
 	unless ($judge) {
 		$m->print('{ "error": true, "message": "No judge found for ID '.$judge_id.'"}');
@@ -33,7 +31,7 @@
 	}
 
 	unless ($entry || $school) {
-		$m->print('{ "error": true, "message": "No school or entry found for ID '.$property_name.'"}');
+		$m->print('{ "error": true, "message": "No school or entry found for ID"}');
 		$m->abort();
 	}
 
