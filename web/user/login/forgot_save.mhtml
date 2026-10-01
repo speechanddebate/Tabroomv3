@@ -1,4 +1,6 @@
 <%args>
+	$dbh
+	$now
 	$id    => undef
 	$key   => undef
 	$pass1 => undef
@@ -12,17 +14,14 @@
 	$m->abort unless $pass1;
 	$m->abort unless $pass2;
 
-	my $now = DateTime->now();
 	my $target = Tab::Person->retrieve($id);
 
 	unless ($target) {
 		$m->comp("/funclib/abort.mas", message => "Invalid account ID sent");
 	}
 
-	my %target_settings = $target->all_settings();
 	my $err;
-
-	my $dbh = Tab::DBI->db_Main();
+	my %target_settings = $target->all_settings();
 
 	my $wipe_sth = $dbh->prepare("
 		delete ps.* from person_setting ps
