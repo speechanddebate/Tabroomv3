@@ -26,7 +26,6 @@
 		"elim_only_ratings",
 		"cumulate_mjp",
 		"pref_jpool",
-		"school_strikes",
 		"prefs",
 	) {
 		my $value = $ARGS{$tag};
@@ -74,9 +73,7 @@
 
 	my $err;
 
-	if ( ($ARGS{"entry_strikes"} || $ARGS{"school_strikes"})
-		&& $ARGS{"prefs"}
-	) {
+	if ( $ARGS{"entry_strikes"} && $ARGS{"prefs"} ) {
 		$err = "You cannot offer both judge preferences AND strikes.  Strikes are part of prefs anyway";
 		$m->redirect("/setup/judges/ratings.mhtml?category_id=$category_id&err=$err");
 	}

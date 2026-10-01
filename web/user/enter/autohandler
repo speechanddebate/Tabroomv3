@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$person
 	$person_settings
 	$perms
@@ -10,213 +11,197 @@
 </%args>
 <%init>
 
+	# These functions self display based on the person record inbound from the
+	# session.
+
 	if (
 		$r->uri eq "/user/enter/strike_cards.mhtml"
 		|| $r->uri eq "/user/enter/strike_card_save.mhtml"
-		|| $r->uri eq "/user/enter/signup_switch.mhtml"
-		|| $r->uri eq "/user/enter/signup_all.mhtml"
-		|| $r->uri eq "/user/enter/ratings/conflict_switch.mhtml"
-		|| $r->uri eq "/user/enter/ratings/strike_switch.mhtml"
 		|| $r->uri eq "/user/enter/flip.mhtml"
 		|| $r->uri eq "/user/enter/flip_save.mhtml"
 	) {
 		$m->call_next();
+		return;
+	}
 
-	} else {
+	my $school;
+	my $status;
 
-		my $school;
+	# In order from most particular to least.
 
-		if ($school_id && $school_id == int($school_id)) {
-			$school = Tab::School->retrieve($school_id);
-		} elsif ($school_id) {
-			my $test = eval{
-				return shift @{$school_id};
-			};
-			if ($test && $test == int($test)) {
-				$school_id = $test;
-				$school = Tab::School->retrieve($school_id);
-			}
-		}
+	#Entry Based Permissions
+	if ($entry_id) {
 
-		my $entry;
+		my $sth = $dbh->prepare("
+			select
+				entry.id entry,
+				(select student.id
+					from student, entry_student es
+					where student.person = ?
+					and student.id = es.student
+					and es.entry = entry.id
+				) as student_id,
+				school.id school_id,
+				(select chapter.id
+					from chapter
+					where chapter.id = school.chapter
+				) as chapter_id,
+				(select sp.value
+					from chapter_setting sp
+					where sp.chapter = school.chapter
+					and sp.tag = 'self_prefs'
+				) as self_prefs
 
-		if ($entry_id && $entry_id == int($entry_id)) {
-			$entry = Tab::Entry->retrieve($entry_id);
-		} elsif ($entry_id) {
-			my $test = eval{
-				return shift @{$entry_id};
-			};
-			if ($test && $test == int($test)) {
-				$entry_id = $test;
-				$entry = Tab::Entry->retrieve($entry_id);
-			}
-		}
+			from entry, school
+			where entry.id = ?
+				and entry.school = school.id
+		");
 
-		if ($entry && not defined $school) {
-			$school = $entry->school;
-		}
+		$sth->execute($person->id, $entry_id);
+		my $results = $sth->fetchall_hash();
 
-		my $judge;
+		my $ref = eval { return shift @{$results}; };
 
-		if ($judge_id && $judge_id == int($judge_id)) {
-			$judge = Tab::Judge->retrieve($judge_id);
-		} elsif ($judge_id) {
-			my $test = eval{
-				return shift @{$judge_id};
-			};
-			if ($test && $test == int($test)) {
-				$judge_id = $test;
-				$judge = Tab::Judge->retrieve($judge_id);
-			}
-		}
+		if ($ref) {
 
-		if ($judge && not defined $school) {
-			$school = $judge->school;
-		}
-
-		my $chapter;
-
-		if ($school) {
-			$chapter = $school->chapter;
-			unless ($person->site_admin) {
-				if ($chapter) {
-					unless ($perms->{chapter}{$chapter->id} eq "chapter") {
-						$m->print('{ "error": true, "message": "No chapter permissions found for entry ID '.$entry_id.'"}');
-						$m->abort();
-					}
-				} else {
-					$m->print('{ "error": true, "message": "No chapter found for entry ID '.$entry_id.'"}');
-					$m->abort();
-				}
-			}
-		} elsif ($chapter_id) {
-			$chapter = Tab::Chapter->retrieve($chapter_id);
-
-			unless ($person->site_admin) {
-				unless ($perms->{chapter}{$chapter->id} eq "chapter") {
-					$m->print('{ "error": true, "message": "No chapter permissions found for entry ID '.$entry_id.'"}');
-					$m->abort();
-				}
-			}
-		}
-
-		if (
-			$r->uri eq "/user/enter/create.mhtml"
-			|| $r->uri eq "/user/enter/school_switch.mhtml"
-			|| $r->uri eq "/user/enter/entry_switch.mhtml"
-			|| $r->uri eq "/user/enter/details_save.mhtml"
-			|| $r->uri eq "/user/enter/nats/entry_switch.mhtml"
-			|| $r->uri eq "/user/enter/nats/conflict_rm.mhtml"
-			|| $r->uri eq "/user/enter/nats/supp_drop.mhtml"
-			|| $r->uri eq "/user/enter/nats/ada_switch.mhtml"
-			|| $r->uri eq "/user/enter/observer_rm.mhtml"
-			|| $r->uri eq "/user/enter/observer_add.mhtml"
-		) {
-			$m->call_next( school => $school );
-			return;
-		}
-
-		if ($r->uri eq "/user/enter/nsda_roster_check.mhtml" && (not defined $school_id)) {
-			$m->call_next();
-			return;
-		}
-
-		my $tourn = Tab::Tourn->retrieve($tourn_id) if $tourn_id;
-		$tourn = $school->tourn if $school && (not defined $tourn);
-
-		$school = Tab::School->search(
-			chapter => $chapter,
-			tourn   => $tourn_id
-		)->first unless $school;
-
-		unless ($school) {
-			$m->redirect("/user/home.mhtml?err=School $school_id does not exist yet.  Please register.  URL ".$r->uri);
-		}
-
-		if ($school->chapter > 0) {
-			$chapter = $school->chapter;
-		} else {
-
-			my $dbh = Tab::DBI->db_Main();
-
-			my $sth = $dbh->prepare("
-				select permission.id
-					from permission, school
-				where school.id = ?
-					and school.district = permission.district
-					and permission.tag in ('wsdc', 'chair')
-					and permission.person = ?
-			");
-
-			$sth->execute($school->id, $person->id);
-
-			my $ok = $sth->fetchrow_array();
-
-
-			if ($ok) {
-
-				$m->call_next(
-					entry  => $entry,
-					school => $school,
-					tourn  => $tourn,
-					perms  => $perms
-				);
-
-				$m->abort();
+			if ($person->site_admin > 0) {
+				$school = Tab::School->retrieve($ref->{school_id});
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
 			}
 
-			$sth->finish;
-		}
-
-		if ($person->site_admin || ($perms->{"chapter"}{$chapter} eq "chapter")) {
-
-			$m->call_next(
-				entry  => $entry,
-				school => $school,
-				tourn  => $tourn,
-				perms  => $perms
-			);
-
-		} elsif ($perms->{"chapter"}{$chapter} eq "prefs") {
-
-			$m->call_next(
-				entry  => $entry,
-				school => $school,
-				tourn  => $tourn,
-				prefs  => 1,
-				perms  => $perms
-			);
-
-		} elsif ($entry && $school && $chapter->setting("self_prefs")) {
-
-			my $yay;
-
-			unless ( $r->uri =~ /\/ratings\// ) {
-				$m->print("You can only access ratings & your pref sheet, not other pages");
-				$m->abort();
+			# If I have blanket chapter permissions I get the keys
+			if (
+				$ref->{chapter_id} > 0
+				&& $perms->{chapter}{$ref->{chapter_id}} eq "chapter"
+			) {
+				$school = Tab::School->retrieve($ref->{school_id});
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
 			}
 
-			foreach my $student ($entry->students) {
-
-				if ($student->person && $student->person->id == $person->id) {
-					$m->call_next(
-						entry  => $entry,
-						tourn  => $tourn,
-						school => $school,
-						prefs  => 2
-					);
-					$yay++;
-				}
+			# If I have prefs only permissions, and these are ratings, go for it.
+			if (
+				$ref->{chapter_id} > 0
+				&& $perms->{chapter}{$ref->{chapter_id}} eq "prefs"
+				&& $r->uri =~ /user\/enter\/ratings\//
+			) {
+				$school = Tab::School->retrieve($ref->{school_id});
+				$m->call_next(school => $school, prefs => 1);
+				return;
 			}
 
-			$m->redirect("/user/home.mhtml?err=You are not authorized to edit that pref sheet") unless $yay;
+			# If I am one of the students and self_prefs are enabled and these are
+			# prefs, go for it.
 
-		} else {
-
-			$m->redirect("/user/home.mhtml?err=You are not authorized to access that school");
+			if ($ref
+				&& $ref->{student_id}
+				&& $ref->{self_prefs}
+				&& $r->uri =~ /user\/enter\/ratings\//
+			) {
+				$school = Tab::School->retrieve($ref->{school_id});
+				$m->call_next(school => $school, tourn => $school->tourn, prefs => 1, no_others => 1);
+				return;
+			}
 
 		}
 	}
 
-</%init>
+	# School based permissions
+	if ($school_id) {
 
+		my $school = Tab::School->retrieve($school_id);
+
+		if ($school) {
+
+			if ($person->site_admin > 0) {
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
+			}
+
+			# If I have blanket chapter permissions I get the keys
+			if (
+				$school->chapter > 0
+				&& $perms->{chapter}{$school->chapter} eq "chapter"
+			) {
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
+			}
+
+			my $up;
+
+			if ($r->uri =~ /user\/enter\/ratings\//) {
+				$up++;
+			}
+
+			# If I have prefs only permissions, and these are ratings, go for it.
+			if (
+				$school->chapter > 0
+				&& $perms->{chapter}{$school->chapter} eq "prefs"
+				&& $r->uri =~ /user\/enter\/ratings\//
+			) {
+				$m->call_next(school => $school, prefs => 1);
+				return;
+			}
+		}
+	}
+
+	#Chapter Based Permissions
+	if ($chapter_id > 0) {
+
+		my $chapter = Tab::Chapter->retrieve($chapter_id);
+
+		if ($tourn_id > 0) {
+			$school = Tab::School->search(
+				tourn => $tourn_id,
+				chapter => $chapter_id
+			)->first;
+		}
+
+		if ($school) {
+
+			if ($person->site_admin > 0) {
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
+			}
+
+			# If I have blanket chapter permissions I get the keys
+			if (
+				$school->chapter > 0
+				&& $perms->{chapter}{$school->chapter} eq "chapter"
+			) {
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
+			}
+
+		} elsif ($r->uri eq "/user/enter/create.mhtml") {
+			$m->call_next(chapter => $chapter);
+			return;
+		}
+	}
+
+	# Coach contacts get dashboard permissions
+	if ($school_id && $r->uri eq "/user/enter/dashboard.mhtml") {
+		my $sth = $dbh->prepare("
+			select
+				contact.id
+			from contact
+			where contact.person = ?
+			and contact.school = ?
+		");
+
+		$sth->execute($person->id, $school_id);
+
+		my $refs = $sth->fetchall_hash();
+		my $ref = eval { return shift @{$refs}; };
+
+		if ($ref->{id}) {
+			$school = Tab::School->retrieve($school_id);
+			$m->call_next(school => $school, tourn => $school->tourn);
+			return;
+		}
+	}
+
+	$m->redirect("/user/home.mhtml?err=You are not authorized to access that school");
+
+</%init>

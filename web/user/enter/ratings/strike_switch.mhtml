@@ -1,88 +1,44 @@
 <%args>
+	$now
 	$person
 	$perms
-	$target_id      => undef
-	$setting_name   => undef
-	$property_name  => undef
+	$judge_id       => undef
+	$entry_id       => undef
 	$property_value => undef
-	$related_thing  => undef
+	$school
 </%args>
 <%init>
 
 	$m->clear_buffer();
 	$r->content_type('application/json');
 
-	unless ($target_id) {
+	unless ($judge_id) {
 		$m->print('{ "error": 1, "message": "No judge ID sent"}');
 		$m->abort();
 	}
 
-	unless ($property_name) {
-		$m->print('{ "error": 1, "message": "No entry or school ID sent"}');
+	unless ($entry_id) {
+		$m->print('{ "error": 1, "message": "No entry ID sent"}');
 		$m->abort();
 	}
 
-	my $judge = Tab::Judge->retrieve($target_id);
-	my $entry;
-	my $school;
-
-	my $now = DateTime->now();
-
-	$entry = Tab::Entry->retrieve($property_name) if $setting_name eq "entry";
-	$school = Tab::School->retrieve($property_name) if $setting_name eq "school";
+	my $judge = Tab::Judge->retrieve($judge_id);
+	my $entry = Tab::Entry->retrieve($entry_id);
 
 	unless ($judge) {
-		$m->print('{ "error": 1, "message": "No judge found for ID '.$target_id.'"}');
+		$m->print('{ "error": 1, "message": "No judge found for ID '.$judge_id.'"}');
 		$m->abort();
 	}
 
-	unless ($entry || $school) {
-		$m->print('{ "error": 1, "message": "No school or entry found for ID '.$property_name.'"}');
+	unless ($entry) {
+		$m->print('{ "error": 1, "message": "No entry found for ID '.$entry_id.'"}');
 		$m->abort();
-	}
-
-	unless ($school) {
-		$school = $entry->school;
-	}
-
-	unless ($person->site_admin
-		|| $perms->{"chapter"}{$school->chapter->id}
-		|| $perms->{"prefs"}{$school->chapter->id}
-	) {
-
-		my $dbh = Tab::DBI->db_Main();
-		my $sth = $dbh->prepare("
-
-			select
-				es.id
-			from entry, entry_student es, student, chapter
-
-			where student.person = ?
-				and student.chapter = chapter.id
-				and chapter.self_prefs = 1
-				and student.id = es.student
-				and es.entry = ?
-			limit 1;
-		");
-
-		$sth->execute($person->id, $entry->id);
-		my $self_perm = $sth->fetch();
-
-		unless ($self_perm) {
-			$m->print('{
-				"error": 1,
-				"message": "You do not have permission to change strikes for '.$school->short_name.'"
-			}');
-			$m->abort();
-		}
 	}
 
 	my $category;
 	my $event;
 
-	if ($related_thing) {
-		$category = Tab::Category->retrieve($related_thing);
-	} elsif ($entry) {
+	if ($entry) {
 		$event = $entry->event;
 		$category = $event->category;
 	} else {
@@ -95,8 +51,6 @@
 	if ( $category_settings{"rounds_per"} && $category_settings{"strikes_by_round"} ) {
 		$by_round = 1;
 	}
-
-
 
 	my ($judgeref, $metaref) = $m->comp("/funclib/strike_judges.mas",
 		entry    => $entry,

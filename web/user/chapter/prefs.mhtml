@@ -34,6 +34,14 @@
 
 			and send.category = category.id
 			and send.tag = 'strike_end'
+
+			and EXISTS (
+				select entry.id
+				from entry, event
+				where event.category = category.id
+				and event.id         = entry.event
+				and entry.school     = school.id
+			)
 		order by tourn.start
 	");
 
@@ -56,7 +64,7 @@
 				<h4><% $chapter->name %></h4>
 			</span>
 			<span class="quarter rightalign semibold biggish">
-				Tournaments Pref Sheets
+				Pref Sheets
 			</span>
 		</div>
 
@@ -97,9 +105,12 @@
 						}
 					}
 </%perl>
-					<tr class="row">
+					<tr class="row smallish">
 
-						<td class="centeralign nowrap">
+						<td
+							class     ="leftalign padleft"
+							data-text ="<% $et->{start} %>"
+						>
 							<& "/funclib/showrange.mas",
 								start_string => $et->{start},
 								end_string   => $et->{end},
@@ -138,24 +149,24 @@
 									class = "buttonwhite bluetext invert padvertless padleft padright"
 									href  = "/user/enter/ratings/index.mhtml?school_id=<% $et->{school_id} %>"
 								>
-									Prefs
+									Prefs Open
 								</a>
 %							} elsif ($dt_cache{$et->{sstart}}{dt} > $now ) {
 
-								<div class="full centeralign semibold bluetext">
+								<div class="full centeralign semibold bluetext nospace padvertless">
 									Prefs Will Open
 								</div>
-								<div class="full centeralign smallish padtop">
+								<div class="full centeralign smallish padtop nospace padvertless">
 									<% $dt_cache{$et->{sstart}}{murica_date} %>
 									<% $dt_cache{$et->{sstart}}{murica} %>
 								</div>
 
 %							} elsif ($dt_cache{$et->{send}}{dt} < $now ) {
 
-								<div class="full centeralign semibold redtext">
+								<div class="full centeralign semibold redtext padvertless">
 									Prefs Closed
 								</div>
-								<div class="full centeralign smallish padtop">
+								<div class="full centeralign smallish padvertless">
 									<% $dt_cache{$et->{send}}{murica_date} %>
 									<% $dt_cache{$et->{send}}{murica} %>
 								</div>
