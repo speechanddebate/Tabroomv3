@@ -1,9 +1,10 @@
 <%args>
+	$now
 	$person
 	$perms
-	$target_id      => undef
-	$setting_name   => undef
-	$property_name  => undef
+	$judge_id       => undef
+	$entry_id       => undef
+	$school_id      => undef
 	$property_value => undef
 </%args>
 <%init>
@@ -11,7 +12,7 @@
 	$m->clear_buffer();
 	$r->content_type('application/json');
 
-	unless ($target_id) {
+	unless ($judge_id) {
 		$m->print('{ "error": true, "message": "No judge ID sent"}');
 		$m->abort();
 	}
@@ -21,12 +22,13 @@
 		$m->abort();
 	}
 
-	my $judge = Tab::Judge->retrieve($target_id);
-	my $entry = Tab::Entry->retrieve($property_name) if $setting_name eq "entry";
-	my $school = Tab::School->retrieve($property_name) if $setting_name eq "school";
+	my $judge = Tab::Judge->retrieve($judge_id);
+
+	my $entry = Tab::Entry->retrieve($entry_id);
+	my $school = Tab::School->retrieve($school_id);
 
 	unless ($judge) {
-		$m->print('{ "error": true, "message": "No judge found for ID '.$target_id.'"}');
+		$m->print('{ "error": true, "message": "No judge found for ID '.$judge_id.'"}');
 		$m->abort();
 	}
 
@@ -35,22 +37,9 @@
 		$m->abort();
 	}
 
-	unless ($school) {
-		$school = $entry->school;
-	}
-
-	unless ($person->site_admin || $perms->{"chapter"}{$school->chapter->id}) {
-		$m->print('{
-			"error": true,
-			"message": "You do not have permission to change conflicts for '.$school->short_name.'}'
-		);
-		$m->abort();
-	}
-
-	my $now = DateTime->now();
 	my $message;
 
-	if ($setting_name eq "school") {
+	if ($school) {
 
 		my $conflict = Tab::Strike->search(
 			type       => "school",
@@ -100,6 +89,8 @@
 
 	} else {
 
+		my $school = $entry->school;
+
 		my $conflict = Tab::Strike->search(
 			type       => "entry",
 			judge      => $judge->id,
@@ -116,7 +107,7 @@
 					judge      => $judge->id,
 					type       => "entry",
 					entry      => $entry->id,
-					tourn      => $entry->school->tourn->id,
+					tourn      => $school->tourn->id,
 					entered_by => $person,
 					conflict   => 1,
 					registrant => 1
@@ -137,8 +128,8 @@
 		}
 
 		$m->comp("/funclib/log.mas",
-			tourn       => $entry->school->tourn->id,
-			entry       => $entry->id,
+			tourn       => $school->tourn->id,
+			school      => $school->id,
 			type        => "registration",
 			description => $message,
 			person      => $person->id
@@ -147,8 +138,6 @@
 	}
 
 	$m->print('{ "error": false, "message": "'.$message.'"}');
-
 	$m->abort();
 
 </%init>
-

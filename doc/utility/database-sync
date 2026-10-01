@@ -33,7 +33,7 @@ if [[ ${hostname} != ${prodserver1} ]]; then
 		cp -L /backup/tabroom/latest/tabroom.tar /tmp/tabroom.tar
 	else
 		echo "Downloading latest database backup"
-		aws s3 cp s3://nsda-backups/00-latest/tabroom.tar  /tmp/tabroom.tar
+		b2 file download b2://nsda-backups/00-latest/tabroom.tar  /tmp/tabroom.tar
 	fi
 
 	echo "Opening data archive"

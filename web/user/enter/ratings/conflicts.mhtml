@@ -259,17 +259,15 @@
 %						} else {
 
 							<span class="hidden"><% $conflicts_by_id{$judge->id} %></span>
-
 								<label class="switch">
 									<input
-										type          = "checkbox"
-										value         = "1"
-										id            = "<% $judge->id %>_conflict"
-										property_name = "<% $entry_id  ? $entry_id : $school->id %>"
-										setting_name  = "<% $entry_id ? "entry" : "school" %>"
-										target_type   = "judge"
-										target_id     = "<% $judge->id %>"
-										onChange      = "postSwitch( this, 'conflict_switch.mhtml');"
+										type        = "checkbox"
+										value       = "1"
+										id          = "<% $judge->id %>_conflict"
+										entry_id    = "<% $entry_id ? "entry" %>"
+										school_id   = "<% $school_id ? "school" %>"
+										judge_id    = "<% $judge->id %>"
+										onChange    = "postSwitch( this, 'conflict_switch.mhtml');"
 										<% $conflicts_by_id{$judge->id} ? 'checked="checked"' : "" %>
 									>
 									<div class="slider onred offgreen"></div>
