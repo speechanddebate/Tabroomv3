@@ -1,5 +1,12 @@
+<%args>
+	$person   => undef
+	$session  => undef
+</%args>
 <%init>
 
+	unless ($person && $session && $session->id > 0) {
+		$m->comp("local_only.mas");
+	}
 
 	my $dbh = Tab::DBI->db_Main();
 

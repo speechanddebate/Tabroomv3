@@ -1,14 +1,9 @@
 <%args>
-	$circuit_id
+	$circuit
 </%args>
 <%init>
 
-	my $circuit = Tab::Circuit->retrieve($circuit_id);
-
-	$m->abort() unless $circuit;
-
 	my @chapters = $m->comp("/funclib/circuit_chapters.mas", circuit => $circuit);
-
 	my %used = ();
 
 </%init>
@@ -17,26 +12,25 @@
 
 	<div class="main">
 
-		<span class="threequarters nospace">
-			<h2>Standard school codes</h2>
-		</span>
-		<span
-			class="quarter rightalign nospace"
-			id ="sortme_buttonarea"
-		>
-		</span>
+		<div class='flexrow full'>
+			<span class="threequarters nospace">
+				<h4>Standard school codes</h4>
+			</span>
+			<span
+				class="quarter rightalign nospace"
+				id ="circuit_codes_buttonarea"
+			>
+			</span>
+		</div>
 
-		<& /funclib/tablesorter.mas, table => "sortme" &>
+		<& /funclib/tablesorter.mas, table => "circuit_codes" &>
 
 		<form action="codes_save.mhtml" method="post">
-		<input type="hidden" name="circuit_id" value="<% $circuit_id %>">
+		<input type="hidden" name="circuit_id" value="<% $circuit->id %>">
 
-		<table id="sortme">
-
+		<table id="circuit_codes">
 			<thead>
-
 				<tr class="yellowrow">
-
 					<th>
 						School
 					</th>
@@ -44,9 +38,7 @@
 					<th>
 						Code
 					</th>
-
 				</tr>
-
 			</thead>
 
 			<tbody>
@@ -62,8 +54,14 @@
 							<% $chapter->name %>
 						</td>
 
-						<td>
-							<input type="text" size="10" maxlength="10" name="<% $chapter->id %>" value="<% $chapter->code %>">
+						<td class="centeralign">
+							<input
+								type      ="text"
+								size      ="10"
+								maxlength ="10"
+								name      ="<% $chapter->id %>"
+								value     ="<% $chapter->code %>"
+							>
 						</td>
 
 					</tr>
@@ -71,18 +69,13 @@
 %				}
 
 			</tbody>
-
 			<tr class="liblrow">
-
 				<td class="rightalign" colspan="2">
 					<input type="submit" value="Save Codes">
 					</form>
 				</td>
-
 			</tr>
-
 		</table>
-
 	</div>
 
 

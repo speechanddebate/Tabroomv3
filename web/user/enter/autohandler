@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$person
 	$person_settings
 	$perms
@@ -10,159 +11,197 @@
 </%args>
 <%init>
 
+	# These functions self display based on the person record inbound from the
+	# session.
+
 	if (
 		$r->uri eq "/user/enter/strike_cards.mhtml"
-		|| $r->uri eq "/user/enter/strike_cards.mhtml"
-		|| $r->uri eq "/user/enter/create.mhtml"
-		|| $r->uri eq "/user/enter/school_switch.mhtml"
-		|| $r->uri eq "/user/enter/entry_switch.mhtml"
-		|| $r->uri eq "/user/enter/nats/entry_switch.mhtml"
-		|| $r->uri eq "/user/enter/nats/conflict_rm.mhtml"
-		|| $r->uri eq "/user/enter/nats/supp_drop.mhtml"
-		|| $r->uri eq "/user/enter/signup_switch.mhtml"
-		|| $r->uri eq "/user/enter/signup_all.mhtml"
-		|| $r->uri eq "/user/enter/observer_rm.mhtml"
-		|| $r->uri eq "/user/enter/observer_add.mhtml"
-		|| $r->uri eq "/user/enter/ratings/conflict_switch.mhtml"
-		|| $r->uri eq "/user/enter/ratings/strike_switch.mhtml"
 		|| $r->uri eq "/user/enter/strike_card_save.mhtml"
 		|| $r->uri eq "/user/enter/flip.mhtml"
-		|| $r->uri eq "/user/enter/nats/ada_switch.mhtml"
 		|| $r->uri eq "/user/enter/flip_save.mhtml"
-		|| $r->uri eq "/user/enter/details_save.mhtml"
 	) {
-		$m->call_next;
-		return;
-	}
-
-	if ($r->uri eq "/user/enter/nsda_roster_check.mhtml" && (not defined $school_id)) {
 		$m->call_next();
 		return;
 	}
 
-	my $tourn = Tab::Tourn->retrieve($tourn_id) if $tourn_id;
-	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
-	my $judge = Tab::Judge->retrieve($judge_id) if $judge_id;
-
 	my $school;
+	my $status;
 
-	if ($school_id == int($school_id)) {
+	# In order from most particular to least.
 
-		$school = Tab::School->retrieve($school_id);
-
-	} elsif ($school_id) {
-
-		my $test = eval{
-			return shift @{$school_id};
-		};
-
-		if ($test && $test == int($test)) {
-			$school_id = $test;
-			$school = Tab::School->retrieve($school_id);
-		}
-	}
-
-	my $chapter = Tab::Chapter->retrieve($chapter_id) if $chapter_id;
-
-	$school = $entry->school if $entry && (not defined $school);
-	$school = $judge->school if $judge && (not defined $school);
-	$tourn = $school->tourn if $school && (not defined $tourn);
-
-	$school = Tab::School->search(
-		chapter => $chapter,
-		tourn   => $tourn_id
-	)->first unless $school;
-
-	unless ($school) {
-		$m->redirect("/user/home.mhtml?err=School $school_id does not exist yet.  Please register.  URL ".$r->uri);
-	}
-
-	if ($school->chapter > 0) {
-
-		$chapter = $school->chapter;
-
-	} else {
-
-		my $dbh = Tab::DBI->db_Main();
+	#Entry Based Permissions
+	if ($entry_id) {
 
 		my $sth = $dbh->prepare("
-			select permission.id
-				from permission, school
-			where school.id = ?
-				and school.district = permission.district
-				and permission.tag in ('wsdc', 'chair')
-				and permission.person = ?
+			select
+				entry.id entry,
+				(select student.id
+					from student, entry_student es
+					where student.person = ?
+					and student.id = es.student
+					and es.entry = entry.id
+				) as student_id,
+				school.id school_id,
+				(select chapter.id
+					from chapter
+					where chapter.id = school.chapter
+				) as chapter_id,
+				(select sp.value
+					from chapter_setting sp
+					where sp.chapter = school.chapter
+					and sp.tag = 'self_prefs'
+				) as self_prefs
+
+			from entry, school
+			where entry.id = ?
+				and entry.school = school.id
 		");
 
-		$sth->execute($school->id, $person->id);
+		$sth->execute($person->id, $entry_id);
+		my $results = $sth->fetchall_hash();
 
-		my $ok = $sth->fetchrow_array();
+		my $ref = eval { return shift @{$results}; };
 
+		if ($ref) {
 
-		if ($ok) {
+			if ($person->site_admin > 0) {
+				$school = Tab::School->retrieve($ref->{school_id});
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
+			}
 
-			$m->call_next(
-				entry  => $entry,
-				school => $school,
-				tourn  => $tourn,
-				perms  => $perms
-			);
+			# If I have blanket chapter permissions I get the keys
+			if (
+				$ref->{chapter_id} > 0
+				&& $perms->{chapter}{$ref->{chapter_id}} eq "chapter"
+			) {
+				$school = Tab::School->retrieve($ref->{school_id});
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
+			}
 
-			$m->abort();
+			# If I have prefs only permissions, and these are ratings, go for it.
+			if (
+				$ref->{chapter_id} > 0
+				&& $perms->{chapter}{$ref->{chapter_id}} eq "prefs"
+				&& $r->uri =~ /user\/enter\/ratings\//
+			) {
+				$school = Tab::School->retrieve($ref->{school_id});
+				$m->call_next(school => $school, prefs => 1);
+				return;
+			}
+
+			# If I am one of the students and self_prefs are enabled and these are
+			# prefs, go for it.
+
+			if ($ref
+				&& $ref->{student_id}
+				&& $ref->{self_prefs}
+				&& $r->uri =~ /user\/enter\/ratings\//
+			) {
+				$school = Tab::School->retrieve($ref->{school_id});
+				$m->call_next(school => $school, tourn => $school->tourn, prefs => 1, no_others => 1);
+				return;
+			}
+
 		}
-
-		$sth->finish;
 	}
 
-	if ($person->site_admin || ($perms->{"chapter"}{$chapter} eq "chapter")) {
+	# School based permissions
+	if ($school_id) {
 
-		$m->call_next(
-			entry  => $entry,
-			school => $school,
-			tourn  => $tourn,
-			perms  => $perms
-		);
+		my $school = Tab::School->retrieve($school_id);
 
-	} elsif ($perms->{"chapter"}{$chapter} eq "prefs") {
+		if ($school) {
 
-		$m->call_next(
-			entry  => $entry,
-			school => $school,
-			tourn  => $tourn,
-			prefs  => 1,
-			perms  => $perms
-		);
+			if ($person->site_admin > 0) {
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
+			}
 
-	} elsif ($entry && $school && $chapter->setting("self_prefs")) {
+			# If I have blanket chapter permissions I get the keys
+			if (
+				$school->chapter > 0
+				&& $perms->{chapter}{$school->chapter} eq "chapter"
+			) {
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
+			}
 
-		my $yay;
+			my $up;
 
-		unless ( $r->uri =~ /\/ratings\// ) {
-			$m->print("You can only access ratings & your pref sheet, not other pages");
-			$m->abort();
-		}
+			if ($r->uri =~ /user\/enter\/ratings\//) {
+				$up++;
+			}
 
-		foreach my $student ($entry->students) {
-
-			if ($student->person && $student->person->id == $person->id) {
-				$m->call_next(
-					entry  => $entry,
-					tourn  => $tourn,
-					school => $school,
-					prefs  => 2
-				);
-				$yay++;
+			# If I have prefs only permissions, and these are ratings, go for it.
+			if (
+				$school->chapter > 0
+				&& $perms->{chapter}{$school->chapter} eq "prefs"
+				&& $r->uri =~ /user\/enter\/ratings\//
+			) {
+				$m->call_next(school => $school, prefs => 1);
+				return;
 			}
 		}
-
-		$m->redirect("/user/home.mhtml?err=You are not authorized to edit that pref sheet") unless $yay;
-
-	} else {
-
-		$m->redirect("/user/home.mhtml?err=You are not authorized to access that school");
-
 	}
 
+	#Chapter Based Permissions
+	if ($chapter_id > 0) {
+
+		my $chapter = Tab::Chapter->retrieve($chapter_id);
+
+		if ($tourn_id > 0) {
+			$school = Tab::School->search(
+				tourn => $tourn_id,
+				chapter => $chapter_id
+			)->first;
+		}
+
+		if ($school) {
+
+			if ($person->site_admin > 0) {
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
+			}
+
+			# If I have blanket chapter permissions I get the keys
+			if (
+				$school->chapter > 0
+				&& $perms->{chapter}{$school->chapter} eq "chapter"
+			) {
+				$m->call_next(school => $school, tourn => $school->tourn);
+				return;
+			}
+
+		} elsif ($r->uri eq "/user/enter/create.mhtml") {
+			$m->call_next(chapter => $chapter);
+			return;
+		}
+	}
+
+	# Coach contacts get dashboard permissions
+	if ($school_id && $r->uri eq "/user/enter/dashboard.mhtml") {
+		my $sth = $dbh->prepare("
+			select
+				contact.id
+			from contact
+			where contact.person = ?
+			and contact.school = ?
+		");
+
+		$sth->execute($person->id, $school_id);
+
+		my $refs = $sth->fetchall_hash();
+		my $ref = eval { return shift @{$refs}; };
+
+		if ($ref->{id}) {
+			$school = Tab::School->retrieve($school_id);
+			$m->call_next(school => $school, tourn => $school->tourn);
+			return;
+		}
+	}
+
+	$m->redirect("/user/home.mhtml?err=You are not authorized to access that school");
 
 </%init>
-

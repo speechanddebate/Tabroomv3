@@ -7,8 +7,14 @@
 	$payment_amount => undef
 	$fee_memo       => undef
 	$fee_amount     => undef
+	$person         => undef
+	$session        => undef
 </%args>
 <%init>
+
+	unless ($api_key || ($person && $session && $session->id > 0)) {
+		$m->comp("local_only.mas");
+	}
 
     $m->clear_buffer();
     $r->content_type('application/json');
@@ -16,7 +22,6 @@
 	my $now = DateTime->now();
 	my $json = JSON->new->allow_nonref->convert_blessed->utf8->pretty;
 
-	my $person;
 	my $tourn;
 	my $school;
 

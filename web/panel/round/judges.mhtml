@@ -109,6 +109,7 @@
 	$m->comp("/funclib/log.mas",
 		type        => 'tabbing',
 		event       => $event_id,
+		round       => $round->id,
 		tourn       => $event->tourn->id,
 		person      => $person,
 		description => $description

@@ -38,7 +38,7 @@
 			<h4>Event Results</h4>
 
 			<form
-				action = "main.mhtml"
+				action = "index.mhtml"
 				method = "post"
 			>
 

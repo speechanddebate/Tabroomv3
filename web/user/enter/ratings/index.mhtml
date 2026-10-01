@@ -26,7 +26,9 @@
 		person_settings => $person_settings,
 		school          => $school,
 		whoami          => "ratings",
-		category_id     => $category_id
+		category_id     => $category_id,
+		no_others       => $ARGS{no_others},
+		dbh             => $ARGS{dbh},
 	&>
 
 	<div class="main">

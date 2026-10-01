@@ -575,7 +575,7 @@
 </%perl>
 			<div class="full flexrow">
 				<span class="quarter bluetext">
-					<h6 class="nospace">
+					<h6 class="nospace semibold">
 						Totals
 					</h6>
 				</span>
@@ -665,12 +665,17 @@
 %				}
 			</table>
 <%perl>
-			my @others = $m->comp(
-				"/funclib/school_entry_by_category.mas",
-				category => $category,
-				school   => $school,
-				prefs    => 1
-			);
+
+			my @others;
+
+			unless ($ARGS{no_others}) {
+				@others = $m->comp(
+					"/funclib/school_entry_by_category.mas",
+					category => $category,
+					school   => $school,
+					prefs    => 1
+				);
+			}
 
 			if ($prefs < 2 && $entry && scalar @others && not defined $read_only) {
 </%perl>
@@ -740,7 +745,9 @@
 			category_id => $category->id,
 			entry_id    => $entry_id,
 			nodiv       => 1,
-			prefs       => $prefs
+			prefs       => $prefs,
+			no_others   => $ARGS{no_others},
+			dbh         => $dbh,
 		&>
 
 	</div>

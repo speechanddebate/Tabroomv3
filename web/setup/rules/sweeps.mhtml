@@ -134,16 +134,17 @@
 
 						<option
 							value="mundt"
-							<% $cumulative->value eq "mundt" ? 'selected' : '' %>
+							<% $cumulative && $cumulative->value eq "mundt" ? 'selected' : '' %>
 							>Karl Mundt Award</option>
 
 						<option
 							value="bruno"
-							<% $cumulative->value eq "bruno" ? 'selected' : '' %>
+							<% $cumulative && $cumulative->value eq "bruno" ? 'selected' : '' %>
 							>Bruno Jacobs Award</option>
+
 						<option
 							value="ward"
-							<% $cumulative->value eq "ward" ? 'selected' : '' %>
+							<% $cumulative && $cumulative->value eq "ward" ? 'selected' : '' %>
 							>Paul E Ward Trophy</option>
 					</select>
 				</div>

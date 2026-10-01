@@ -55,8 +55,20 @@
 			$limit
 	");
 
+	my $flights_sth = $dbh->prepare("
+		update panel
+		set flight = 1, room = NULL
+		where round = ?
+		and NOT EXISTS (
+			select room.id
+			from room
+			where room.id = panel.room
+		)
+	");
+
 	$zero_sth->execute($round->id);
 	$scores_sth->execute($round->id);
+	$flights_sth->execute($round);
 
 	return;
 

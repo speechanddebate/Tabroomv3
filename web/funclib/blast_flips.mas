@@ -11,13 +11,13 @@
 	if ($panel) {
 		$panel_id = $panel->id;
 	}
+
 	if ($round) {
 		$round_id = $round->id;
 	}
 
 	$round_id = int($round_id);
 	$panel_id = int($panel_id);
-
 	my $limit;
 
 	if ($panel_id > 0) {
@@ -45,10 +45,10 @@
 
 		where ballot.panel = panel.id
 			and panel.bye != 1
-			and ballot.entry = es.entry
-			and es.student = student.id
+			and ballot.entry   = es.entry
+			and es.student     = student.id
 			and student.person = sp.id
-			and sp.no_email = 0
+			and sp.no_email    = 0
 			$limit
 	");
 
@@ -60,13 +60,13 @@
 
 		where 1=1
 
-			and panel.round      = ?
-			and panel.id         = ballot.panel
-			and ballot.entry     = entry.id
-			and entry.school     = school.id
-			and school.id        = contact.school
-			and contact.person   = person.id
-			and person.no_email  = 0
+			and panel.round     = ?
+			and panel.id        = ballot.panel
+			and ballot.entry    = entry.id
+			and entry.school    = school.id
+			and school.id       = contact.school
+			and contact.person  = person.id
+			and person.no_email = 0
 
 			and panel.bye != 1
 
@@ -261,13 +261,13 @@
 			$round_string .= "\nWinner has until ".$sections{$panel_id}{"deadline"}." to make a choice";
 
 			$round_string .= "\n\nDecide on your Tabroom account";
-			$map_text .= "\nat <% $Tab::url_prefix %>/user/enter/flip.mhtml\n";
+			$map_text .= "\nat <% $Tab::app_url_prefix %>/user/enter/flip.mhtml\n";
 
 			$round_html .= "<p>The winner of the flip is ".$sections{$panel_id}{"winner"}."</p>";
 			$round_html .= "<p>Winner has until ".$sections{$panel_id}{"deadline"}." to make a choice.</p>";
 
-			$round_html .= "<p>Decide on your Tabroom account at <a href=".$Tab::url_prefix."/user/enter/flip.mhtml>";
-			$round_html .= $Tab::url_prefix."/user/enter/flip.mhtml.</a>";
+			$round_html .= "<p>Decide on your Tabroom account at <a href=".$Tab::app_url_prefix."/user/enter/flip.mhtml>";
+			$round_html .= $Tab::app_url_prefix."/user/enter/flip.mhtml.</a>";
 
 		} elsif ($sections{$panel_id}{"flip_status"} eq "loser") {
 
@@ -275,12 +275,12 @@
 			$round_string .= "until ".$sections{$panel_id}{"deadline"};
 
 			$round_string .= "\n\nDecide on your Tabroom account";
-			$map_text .= "\nat <% $Tab::url_prefix %>/user/enter/flip.mhtml.\n";
+			$map_text .= "\nat <% $Tab::app_url_prefix %>/user/enter/flip.mhtml.\n";
 
 			$round_html .= "<p>".$sections{$panel_id}{"loser"}." may now make their flip choice ";
 			$round_html .= "until ".$sections{$panel_id}{"deadline"}."</p>";
-			$round_html .= "<p>Decide on your Tabroom account at <a href=".$Tab::url_prefix."/user/enter/flip.mhtml>";
-			$round_html .= $Tab::url_prefix."/user/enter/flip.mhtml.</a>";
+			$round_html .= "<p>Decide on your Tabroom account at <a href=".$Tab::app_url_prefix."/user/enter/flip.mhtml>";
+			$round_html .= $Tab::app_url_prefix."/user/enter/flip.mhtml.</a>";
 
 		} elsif ($sections{$panel_id}{"flip_status"} eq "anyone") {
 
@@ -289,11 +289,11 @@
 
 			$round_html .= "<p>The deadline for a flip choice has expired.  Anyone may now choose.  First to choose wins";
 			$round_html .= "until ".$sections{$panel_id}{"deadline"}."</p>";
-			$round_html .= "<p>Decide on your Tabroom account at <a href=".$Tab::url_prefix."/user/enter/flip.mhtml>";
-			$round_html .= $Tab::url_prefix."/user/enter/flip.mhtml.</a>";
+			$round_html .= "<p>Decide on your Tabroom account at <a href=".$Tab::app_url_prefix."/user/enter/flip.mhtml>";
+			$round_html .= $Tab::app_url_prefix."/user/enter/flip.mhtml.</a>";
 
 			$round_string .= "\n\nDecide on your Tabroom account";
-			$map_text .= "\nat <% $Tab::url_prefix %>/user/enter/flip.mhtml\n";
+			$map_text .= "\nat <% $Tab::app_url_prefix %>/user/enter/flip.mhtml\n";
 		}
 
 		my @email = keys %{$destinations{$panel_id}{"email"}};
@@ -303,7 +303,7 @@
 			from    => $sections{$panel_id}{"from"},
 			tourn   => $tourn_id,
 			ids     => \@ids,
-			url     => $Tab::url_prefix.'/user/enter/flip.mhtml',
+			url     => $Tab::app_url_prefix.'/user/enter/flip.mhtml',
 			subject => "Coinflip status update",
 			body    => $round_string.$map_text,
 			html    => $round_html,

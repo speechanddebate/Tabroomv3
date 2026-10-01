@@ -1122,10 +1122,10 @@
 %				if ($panels{$key}{"bye"}) {
 
 					<td
-						class = "nospace rooms centeralign"
-						title = "BYE"
+						class     = "nospace rooms centeralign"
+						title     = "BYE"
+						data-text ="ZZZ999"
 					>
-						<span title="Sort this, nitwit" class="hidden">ZZZ999</span>
 						<a
 							href  = "panel_view.mhtml?panel_id=<% $key %>"
 							class = "padvertical redtext semibold"
@@ -1490,7 +1490,15 @@
 					}
 				}
 
-				$m->print('<td class="smallhide judgeuse nospace centeralign">');
+</%perl>
+					<td
+						class="smallhide judgeuse nospace centeralign"
+%						if ($panels{$key}{"judges"}) {
+%							my $judge = ${$panels{$key}{judges}}[0];
+							data-text="<% $judge_use{$judge}{"percentage"} %>"
+%						}
+					>
+<%perl>
 
 					if ($panels{$key}{"judges"}) {
 
@@ -1505,10 +1513,6 @@
 									style = "min-width: 7em;"
 %								}
 							>
-								<span class="hidden">
-									<% $judge_use{$judge}{"percentage"} %>
-								</span>
-
 %								if ($rounds_per) {
 									<span class="third nospace" style="min-width: 2.5em;">
 										<% $judge_use{$judge}{"percentage"} %>
@@ -1536,19 +1540,18 @@
 				</td>
 
 %				if ($panels{$key}{"judges"} && scalar @{$panels{$key}{"judges"}} > 0) {
+
+%					my $sample = ${$panels{$key}{judges}}[0];
+
 					<td
-						class = "judges nospace nowrap"
-						title = "<% $panels{$key}{"judgecodes"} %> <% $panels{$key}{"judgenames"} %>"
+						class     = "judges nospace nowrap"
+						title     = "<% $panels{$key}{"judgecodes"} %> <% $panels{$key}{"judgenames"} %>"
+						data-text ="<% $judges{$sample}{"code"} %> <% $judges{$sample}{"last"} %> <% $judges{$sample}{"first"} %>"
 					>
 
 %					foreach my $judge (
 %						@{$panels{$key}{"judges"}}
 %					) {
-
-						<span class="hidden">
-							<% $judges{$judge}{"last"} %> <% $judges{$judge}{"first"} %>
-							<% $judges{$judge}{"code"} ? $judges{$judge}{"code"} : "" %>
-						</span>
 
 						<a class=" <% $judges{$judge}{"chair"}
 								? "semibold"
@@ -1655,11 +1658,8 @@
 									</span>
 								</div>
 							</span>
-
 						</a>
 % 					}
-
-					<span class="hidden">0</span>
 
 					</td>
 
@@ -1681,8 +1681,7 @@
 
 %				} else {
 
-					<td class="judges nospace centeralign">
-						<span class="hidden">ZZZZZZZZZ</span>  <!-- adventures in dumb sorting -->
+					<td class="judges nospace centeralign" data-text="AAAAAAA">
 						<a
 							class="dkred button nowrap padvertical"
 							href="panel_view.mhtml?panel_id=<% $key %>"

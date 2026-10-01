@@ -1180,7 +1180,7 @@
 
 	Tab::Round->columns(TEMP => "strikeschool");
 
-	Tab::Round->set_sql( school_strikes => "
+	Tab::Round->set_sql( strike_cards => "
 		select round.*, entry.school as strikeschool
 		from round, round_setting, panel, ballot, entry, school
 		where entry.school = school.id
@@ -1195,7 +1195,7 @@
 		order by round.start_time
 	");
 
-	my @cards = Tab::Round->search_school_strikes($school_id);
+	my @cards = Tab::Round->search_strike_cards($school_id);
 
 	my %strike_cards = map {$_->strikeschool => 1} @cards;
 
@@ -1527,7 +1527,6 @@
 %			}
 
 %			foreach my $room_id (keys %{$rooms{"coach"}}) {
-
 				<span class="third leftalign">
 					<span class="threequarters semibold bluetext">
 						<span class="halfspace"></span>

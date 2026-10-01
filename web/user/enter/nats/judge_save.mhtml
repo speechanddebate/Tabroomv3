@@ -32,10 +32,31 @@
 	my $chapter_judge;
 
 	my $max_rounds = $category->setting('max_rounds');
-	$max_rounds = 8 unless $max_rounds;
-	$max_rounds = 10 if $judge && $judge->setting('tab_room');
+	$max_rounds    = 8 unless $max_rounds;
+	$max_rounds    = 10 if $judge && $judge->setting('tab_room');
 
 	my $msg;
+
+    my @coaches;
+	my ($roster_ref, $raw) = $m->comp("/funclib/nsda/school_roster.mas", chapter => $school->chapter);
+
+    my @roster = eval {
+        return @{$roster_ref};
+    };
+
+    foreach my $person (@roster) {
+        if ($person->{role} eq "Coach") {
+            push (@coaches, $person);
+        } elsif ($person->{role} eq "Advisor") {
+            push (@coaches, $person);
+        }
+    }
+
+	my %coach_by_id = map { $_->{person_id} => $_ } @coaches;
+
+	if ($ARGS{nsda} && (not defined $coach_by_id{$ARGS{nsda}}) {
+		$ARGS{nsda} = 0;
+	}
 
 	unless ($judge) {
 

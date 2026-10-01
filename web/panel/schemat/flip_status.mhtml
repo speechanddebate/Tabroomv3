@@ -130,7 +130,6 @@
 				my $count = $count->{panels};
 
 				if ($count < 1) {
-					Tab::debuglog("Flight $flight count $count");
 					$reply->{$flight}{done} = \1;
 				} else {
 					$reply->{$flight}{count} = $count;

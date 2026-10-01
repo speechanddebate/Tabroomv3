@@ -11,6 +11,20 @@
 
 	Tab::Panel->sql_remove_rooms->execute($round);
 
+	Tab::Panel->set_sql(remove_flights => "
+		update panel
+		set flight = 1
+		where round = ?
+		and NOT EXISTS (
+			select judge.id
+			from ballot, judge
+			where ballot.panel = panel.id
+			and ballot.judge = judge.id
+		)
+	");
+
+	Tab::Panel->sql_remove_flights->execute($round);
+
 	$m->comp("/funclib/hybrid_panels.mas", round => $round, dump => 'yasskween');
 
 	my $setting = Tab::RoundSetting->search( round => $round, tag => "disaster_checked")->first;

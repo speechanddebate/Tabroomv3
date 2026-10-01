@@ -36,8 +36,12 @@
 		$err .= "You did not enter a school or team name.  Try again";
     }
 
+	unless (length($chapter_name) > 4) {
+		$err .= "Please use a full institution name, not an abbreviation, to avoid misidentification and duplicates.";
+	}
+
     unless ($country) {
-		$err .= "You did not enter a country.  Please try again";
+		$err .= "You did not enter a country.  Please try again.";
     }
 
 	unless ($state) {
@@ -207,6 +211,7 @@
 	} elsif ($chapter_name) {
 
 		my $search_name = $chapter_name;
+
 		#this is friggin annoying
 	    $search_name =~ s/of Math and Science$//g;
     	$search_name =~ s/Academy$//g;
@@ -235,11 +240,15 @@
 				state   => $state
 			);
 
-			push @chapters, Tab::Chapter->search_where(
-				name    => { "like", $search_name."%"},
-				country => $country,
-				state   => $state
-			);
+			if ($search_name) {
+				push @chapters, Tab::Chapter->search_where(
+					name    => { "like", $search_name."%"},
+					country => $country,
+					state   => $state
+				);
+			}
+
+			Tab::debuglog(scalar @chapters." duplicate chapters found with chapter name $chapter_name and search name $search_name.");
 
 			if (@chapters) {
         		$m->redirect("create.mhtml?name=$chapter_name&state=$state&naudl=$naudl&level=$level&country=$country&ipeds=$ipeds&nces=$nces&ceeb=$ceeb&search=1");

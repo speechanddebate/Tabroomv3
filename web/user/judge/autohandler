@@ -1,0 +1,41 @@
+<%args>
+	$person
+	$judge_id   => undef
+</%args>
+<%init>
+
+	if ($r->uri eq "/user/judge/panels.mhtml") {
+		$m->call_next();
+	}
+
+	my $judge;
+
+	if ($judge_id && $judge_id == int($judge_id)) {
+		$judge = Tab::Judge->retrieve($judge_id);
+	} elsif ($judge_id) {
+		my $test = eval{
+			return shift @{$judge_id};
+		};
+		if ($test && $test == int($test)) {
+			$judge_id = $test;
+			$judge = Tab::Judge->retrieve($judge_id);
+		}
+	}
+
+	if ($judge && $judge->id) {
+
+		if (not defined $person->site_admin) {
+			unless ($judge->person > 0 && ($judge->person == $person)) {
+				$m->comp("/funclib/abort.mas", message => "You do not have access to that judge record");
+			}
+		}
+
+		$m->call_next(
+			judge => $judge
+		);
+	} else {
+		$m->call_next( judge => undef );
+	}
+
+</%init>
+

@@ -62,6 +62,8 @@
 		my $code;
 		my $category;
 
+		my %taken;
+
 		foreach my $weekend (@weekends) {
 
 			next unless $categories{$type}{$weekend->id};
@@ -69,6 +71,15 @@
 			$code = "IE" if $type eq "speech";
 			$code = "DEB" if $type eq "debate";
 			$code = "CON" if $type eq "congress";
+
+			if ($taken{$code}++) {
+				my $add = 2;
+				while ($taken{$code."-".$add}) {
+					$add++;
+				}
+				$code = $code."-".$add;
+				$taken{$code}++;
+			}
 
 			$category = Tab::Category->search(
 				name  => ucfirst($type)." (".$weekend->name.")",

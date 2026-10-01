@@ -311,15 +311,12 @@
 								<% $event_settings->{"schem_designation"} eq "both"
 									? 'selected="selected"' : "" %>
 							>Both</option>
-
 						</select>
 					</span>
 				</div>
-
 %			}
 
 %			if ($event->type eq "wudc") {
-
 				<label for="avoid_school_hits">
 					<div class="hover row flexrow">
 						<span class="twothird wrap">
@@ -328,10 +325,10 @@
 
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "avoid_school_hits",
-								value   => $event_settings->{"avoid_school_hits"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "avoid_school_hits",
+								value    => $event_settings->{"avoid_school_hits"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
 					</div>
@@ -344,12 +341,9 @@
 				&& $event->type ne "wudc"
 			) {
 </%perl>
-
 %				unless ($districts) {
-
 					<div class="norr flexkids nospace <% $event_settings->{"round_robin"} ? "hidden" : "" %>">
 %						my $seed_presets = $event_settings->{"seed_presets"};
-
 						<div class="row flexrow">
 							<span class="third padleft">
 								Preset seeding
@@ -422,6 +416,28 @@
 								</span>
 							</div>
 						</label>
+
+						<div
+							class ="hover row flexrow"
+							id    ="option_set_speaker_order"
+							title = "Use this option when all rounds are flip but the speaker order is set"
+						>
+							<label for="set_speaker_order">
+								<span class="fivesixths padleft">
+									Speaker order is fixed
+								</span>
+
+								<span class="sixth centeralign">
+									<& "/funclib/bool_switch.mas",
+										tag      => "set_speaker_order",
+										value    => $event_settings->{"set_speaker_order"},
+										event_id => $event,
+										function => "checkFlip();",
+										smaller  => 1,
+									&>
+								</span>
+							</label>
+						</div>
 %					}
 
 					<label for="school_debates_self">
@@ -574,7 +590,6 @@
 %					}
 
 					<div class="flexkids wrap flexrownospace norr <% $event_settings->{"round_robin"} ? "hidden" : "" %>">
-
 						<h5 class="fixedheight">
 							Powermatching
 						</h5>
@@ -871,10 +886,10 @@
 
 							<span class="sixth centeralign">
 								<& "/funclib/bool_switch.mas",
-									tag     => "speaker_priority_first",
-									value   => $event_settings->{"speaker_priority_first"},
-									event_id  => $event,
-									smaller => 1,
+									tag      => "speaker_priority_first",
+									value    => $event_settings->{"speaker_priority_first"},
+									event_id => $event,
+									smaller  => 1,
 								&>
 							</span>
 						</div>
@@ -921,10 +936,10 @@
 						</span>
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "repeat_rooms",
-								value   => $event_settings->{"repeat_rooms"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "repeat_rooms",
+								value    => $event_settings->{"repeat_rooms"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
 					</div>
@@ -941,10 +956,10 @@
 							</span>
 							<span class="sixth centeralign">
 								<& "/funclib/bool_switch.mas",
-									tag     => "seed_presets",
-									value   => $event_settings->{"seed_presets"},
-									event_id  => $event,
-									smaller => 1,
+									tag      => "seed_presets",
+									value    => $event_settings->{"seed_presets"},
+									event_id => $event,
+									smaller  => 1,
 								&>
 							</span>
 						</div>
@@ -1088,10 +1103,10 @@
 					</span>
 					<span class="sixth centeralign">
 						<& "/funclib/bool_switch.mas",
-							tag     => "no_autopair",
-							value   => $event_settings->{"no_autopair"},
-							event_id  => $event,
-							smaller => 1,
+							tag      => "no_autopair",
+							value    => $event_settings->{"no_autopair"},
+							event_id => $event,
+							smaller  => 1,
 						&>
 					</span>
 				</div>
@@ -1113,6 +1128,22 @@
 					>
 				</span>
 			</div>
+
+			<label for="disable_flight_limit">
+				<div class="hover row flexrow">
+					<span class="fivesixths padleft">
+						Disable flight limit
+					</span>
+					<span class="sixth centeralign">
+						<& "/funclib/bool_switch.mas",
+							tag      => "disable_flight_limit",
+							value    => $event_settings->{"disable_flight_limit"},
+							event_id => $event,
+							smaller  => 1,
+						&>
+					</span>
+				</div>
+			</label>
 		</span>
 
 		<span class="pagehalf flexkids marleftmore">
@@ -1129,10 +1160,10 @@
 						</span>
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "allow_judge_own",
-								value   => $event_settings->{"allow_judge_own"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "allow_judge_own",
+								value    => $event_settings->{"allow_judge_own"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
 					</label>
@@ -1149,10 +1180,10 @@
 
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "region_judge_forbid",
-								value   => $event_settings->{"region_judge_forbid"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "region_judge_forbid",
+								value    => $event_settings->{"region_judge_forbid"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
 					</div>
@@ -1166,10 +1197,10 @@
 
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "conflict_dioregion_judges",
-								value   => $event_settings->{"conflict_dioregion_judges"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "conflict_dioregion_judges",
+								value    => $event_settings->{"conflict_dioregion_judges"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
 					</div>
@@ -1185,10 +1216,10 @@
 
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "region_judge_forbid",
-								value   => $event_settings->{"region_judge_forbid"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "region_judge_forbid",
+								value    => $event_settings->{"region_judge_forbid"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
 					</div>
@@ -1204,10 +1235,10 @@
 
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "no_first_years",
-								value   => $event_settings->{"no_first_years"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "no_first_years",
+								value    => $event_settings->{"no_first_years"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
 					</div>
@@ -1215,7 +1246,6 @@
 %			}
 
 			<script>
-
 
 				function checkRepeat() {
 					if ($("#allow_repeat_judging").prop("checked") ) {
@@ -1239,8 +1269,11 @@
 				function checkFlip() {
 					if ($("#no_side_constraints").prop("checked") ) {
 						$(".no_side_constraints").addClass('itooamhidden');
+						$("#option_set_speaker_order").removeClass('hidden');
 					} else {
+						$("#set_speaker_order").prop("checked", false);
 						$(".no_side_constraints").removeClass('itooamhidden');
+						$("#option_set_speaker_order").addClass('hidden');
 					}
 					fixVisual();
 				}
@@ -1262,7 +1295,7 @@
 						<& "/funclib/bool_switch.mas",
 							tag      => "allow_repeat_judging",
 							value    => $event_settings->{"allow_repeat_judging"},
-							event_id   => $event,
+							event_id => $event,
 							function => "checkRepeat();",
 							smaller  => 1,
 						&>
@@ -1279,10 +1312,10 @@
 
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "allow_repeat_prelim_side",
-								value   => $event_settings->{"allow_repeat_prelim_side"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "allow_repeat_prelim_side",
+								value    => $event_settings->{"allow_repeat_prelim_side"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
 					</div>
@@ -1298,7 +1331,7 @@
 						<& "/funclib/bool_switch.mas",
 							tag      => "allow_repeat_elims",
 							value    => $event_settings->{"allow_repeat_elims"},
-							event_id   => $event,
+							event_id => $event,
 							function => "checkRepeatElims();",
 							smaller  => 1,
 						&>
@@ -1315,10 +1348,10 @@
 
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "disallow_repeat_drop",
-								value   => $event_settings->{"disallow_repeat_drop"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "disallow_repeat_drop",
+								value    => $event_settings->{"disallow_repeat_drop"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
 					</div>
@@ -1342,7 +1375,6 @@
 								type  = "text"
 								class = "thin"
 								name  = "break_point"
-								size  = "5"
 								value = "<%  $event_settings->{"break_point"} %>"
 							>
 						</span>
@@ -1358,7 +1390,6 @@
 								type  = "text"
 								class = "thin"
 								name  = "max_pref"
-								size  = "5"
 								value = "<% $event_settings->{"max_pref"} %>"
 							>
 						</span>
@@ -1372,10 +1403,10 @@
 
 							<span class="sixth centeralign">
 								<& "/funclib/bool_switch.mas",
-									tag     => "nobreak_noprefs",
-									value   => $event_settings->{"nobreak_noprefs"},
-									event_id  => $event,
-									smaller => 1,
+									tag      => "nobreak_noprefs",
+									value    => $event_settings->{"nobreak_noprefs"},
+									event_id => $event,
+									smaller  => 1,
 								&>
 							</span>
 						</div>

@@ -14,6 +14,7 @@
 
 	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
 	my $school = Tab::School->retrieve($school_id) if $school_id;
+
 	$school = $entry->school if $entry;
 
 	my $chapter = $school->chapter if $school;
@@ -30,8 +31,13 @@
 	$m->redirect("/user/home.mhtml?err=You are not authorized to view that school")
 		unless ($person->site_admin || $coach);
 
+	my $tourn = eval {
+		return $school->tourn if $school;
+	};
+
 	$m->call_next(
 		school          => $school,
+		tourn           => $tourn,
 		chapter         => $chapter,
 		person          => $person,
 		person_settings => $person_settings,

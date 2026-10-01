@@ -1,6 +1,7 @@
 <%args>
 	$person
 	$person_settings
+	$judge
 	$panel_id => undef
 	$from     => undef
 </%args>
@@ -21,9 +22,8 @@
 	}
 
 	my $round = $panel->round;
-	my $judge;
 
-	if ($person->site_admin && $ARGS{"judge_id"}) {
+	if ($person->site_admin && $judge) {
 
 		Tab::Judge->set_sql( panel_judge => "
 			select judge.*
@@ -33,7 +33,7 @@
 				and judge.id = ?
 		");
 
-		$judge = Tab::Judge->search_panel_judge($panel->id, $ARGS{"judge_id"})->first;
+		$judge = Tab::Judge->search_panel_judge($panel->id, $judge->id)->first;
 
 	} else {
 
@@ -143,12 +143,14 @@
 				$panel->letter
 			)->first;
 
-			foreach my $ballot ($po_panel->ballots( judge => $judge)) {
-				unless ($ballot->audit) {
-					$ballot->audit(1);
-					$ballot->audited_by($person->id);
-					$ballot->update();
-					$change++;
+			if ($po_panel) {
+				foreach my $ballot ($po_panel->ballots( judge => $judge)) {
+					unless ($ballot->audit) {
+						$ballot->audit(1);
+						$ballot->audited_by($person->id);
+						$ballot->update();
+						$change++;
+					}
 				}
 			}
 		}

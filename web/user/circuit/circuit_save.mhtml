@@ -2,10 +2,10 @@
 	$person
 	$name
 	$abbr
-	$circuit_id         => undef
-	$timezone           => undef
-	$state              => undef
-	$country            => undef
+	$circuit
+	$timezone => undef
+	$state    => undef
+	$country  => undef
 </%args>
 <%init>
 

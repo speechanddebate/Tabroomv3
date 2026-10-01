@@ -20,6 +20,20 @@
 		$m->abort();
 	}
 
+	my $chapter = $entry->school->chapter;
+
+	unless ($person->site_admin) {
+		if ($chapter) {
+			unless ($perms->{chapter}{$chapter->id} eq "chapter") {
+				$m->print('{ "error": true, "message": "No chapter permissions found for entry ID '.$entry_id.'"}');
+				$m->abort();
+			}
+		} else {
+			$m->print('{ "error": true, "message": "No chapter found for entry ID '.$entry_id.'"}');
+			$m->abort();
+		}
+	}
+
 	my $message;
 	my @replace;
 	my %response;

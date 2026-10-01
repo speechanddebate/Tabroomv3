@@ -227,8 +227,6 @@
 									<% $menus{$key}{$cid}{"name"} %>
 								</span>
 								<span class="quarter nospace">
-									<% ucfirst($key) %>
-									<% $cid %>
 									<% $menus{$key}{$cid}{"extra"} %>
 								</span>
 %							} else {

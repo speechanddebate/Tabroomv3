@@ -1,13 +1,11 @@
 <%args>
+	$dbh
 	$school
+	$tourn
 	$person
 	$event_id => undef
 </%args>
 <%init>
-
-	my $tourn = $school->tourn;
-
-	my $dbh = Tab::DBI->db_Main();
 
 	my $sth = $dbh->prepare("
         select
@@ -57,7 +55,7 @@
 		&>
 
 		<span class='threequarters'>
-			<h3 class="padtopmuchmore martopmuchmore normalweight">
+			<h3 class="normalweight">
 				<% $tourn->name %>
 			</h3>
 
@@ -82,14 +80,16 @@
 
 			<& "/funclib/tablesorter.mas", table => "stats" &>
 
-			<span class="threequarters nospace padtopmore">
-				<h5 class="leftalign semibold">
-					General Statistics
-				</h5>
-			</span>
+			<div class="full flexrow">
+				<span class="threequarters">
+					<h5 class="leftalign semibold">
+						General Statistics
+					</h5>
+				</span>
 
-			<span class="quarter rightalign nospace" id="stats_buttonarea">
-			</span>
+				<span class="quarter rightalign nospace" id="stats_buttonarea">
+				</span>
+			</div>
 
 			<table id="stats">
 				<thead>

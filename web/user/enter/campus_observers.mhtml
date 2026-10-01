@@ -147,17 +147,17 @@
 </%perl>
 								<div
 									id    = "<% $observer %>_<% $id %>"
-									class = "nospace smaller padleft yellowhover"
+									class = "flexrow smaller padleft yellowhover"
 								>
 									<span class="smaller fourfifths">
 										<% $observers{$id}{$observer} %>
 									</span>
 									<span class="fifth smaller centeralign nospace">
 										<a
-											class         = "fa fa-sm fa-trash buttonwhite redtext"
-											target_id     = "<% $id %>"
-											related_thing = "<% $observer %>"
-											onClick       = "postSwitch(this, 'observer_rm.mhtml');"
+											class       = "fa fa-sm fa-trash buttonwhite redtext"
+											entry_id    = "<% $id %>"
+											observer_id = "<% $observer %>"
+											onClick     = "postSwitch(this, 'observer_rm.mhtml');"
 										></a>
 									</span>
 								</div>
@@ -168,11 +168,10 @@
 					<td class="centeralign">
 						<span class="nospace full">
 						<select
-							name      = "tabroom_id"
-							class     = "fixedbig"
-							target_id = "<% $id %>"
-							id        = "input_<% $id %>"
-							onChange  = "postSwitch(this, 'observer_add.mhtml', clearContents);"
+							name     = "tabroom_id"
+							entry_id = "<% $id %>"
+							id       = "input_<% $id %>"
+							onChange = "postSwitch(this, 'observer_add.mhtml', clearContents);"
 						>
 							<option value="">Choose coach from roster</option>
 %							foreach my $admin (sort keys %people) {

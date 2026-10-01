@@ -16,6 +16,7 @@
         type        => 'tabbing',
         event       => $round->event->id,
         tourn       => $round->event->tourn->id,
+		round       => $round->id,
         person      => $person,
         description => $description
     );
@@ -27,12 +28,12 @@
 	);
 
     my $round_event = $round->event;
-	my $event_type = $round_event->type;
-    my $tourn = $round_event->tourn;
-	my $category = $round_event->category;
+	my $event_type  = $round_event->type;
+    my $tourn       = $round_event->tourn;
+	my $category    = $round_event->category;
 
 	my %category_settings = $category->all_settings;
-	my %event_settings = $round_event->all_settings;
+	my %event_settings    = $round_event->all_settings;
 
 	my $this_round = $round->id;
 	my $round_type = $round->type;
@@ -600,7 +601,7 @@
                     $score += 10000000 if $entry_region{$entry} == $judge_region{$judge};
                 }
 
-				if ($event_settings{"conflict_dioregion_judges"}) { 
+				if ($event_settings{"conflict_dioregion_judges"}) {
                     $score += 1000000 if $entry_dioregion{$entry} == $judge_dioregion{$judge};
 				}
 
@@ -657,7 +658,6 @@
 			$current_flight++;
 			$current_flight = 1 if $current_flight > $flights;
 		}
-
 
 		foreach my $order (1 .. $num_judges) {
 
@@ -952,19 +952,18 @@
 	}
 
 	my $msg = "Judges added";
-
 	return $msg if $ARGS{"return"};
 
 	unless ($debugme) {
 
-		$m->redirect("/panel/round/rooms.mhtml?round_id=".$round->id)
-			if $round->type eq "elim"
-			|| $round->type eq "final"
-			|| $round->type eq "runoff"
-			|| $flights == 1;
+		if ($flights == 1) {
+			$m->redirect("/panel/round/rooms.mhtml?round_id=".$round->id)
+				if $round->type eq "elim"
+				|| $round->type eq "final"
+				|| $round->type eq "runoff";
+		}
 
 		$m->redirect("/panel/schemat/show.mhtml?round_id=".$round->id."&disp=1&msg=$msg");
-
 	}
 
 	sub score_elim_panel {

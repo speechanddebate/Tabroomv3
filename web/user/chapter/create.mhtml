@@ -21,11 +21,28 @@
 	if ($search) {
 
 		my $search_name = $name;
-
 		$search_name = $m->comp('/funclib/short_name.mas', name => $search_name);
 
     	$search_name =~ s/^\s+//;  #leading spaces
     	$search_name =~ s/\s+$//;  #trailing spaces
+
+		#this is friggin annoying
+	    $search_name =~ s/of Math and Science$//g;
+    	$search_name =~ s/Academy$//g;
+    	$search_name =~ s/Regional\ High\ School$//g;
+    	$search_name =~ s/High\ School$//g;
+   		$search_name =~ s/School$//g;
+    	$search_name =~ s/High$//g;
+    	$search_name =~ s/Preparatory$/Prep/g;
+    	$search_name =~ s/College\ Prep$/CP/g;
+    	$search_name =~ s/HS$//g;
+    	$search_name =~ s/Regional$//g;
+    	$search_name =~ s/Public\ Charter//g;
+    	$search_name =~ s/Charter\ Public//g;
+    	$search_name =~ s/^The//g;
+    	$search_name =~ s/^Saint/St./g;
+    	$search_name = "College Prep" if $search_name eq "CP";  #Sometimes it's the whole school name.  Oops.
+    	$search_name =~ s/High\ School/HS/g;
 
 		unless ($duplicate) {
 			@chapters = Tab::Chapter->search_where(
@@ -47,51 +64,54 @@
 
 %		if (@chapters) {
 
-			<h2>That institution already exists!</h2>
+			<h5 class="semibold">That institution might already exist in Tabroom!</h5>
 
-			<p>
-				An institution already exists with that name &amp; location.  If
-				you are a new coach for an existing program, you should instead
-				email the previous coaches to request access to that program's
-				account, so you can gain access to the existing team history &
-				records.
-			</p>
+			<div class="flexrow centeralign">
 
-			<p>
-				To gain access to an account where the coaches with access have
-				departed, please contact <a href="mailto: help@tabroom.com">help@tabroom.com</a>
-			</p>
+				<span class="ninetenths leftalign">
+					<p>
+						An institution already exists with that name &amp;
+						location.  If you are a new coach for an existing
+						program, you should instead email the previous coaches
+						to request access to that program's account, so you can
+						gain access to the existing team history &amp; records.
+					</p>
 
-			<p>
-				However, if you are creating a parallel program, or if there are
-				just two schools with the same name or something, click "confirm
-				dupilication" below.
-			</p>
+					<p>
+						To gain access to an account where the coaches with
+						access cannot be reached, please contact <a href="mailto:
+						help@tabroom.com">help@tabroom.com</a>
+					</p>
 
+					<p>
+						However, if you are creating a parallel program, or if
+						there are just two institutions with the same name or
+						something, click "confirm dupilication" below.
+					</p>
+				</span>
+			</div>
 
-			<div class="yellow marno">
-
-				<span class="half strong">
+			<div class="yellow flexrow">
+				<span class="half semibold">
 					Name
 				</span>
 
-				<span class="half strong">
+				<span class="half semibold">
 					Accounts w/access
 				</span>
-
 			</div>
 
 %			my %used;
 %			foreach my $chapter (@chapters) {
 %				next if $used{$chapter->id}++;
 
-				<div class="marno  row padno">
+				<div class="row flexrow">
 
-					<span class="half">
+					<span class="half padleft">
 						<% $chapter->name %>
 					</span>
 
-					<span class="half padvert">
+					<span class="half padvert padleft">
 						<& "/funclib/chapter_admins.mas", chapter => $chapter, print => 1 &>
 					</span>
 
@@ -111,33 +131,37 @@
 			<h2>Create a new school/team</h2>
 % 		}
 
-			<div class=" row padno">
+			<form
+				action ="save.mhtml"
+				method ="post"
+			>
 
-				<span class="half ">
-					School/Team Name
+			<input
+				type  ="hidden"
+				name  ="new"
+				value ="yessireebob"
+			>
+
+			<div class="row flexrow">
+				<span class="half padleft">
+					Institution/School/Team Name
 				</span>
 
-				<span class="half">
-					<form action="save.mhtml" method="post">
-					<input type="hidden" name="new" value="yessireebob">
-
+				<span class="half padright">
 					<input
 						type  = "text"
 						name  = "chapter_name"
-						size  = "32"
 						value = "<% $name %>">
 				</span>
-
 			</div>
 
-			<div class=" row padno">
-
-				<span class="half ">
+			<div class="row flexrow">
+				<span class="half padleft">
 					Level
 				</span>
 
-				<span class="half">
-					<select name="level" class="fixedbig">
+				<span class="half padright">
+					<select name="level">
 						<option value="">--Please choose a level--</option>
 
 						<option <% $level eq "university" ? 'selected' : "" %>
@@ -166,59 +190,57 @@
 
 			</div>
 
-			<div class=" row padno">
+			<div class="row flexrow">
 
-				<span class="half ">
+				<span class="half padleft">
 					Street
 				</span>
 
-				<span class="half">
+				<span class="half padright">
 					<input
 						type  = "text"
 						name  = "street"
-						size  = "32"
 						value = "<% $name %>">
 				</span>
 
 			</div>
 
-			<div class=" row padno">
+			<div class="row flexrow">
 
-				<span class="half ">
+				<span class="half padleft">
 					City
 				</span>
 
-				<span class="half">
+				<span class="half padright">
 					<input
 						type  = "text"
 						name  = "city"
-						size  = "32"
 						value = "<% $name %>">
 				</span>
 
 			</div>
 
-			<div class=" row padno">
+			<div class="row flexrow">
 
-				<span class="half ">
+				<span class="half padleft">
 					State/Province (if applicable)
 				</span>
 
-				<span class="half">
-					<select name="state" class="fixedbig">
+				<span class="half padright">
+					<select name="state">
 						<& "/funclib/state_select.mas", state => $state &>
 					</select>
 				</span>
 
 			</div>
 
-			<div class=" row padno">
+			<div class="row flexrow">
 
-				<span class="half ">
+				<span class="half padleft">
 					US Zip
 				</span>
 
-				<span class="half">
+				<span class="half padright">
 					<input
 						type  = "number"
 						name  = "zip"
@@ -229,102 +251,98 @@
 
 			</div>
 
-			<div class=" row padno">
+			<div class="row flexrow">
 
-				<span class="half ">
+				<span class="half padleft">
 					Postal Code (Non-USA)
 				</span>
 
-				<span class="half">
+				<span class="half padright">
 					<input
 						type  = "text"
 						name  = "postal"
-						size  = "8"
 						value = "<% $postal %>">
 				</span>
 
 			</div>
 
 
-			<div class=" row padno">
+			<div class="row flexrow">
 
-				<span class="half ">
+				<span class="half padleft">
 					Country
 				</span>
 
-				<span class="half">
-					<select name="country" class="fixedbig">
+				<span class="half padright">
+					<select name="country">
 						<& "/funclib/country_select.mas", country => $country &>
 					</select>
 				</span>
 
 			</div>
 
-			<div class=" row padno">
+			<div class="row flexrow">
 
-				<span class="fourfifths">
+				<span class="fourfifths padleft">
 					Is your school a member of a Urban Debate League
 					affiliated with NAUDL?
 				</span>
 
-				<label for="naudl">
-					<span class="hover tenth centeralign">
+				<span class="hover fifth centeralign">
+					<label for="naudl" class="centeralign">
 						<input
 							type  = "checkbox"
 							id    = "naudl"
 							name  = "naudl"
 							value = "1"
 							<% $naudl ? 'checked="checked"' : "" %>>
-					</span>
-				</label>
+					</label>
+				</span>
 
 			</div>
 
-			<h5>The following information helps us prevent duplicate records</h5>
+			<h5>The following optional information helps us prevent duplicate records</h5>
 
-			<div class=" row padno">
+			<div class="row flexrow">
 
-				<span class="fourfifths">
+				<span class="twothirds padleft">
 					National Center for Education Statistics number
 				</span>
 
-				<span class="fifth centeralign">
+				<span class="third padright">
 					<input
 						type  = "text"
 						name  = "nces"
-						size  = "10"
 						value = "<% $nces %>">
 				</span>
 
 			</div>
 
-			<div class=" row padno">
+			<div class="row flexrow">
 
-				<span class="fourfifths">
+				<span class="twothirds padleft">
 					CEEB (College Entrance Examination Board) number
 				</span>
 
-				<span class="fifth centeralign">
+				<span class="third padright">
 					<input
 						type  = "text"
 						name  = "ceeb"
-						size  = "10"
 						value = "<% $ceeb %>">
 				</span>
 
 			</div>
 
-			<div class=" row padno marno">
+			<div class="row flexrow">
 
-				<span class="fourfifths">
-					IPEDS Number (US College/Universities - optional)
+				<span class="twothirds padleft">
+					IPEDS Number (US College/Universities)
 				</span>
 
-				<span class="fifth centeralign">
+				<span class="third padright">
 					<input
 						type  = "text"
 						name  = "ipeds"
-						size  = "10"
 						value = "<% $ipeds %>">
 				</span>
 
@@ -333,11 +351,11 @@
 %			if (@chapters) {
 
 				<label for="dupe">
-					<div class="row padno hover martopmore bluebordertop">
+					<div class="row flexrow hover martopmore bluebordertop">
 						<span class="half padsetting semibold redtext">
 							You confirm this is not a duplicate program:
 						</span>
-						<span class="twofifths rightalign">
+						<span class="half centeralign">
 							<input
 								type  = "checkbox"
 								name  = "duplicate"
@@ -350,12 +368,16 @@
 
 %			}
 
-		<div class="libl row marno rightalign padvert padrightmore">
-			<input
-				type  = "submit"
-				value = "Save School Info">
-			</form>
+		<div class="libl row flexrow rightalign padvert padrightmore">
+			<span class="centeralign third">
+				<input
+					type  = "submit"
+					value = "Save School Info"
+				>
+			</span>
 		</div>
+
+		</form>
 
 	</div>
 

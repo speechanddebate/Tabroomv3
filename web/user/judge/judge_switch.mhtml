@@ -1,7 +1,7 @@
 <%args>
 	$person
 	$perms
-	$judge_id      => undef
+	$judge_id       => undef
 	$property_name  => undef
 	$property_value => undef
 	$setting_name   => undef
@@ -20,6 +20,33 @@
 	unless ($property_name || $setting_name) {
 		$m->print('{ "error": true, "message": "No property to change sent"}');
 		$m->abort();
+	}
+
+	my $allowed_settings = ({
+		diverse => 1,
+	});
+
+	my $allowed_properties = ({
+		first          => 1,
+		middle         => 1,
+		last           => 1,
+		ada            => 1,
+		obligation     => 1,
+		hired          => 1,
+		category       => 1,
+		alt_category   => 1,
+		person         => 1,
+	});
+
+	unless ($person->site_admin) {
+		if (
+			($property_name && (not defined $allowed_properties->{$property_name}))
+			|| ($setting_name && (not defined $allowed_settings->{$setting_name}))
+		) {
+			$m->comp("/funclib/abort.mas",
+				message => "You are not authorized to change those properties",
+			);
+		}
 	}
 
 	my $judge = Tab::Judge->retrieve($judge_id);

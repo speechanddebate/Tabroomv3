@@ -19,14 +19,19 @@
 	my %round_settings = $round->all_settings();
 
     if ($round_settings{"timeslot_merge"}) {
-		my $msg = "Rooms were not placed because this is a timeslot-merged round";
-		$m->redirect("/panel/schemat/show.mhtml?round_id=$round_id&msg=$msg");
+		my $err = "Rooms were not placed because this is a timeslot-merged round";
+		$m->redirect("/panel/schemat/show.mhtml?round_id=$round_id&err=$err");
 	}
 
 	my $event = $round->event;
 	my %event_settings = $event->all_settings();
 
+	my $msg;
+
 	if ($wipe) {
+
+		$msg = "Erased and ";
+
 		my $wipe_sth = $dbh->prepare("
 			update panel set room = NULL where round = ?
 		");
@@ -53,9 +58,9 @@
 				|| $event_settings{"online_mode"} eq "nsda_campus_observers"
 			) && (not defined $event_settings{"online_hybrid"})
 		) {
-			my $msg = "Room placement is not necessary for online tournaments.  Skipped";
-			if ($return) { return $msg; }
-			$m->redirect("/panel/schemat/show.mhtml?round_id=$round_id&msg=$msg");
+			my $err = "Room placement is not necessary for online tournaments.  Skipped";
+			if ($return) { return $err; }
+			$m->redirect("/panel/schemat/show.mhtml?round_id=$round_id&err=$err");
 		}
 	}
 
@@ -173,7 +178,18 @@
 	# if the round is flighted where possible. Where it is not possible that is
 	# fine, because it will imply that the judge is judging two ADA sections.
 
-	if ($round->flighted == 2) {
+	my $prefs = $event->category->setting("prefs");
+	undef $prefs if $prefs eq "none";
+	undef $prefs if $event_settings{"no_prefs"};
+
+	unless (
+		$round->flighted != 2
+		|| (
+			$num_judges > 1
+			&& $prefs
+			&& $round->type eq "elim"
+		)
+	) {
 		$m->comp("reset_flights.mhtml",
 			round_id        => $round->id,
 			return          => 1,
@@ -945,17 +961,17 @@
 		$m->comp("/funclib/hybrid_panels.mas", round => $round);
 	}
 
-	my $description = "Assigned Rooms in ".$round->realname." of ".$event->abbr;
+	$msg .= "Assigned Rooms in ".$round->realname." of ".$event->abbr;
 
 	$m->comp("/funclib/log.mas",
 		type        => 'tabbing',
 		event       => $event->id,
 		tourn       => $tourn->id,
+		round       => $round->id,
 		person      => $person,
-		description => $description
+		description => $msg
 	);
 
-	my $msg = "Rooms have been assigned";
 	my $full_err = "Insufficent rooms were available.  Some rounds do not have rooms!"
 		if $oh_crap_ran_out > 0;
 

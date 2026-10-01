@@ -4,6 +4,8 @@
 </%args>
 <%init>
 
+	return;
+
     # Written by ATH, Apr. 2020
     use JSON;
     my $json = JSON->new->allow_nonref;
@@ -19,8 +21,9 @@
     }
 
     # Get the person data to include with the resposne
-    my $profile = Tab::Person->retrieve($person);
-    unless ($profile) {
+    my $profile = Tab::Person->retrieve(int($person));
+
+    unless ($profile && $profile->id) {
         my %err = (
             message => 'No person with the ID'.$person.' was found.'
         );
@@ -188,13 +191,13 @@
         my ($tourn_id, $tourn_name, $tourn_start, $tourn_end, $tourn_permission, $tourn_contact) = $sth5->fetchrow_array()
     ) {
         my %admin_hash = (
-            type       => 'admin',
-            tourn_id   => $tourn_id,
-            tourn_name => $tourn_name,
-            tourn_start => $tourn_start,
-            tourn_end => $tourn_end,
+            type             => 'admin',
+            tourn_id         => $tourn_id,
+            tourn_name       => $tourn_name,
+            tourn_start      => $tourn_start,
+            tourn_end        => $tourn_end,
             tourn_permission => $tourn_permission,
-            tourn_contact => $tourn_contact,
+            tourn_contact    => $tourn_contact,
         );
         push @tourns, \%admin_hash;
     }
@@ -212,7 +215,5 @@
     );
 
     print $json->pretty->encode(\%json_hash);
-
-	;
 
 </%init>

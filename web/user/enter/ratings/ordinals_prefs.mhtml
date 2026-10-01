@@ -722,7 +722,9 @@
 			prefs           => $prefs,
 			category_id     => $category->id,
 			entry_id        => $entry_id,
-			nodiv           => 1
+			nodiv           => 1,
+			no_others       => $ARGS{no_others},
+			dbh             => $dbh,
 		&>
 
 %		if ($entry && $category_settings{"show_diversity"} && $diverse_total > 0) {

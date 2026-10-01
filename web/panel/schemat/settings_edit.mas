@@ -1269,7 +1269,7 @@
 					</span>
 
 					<span class="third rightalign padright">
-%						if ($tourn_settings->{"nsda_nats"}) {
+%						if ($tourn_settings->{"nsda_nats"} || $event_settings{disable_flight_limit}) {
 							<input
 								type          = "number"
 								name          = "flighted"

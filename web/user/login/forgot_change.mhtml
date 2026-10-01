@@ -19,15 +19,10 @@
 	my %person_settings = $person->all_settings();
 
 	unless ($person_settings{"pass_change_expires"} && $person_settings{"pass_changekey"}) {
-
 		$err = "Either something is wrong with the system, or you're pulling shenanigans.";
-
 	} elsif ($person_settings{"pass_change_expires"}->epoch < $now->epoch) {
-
 		$err = "That access code has expired.  Please have the system send you another reset email.";
-
-	} elsif ($person_settings{"pass_changekey"} != $key) {
-
+	} elsif ($person_settings{"pass_changekey"} ne $key) {
 		$err = "The access key is not valid.  Please try again.";
 	}
 

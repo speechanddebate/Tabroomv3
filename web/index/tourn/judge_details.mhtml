@@ -215,7 +215,6 @@
 	");
 
 	my @jpools = Tab::JPool->search_by_judge($already->id);
-
 	my %jpool_by_id = map {$_->id => $_} @jpools;
 
 	my $answers;
@@ -329,7 +328,6 @@
 					<% $already->setting("public_signup_by") %>
 				</span>
 			</div>
-
 
 %			if (@jpools) {
 %				if ($tourn_settings{"mock_trial_registration"}) {

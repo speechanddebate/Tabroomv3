@@ -2,9 +2,7 @@
 	$person
 	$perms
 	$entry_id      => undef
-	$property_name  => undef
 	$setting_name   => undef
-	$property_value => 0
 	$flag           => undef
 </%args>
 <%init>
@@ -17,7 +15,7 @@
 		$m->abort();
 	}
 
-	unless ($property_name || $setting_name) {
+	unless ($setting_name) {
 		$m->print('{ "error": true, "message": "No property to change sent"}');
 		$m->abort();
 	}
@@ -36,17 +34,11 @@
 	);
 
 	if ($setting_name) {
-
 		if ($setting_name eq "video_link_tested") {
-
 			$entry->setting($setting_name, $person->id);
-
 			$response{"hideAll"} = "test_pls";
 			$response{"showAll"} = "tested_thx";
 			$response{message}   = "Video link for entry is now marked as tested";
-
-		} else {
-			$entry->setting($setting_name, $property_value);
 		}
 	}
 

@@ -2,7 +2,7 @@
 	$person
 	$perms
 	$ballot_id      => undef
-	$school_id      => undef
+	$school
 	$property_value => undef
 </%args>
 <%init>
@@ -10,7 +10,7 @@
 	$m->clear_buffer();
 	$r->content_type('application/json');
 
-	unless ($ballot_id || $school_id) {
+	unless ($ballot_id || $school) {
 		$m->print('{ "error": true, "message": "No ballot ID sent"}');
 		$m->abort();
 	}
@@ -68,7 +68,7 @@
 			where school.id  = ?
 		");
 
-		$sth->execute($school_id);
+		$sth->execute($school->id);
 		my $results = $sth->fetchall_hash();
 		my $res = shift @{$results};
 
@@ -93,7 +93,7 @@
 					)
 			");
 
-			$approve_ballot_sth->execute($person->id, $school_id);
+			$approve_ballot_sth->execute($person->id, $school->id);
 			$response{'message'} = "All ballots marked as viewable to your competitors.";
 			$response{"refresh"} = \1;
 
@@ -113,7 +113,7 @@
 					)
 			");
 
-			$disapprove_ballot_sth->execute($school_id);
+			$disapprove_ballot_sth->execute($school->id);
 			$response{'message'} = "No ballots marked as viewable to your competitors.";
 			$response{"refresh"} = \1;
 		}

@@ -39,15 +39,16 @@
 
 	<div class="main">
 
-	<span class="fourfifths nospace">
-		<h5>Circuit Contacts: <% $circuit->abbr %></h5>
-	</span>
+	<div class='flexrow'>
+		<span class="fourfifths nospace">
+			<h4>Circuit Contacts: <% $circuit->abbr %></h5>
+		</span>
 
-	<span
-		class = "fifth rightalign nospace"
-		id    = "contacts_buttonarea"
-	>
-	</span>
+		<span
+			class = "fifth rightalign"
+			id    = "contacts_buttonarea"
+		></span>
+	</div>
 
 	<& "/funclib/tablesorter.mas", table => "contacts" &>
 
@@ -107,7 +108,7 @@
 		) {
 
 </%perl>
-			<tr>
+			<tr class='smallish'>
 				<td>
 					<% $chapter_name %>
 				</td>

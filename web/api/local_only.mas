@@ -1,0 +1,13 @@
+<%init>
+
+	my $ip = $ENV{HTTP_X_FORWARDED_FOR} || $ENV{REMOTE_ADDR};
+
+	if ($ip ne "127.0.0.1"
+		&& (index ($ip, "172.18") == -1)
+		&& (index ($ip, "172.17") == -1)
+	) {
+		$m->print("Permission denied\n");
+		$m->abort();
+	}
+
+</%init>

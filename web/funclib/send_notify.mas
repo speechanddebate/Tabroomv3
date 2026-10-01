@@ -52,7 +52,7 @@
 		}
 
 		my $client = REST::Client->new(
-			host => $Tab::url_prefix
+			host => $Tab::app_url_prefix || $Tab::url_prefix
 		);
 
 		my %send_message = (
@@ -204,7 +204,7 @@
 			}
 		}
 
-		Tab::eventlog("Sending ".scalar @tos." messages");
+		Tab::log("Sending ".scalar @tos." messages");
 	}
 
 	return;

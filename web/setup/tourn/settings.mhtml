@@ -1684,7 +1684,6 @@
 			</div>
 
 			<div class="row flexrow wrap">
-
 				<span class="half hover">
 				<label for="mailing_address">
 					<span class="fourfifths padleft">
@@ -1719,7 +1718,6 @@
 			</div>
 
 			<div class="row flexrow wrap">
-
 				<span class="half flexrow">
 					<span class="fourfifths padleft">
 						NSDA District Qualifier district ID

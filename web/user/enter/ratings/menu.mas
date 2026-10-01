@@ -9,11 +9,12 @@
 	$ajaxify     => undef
 	$style       => undef
 	$meta        => undef
+	$no_others   => undef
+	$dbh
 </%args>
 <%init>
 
 	my $tourn = $school->tourn;
-	my $dbh = Tab::DBI->db_Main();
 
 	my $tz = $tourn->tz;
 	$tz = "UTC" unless $tz;
@@ -21,37 +22,10 @@
 
 	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
 
-	my $no_others;
-	my $ok;
-
-	if ($person) {
-
-		$ok++ if $person->site_admin;
-
-		foreach my $admin ($school->chapter->admins) {
-			$ok++ if $admin->id == $person->id;
-		}
-
-		if ($school->chapter->setting("self_prefs")) {
-			$no_others++ unless $ok;
-			if ($entry) {
-				foreach my $student ($entry->students) {
-					$ok++ if $student->person && $student->person->id == $person->id;
-				}
-			}
-		}
-	}
-
-	unless ($ok) {
-		my $err = "You are not authorized to edit that pref sheet.";
-		$m->redirect("/user/home.mhtml?err=$err");
-	}
-
 	my @pref_categories;
 
 	my %pref_style;
 	my %conflicts;
-	my %school_strikes;
 	my %entry_strikes;
 	my %category_entries;
 
@@ -98,12 +72,10 @@
 
 		$conflicts{$other_category}      = $other_category->setting("conflicts");
 		$pref_style{$other_category}     = $other_category->setting("prefs");
-		$school_strikes{$other_category} = $other_category->setting("school_strikes");
 		$entry_strikes{$other_category}  = $other_category->setting("entry_strikes");
 
 		next unless $conflicts{$other_category}
 			|| $pref_style{$other_category}
-			|| $school_strikes{$other_category}
 			|| $entry_strikes{$other_category};
 
 
@@ -113,7 +85,7 @@
 	my $category = $pref_categories[0] if @pref_categories;
 	$category_id = $category->id if $category && not defined $category_id;
 
-    Tab::Round->set_sql( school_strikes => "
+    Tab::Round->set_sql( strike_cards => "
         select round.*, entry.school as schoolid
         from round, round_setting, panel, ballot, entry
 		where entry.school = ?
@@ -127,7 +99,7 @@
         order by round.start_time
     ");
 
-	my @strike_cards = Tab::Round->search_school_strikes($school->id);
+	my @strike_cards = Tab::Round->search_strike_cards($school->id);
 
 </%init>
 
@@ -234,7 +206,6 @@
 %	}
 
 %	if (@strike_cards) {
-
 		<div class="sidenote">
 
 			<h4>Strike cards</h4>
@@ -257,7 +228,6 @@
 
 		next unless $conflicts{$category}
 			|| $pref_style{$category}
-			|| $school_strikes{$category}
 			|| $entry_strikes{$category};
 
 </%perl>
@@ -319,16 +289,6 @@
 %				}
 %			}
 
-%			if ($school_strikes{$category}) {
-
-				<h4>Strikes in <% $category->abbr %></h4>
-
-				<a class="<% $whoami eq "school_strikes" ? "dk" : "" %>blue full nowrap"
-					href="school_strikes.mhtml?school_id=<% $school->id %>&category_id=<% $category->id %>#yo">
-					School Strikes in <% $category->abbr %>
-				</a>
-%			}
-
 %			if ($entry_strikes{$category}) {
 
 				<h4>Strikes in <% $category->abbr %></h4>
@@ -348,7 +308,7 @@
 		           	</a>
 %				}
 
-%				if ($entry) {
+%				if ($entry && (not defined $no_others))  {
 
 				<h4>Clone Strikes</h4>
 

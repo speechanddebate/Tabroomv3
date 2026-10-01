@@ -1,4 +1,6 @@
 <%args>
+	$dbh
+	$now
 	$username => undef
 	$person  => undef
 	$session => undef
@@ -23,7 +25,6 @@
 	my $user_person = Tab::Person->search( email => $username )->first;
 	my $url;
 
-	my $now = DateTime->now();
 	my $nowstring = $m->comp("/funclib/showdt.mas",
 		return => 1,
 		dt     => $now,
@@ -32,6 +33,33 @@
 	);
 
 	if ($user_person)  {
+
+		# Check the age of any existing password changekey request.  Rate limit
+		# to once every 5 minutes.
+
+		my $existing_sth = $dbh->prepare("
+			select pck.id, pck.timestamp
+				from person_setting pck
+			where pck.person = ?
+			and pck.tag = 'pass_changekey'
+		");
+
+		$existing_sth->execute($user_person->id);
+		my $refs = $existing_sth->fetchall_hash();
+
+		if ($refs && scalar @{$refs}) {
+
+			my $ref = shift @{$refs};
+
+			my $age = DateTime::Format::MySQL->parse_datetime($ref->{timestamp});
+
+			$age->add(minutes => 5);
+
+			if ($age > $now) {
+				my $err = "You may only request a password reset key once every 5 minutes. If the email has not arrived, please check your spam mailbox!";
+				$m->redirect("forgot.mhtml?err=$err");
+			}
+		}
 
 		# Generate a hash against the uid
 		my $id = $user_person->id;

@@ -3,6 +3,16 @@
 </%args>
 <%init>
 
+	($person, $tourn, $session) = $m->comp(
+		"login_api.mas",
+			tourn_id   => $ARGS{tourn_id},
+			username   => $ARGS{username},
+			password   => $ARGS{password},
+			session_id => $ARGS{session_id},
+			person_id  => $ARGS{person_id},
+			skip_abort => 1
+	);
+
 	Tab::Person->set_sql( diamonds => "
 		select person.* from person where person.nsda > 0
 		and exists (

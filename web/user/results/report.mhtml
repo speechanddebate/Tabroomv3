@@ -50,7 +50,14 @@
 
 	<div class="main">
 
-		<h2><% $school->chapter->name %>: Results</h2>
+		<div class="full flexrow">
+			<span class="threequarters">
+				<h3><% $school->tourn->name %></h3>
+			</span>
+			<span class="quarter rightalign padright bigger bluetext semibold">
+				Results for <% $school->name %>
+			</span>
+		</div>
 
 		<& "/user/chapter/tabbar.mas",
 			person  => $person,

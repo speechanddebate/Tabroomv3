@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$person
 	$person_settings
 	$school
@@ -131,7 +132,9 @@
 			whoami          => $whoami,
 			nodiv           => 1,
 			prefs           => $prefs,
-			entry_id        => $entry_id
+			entry_id        => $entry_id,
+			no_others       => $ARGS{no_others},
+			dbh             => $dbh,
 		&>
 
 	</div>

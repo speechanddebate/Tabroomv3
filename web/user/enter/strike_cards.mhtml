@@ -1,12 +1,7 @@
 <%args>
 	$person
-	$school_id => undef
 </%args>
 <%init>
-
-	unless ($person->site_admin) {
-		undef $school_id;
-	}
 
 	my %panels;
 	my %rounds;

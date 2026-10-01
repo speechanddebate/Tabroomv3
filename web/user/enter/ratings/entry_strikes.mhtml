@@ -89,7 +89,9 @@
 		whoami          => "entry_strikes",
 		category_id     => $category->id,
 		entry_id        => $entry_id,
-		meta            => \%meta
+		meta            => \%meta,
+		no_others       => $ARGS{no_others},
+		dbh             => $ARGS{dbh},
 	&>
 
 	<div class="main">
@@ -281,16 +283,14 @@
 %									} else {
 										<label class="switch">
 											<input
-												type          = "checkbox"
-												class         = "strikes"
-												count_for     = <% $judges{$judge_id}{"count"}  %>
-												value         = "1"
-												id            = "<% $judge_id %>_strike"
-												property_name = "<% $entry_id %>"
-												setting_name  = "entry"
-												target_type   = "judge"
-												target_id     = "<% $judge_id %>"
-												onChange      = "postSwitch( this, 'strike_switch.mhtml');
+												type         = "checkbox"
+												class        = "strikes"
+												id           = "<% $judge_id %>_strike"
+												count_for    = <% $judges{$judge_id}{"count"}  %>
+												value        = "1"
+												entry_id     = "<% $entry_id %>"
+												judge_id     = "<% $judge_id %>"
+												onChange     = "postSwitch( this, 'strike_switch.mhtml');
 																 strikeCount();"
 												<% $judges{$judge_id}{"strike"} ? 'checked="checked"' : "" %>
 											>

@@ -1,0 +1,21 @@
+<%args>
+	$person          => undef
+	$session         => undef
+	$person_settings => undef
+	$perms           => undef
+	$region_id       => undef
+</%args>
+<%init>
+
+	my $region = Tab::Region->retrieve($region_id);
+
+	if ($region && (not defined $perms->{"region"}{$region_id})) {
+		$m->print("You are not authorized to view that region");
+		$m->abort;
+	}
+
+	$m->call_next(
+		region => $region
+	);
+
+</%init>

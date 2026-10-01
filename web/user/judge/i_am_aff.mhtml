@@ -2,7 +2,7 @@
 	$dbh
 	$entry_id => undef
 	$panel_id => undef
-	$judge_id => undef
+	$judge
 </%args>
 <%init>
 
@@ -18,6 +18,6 @@
 	$aff_sth->execute(1, $panel_id, $entry_id);
 	$neg_sth->execute(2, $panel_id, $entry_id);
 
-	$m->redirect("/user/judge/ballot.mhtml?judge_id=$judge_id&panel_id=$panel_id");
+	$m->redirect("/user/judge/ballot.mhtml?judge_id=$judge&panel_id=$panel_id");
 
 </%init>

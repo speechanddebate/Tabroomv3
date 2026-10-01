@@ -1,7 +1,13 @@
 <%args>
 	$panel_id => undef
+	$person   => undef
+	$session  => undef
 </%args>
 <%init>
+
+	unless ($person && $session && $session->id > 0) {
+		$m->comp("local_only.mas");
+	}
 
 	my $dbh = Tab::DBI->db_Main();
 	my $limit;
@@ -11,46 +17,61 @@
 	}
 
 	my $prune_sth = $dbh->prepare("
-		delete flipat.* from panel_setting flipat
-		where flipat.tag='flip_at'
-		and flipat.value_date < (NOW() - INTERVAL 1 MONTH)
+		delete aq.* from autoqueue aq
+			where aq.tag IN ('flip', 'flip_1', 'flip_2')
+			and aq.active_at  < (NOW() - INTERVAL 1 HOUR)
 	");
+
+	$prune_sth->execute();
+
+	$prune_sth = $dbh->prepare("
+		delete fa.* from panel_setting fa
+			where fa.tag = 'flip_at'
+			and fa.value_date  < (NOW() - INTERVAL 1 HOUR)
+	");
+
 	$prune_sth->execute();
 
 	my $sth = $dbh->prepare("
 		select
 			panel.id,
 			flip_status.value,
-			flip.value_text,
-			flip_team_order.value, flip_anyone_chooses.value, flip_deadline.value
+
+			( select flip.value_text
+				from event_setting flip
+				where flip.event = round.event
+				and flip.tag = 'flip'
+			) flip,
+
+			( select flip_team_order.value
+				from event_setting flip_team_order
+				where flip_team_order.event = round.event
+				and flip_team_order.tag = 'flip_team_order'
+			) flip_team_order,
+
+			( select flip_anyone_chooses.value
+				from event_setting flip_anyone_chooses
+				where flip_anyone_chooses.event = round.event
+				and flip_anyone_chooses.tag = 'flip_anyone_chooses'
+			) flip_anyone_chooses,
+
+			( select flip_deadline.value
+				from event_setting flip_deadline
+				where flip_deadline.event = round.event
+				and flip_deadline.tag = 'flip_deadline'
+			) flip_deadline
 
 		from (panel, round, panel_setting flip_at, panel_setting flip_status)
 
-			left join event_setting flip_team_order
-				on flip_team_order.event = round.event
-				and flip_team_order.tag = 'flip_team_order'
-
-			left join event_setting flip_anyone_chooses
-				on flip_anyone_chooses.event = round.event
-				and flip_anyone_chooses.tag = 'flip_anyone_chooses'
-
-			left join event_setting flip_deadline
-				on flip_deadline.event = round.event
-				and flip_deadline.tag = 'flip_deadline'
-
-			left join panel_setting flip
-				on flip.tag = 'flip'
-				and flip.panel = panel.id
-
 		where panel.round = round.id
 
-            and flip_status.panel = panel.id
-            and flip_status.tag = 'flip_status'
-            and flip_status.value != 'done'
+			and flip_status.panel = panel.id
+			and flip_status.tag = 'flip_status'
+			and flip_status.value != 'done'
 
-            and flip_at.panel = panel.id
-            and flip_at.tag = 'flip_at'
-            and flip_at.value_date <= now()
+			and flip_at.panel = panel.id
+			and flip_at.tag = 'flip_at'
+			and flip_at.value_date <= now()
 
 			$limit
 	");
