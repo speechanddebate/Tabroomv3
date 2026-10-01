@@ -28,13 +28,14 @@
 	my $category   = $event->category;
 	my $event_type = $event->type;
 	my $round_type = $round->type;
+	my %{$round_settings} = $round->all_settings;
 
 	my %event_settings    = $event->all_settings;
 	my %category_settings = $category->all_settings;
 
     my $description = "Re-assigned the judges for round ".$round->realname." of ".$event->abbr;
 
-	if ($round->setting('timeslot_merge')) {
+	if ($round_settings->{'timeslot_merge'}) {
 		$description = "Re-assigned the judges for ".$category->abbr." merged rounds in ".$round->timeslot->name;
 	}
 
@@ -52,6 +53,7 @@
         type        => 'tabbing',
         event       => $event->id,
         tourn       => $tourn->id,
+		round       => $round->id,
         person      => $person,
         description => $description
     );
@@ -144,7 +146,7 @@
 		}
 	}
 
-	my $num_judges = $round->setting("num_judges");
+	my $num_judges = $round_settings->{"num_judges"};
 	$num_judges = 1 unless $num_judges;
 
     my $dio_region = $event->setting("diocese_regions");
@@ -1032,7 +1034,7 @@
 		type => $event->type
 	);
 
-	my $bracket_order = $round->setting("tab_rating_priority");
+	my $bracket_order = $round_settings->{"tab_rating_priority"};
 	$bracket_order = $default_settings{$round->name} unless $bracket_order;
 	$bracket_order =~ s/\s*//g;
 
@@ -1128,15 +1130,13 @@
 		$last_order = $order;
 	}
 
-	my $seed_order = $round->setting("tab_seed_priority");
-
+	my $seed_order = $round_settings->{"tab_seed_priority"};
 	$seed_order =~ s/\s*//g;
 
 	my @seed_orders = split(/\,/, $seed_order)
 		if $round_type eq "prelim";
 
 	my %seed_score;
-
 	undef $order_multiplier;
 
 	foreach my $order (reverse @seed_orders) {
@@ -1431,7 +1431,6 @@
 					foreach my $match (shuffle @{$matches_with{$panel}}) {
 
 						next if $taken{$match}++;
-
 						push @{$panel_link{$panel}}, $match;
 
 						$am_other{$match}++;
@@ -2051,19 +2050,16 @@
 
 		if (
 			$event_settings{"online_mode"}
-			&& ($event_settings{"online_mode"} eq "public_jitsi"
-				|| $event_settings{"online_mode"} eq "public_jitsi_observers"
-				|| $event_settings{"online_mode"} eq "nsda_campus"
-				|| $event_settings{"online_mode"} eq "nsda_campus_observers"
-			) && (not defined $round->setting("use_normal_rooms"))
 			&& (not defined $event_settings{"online_hybrid"})
+			&& (not defined $round_settings->{"use_normal_rooms"})
+			&& (
+				$event_settings{"online_mode"} eq "nsda_campus"
+				|| $event_settings{"online_mode"} eq "nsda_campus_observers"
+			)
 		) {
-
 			my $msg = "Sections assigned and renumbered by flight";
 			$m->redirect("/panel/schemat/show.mhtml?round_id=".$round->id."&msg=$msg");
-
 		} elsif ($flights == 1 || $linked) {
-
 			$m->redirect("/panel/round/rooms.mhtml?round_id=".$round->id);
 		} else {
 			$m->redirect("/panel/schemat/show.mhtml?round_id=".$round->id."&disp=1&msg=$msg");
