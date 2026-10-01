@@ -7,8 +7,8 @@
 	$payment_amount => undef
 	$fee_memo       => undef
 	$fee_amount     => undef
-	$person   => undef
-	$session  => undef
+	$person         => undef
+	$session        => undef
 </%args>
 <%init>
 
@@ -22,7 +22,6 @@
 	my $now = DateTime->now();
 	my $json = JSON->new->allow_nonref->convert_blessed->utf8->pretty;
 
-	my $person;
 	my $tourn;
 	my $school;
 
