@@ -204,16 +204,13 @@
 						},
 						unsubscribeEnabled: true,
 					},
-				}).then( async(reply) => {
-
-					console.log(`Initialization reply was `);
-					console.log(JSON.stringify(reply));
-
-					console.log(`OneSignal User is now`);
-					console.log(JSON.stringify(OneSignal.User.externalId));
 				});
 
-				if (OneSignal.User) {
+				console.log(JSON.stringify(OneSignal.User.externalId));
+
+				if (OneSignal.User?.externalId) {
+
+					console.log(`I am here in the control flow`);
 
 					if (OneSignal.User.externalId !== tabroomId) {
 						await OneSignal.login(tabroomId);
@@ -223,7 +220,23 @@
 					let subscriptionId = OneSignal.User.PushSubscription.id;
 					const sessionPushId = '<% $session->push_notify %>';
 
-					if (!sessionPushId && OneSignal.User.PushSubscription.optedIn && 1 === 2) {
+					if ( subscriptionId && (subscriptionId !== sessionPushId) && OneSignal.User.PushSubscription.optedIn) {
+						const pushResponse = await $.ajax({
+							type : 'POST',
+							data : { subscriptionId },
+							url  : `<% $Tab::indexcards_url %>/user/push/sync`,
+							crossDomain : true,
+							xhrFields: {
+								withCredentials: true
+							},
+						});
+
+						if (pushResponse === 'Push status saved and synced to session') {
+							sessionPushId = subscriptionId;
+						}
+					}
+
+					if (!sessionPushId && OneSignal.User.PushSubscription.optedIn) {
 
 						const subscriptionData = await $.ajax({
 							type        : 'GET',
@@ -235,30 +248,20 @@
 						});
 
 						if (subscriptionData.enabled === false) {
+							console.log(`Enabled is false so opting out`);
 							OneSignal.User.PushSubscription.optOut();
 						}
-
-					} else if (subscriptionId !== sessionPushId && 1 === 2) {
-
-						await $.ajax({
-							type : 'POST',
-							data : { subscriptionId },
-							url  : `<% $Tab::indexcards_url %>/user/push/sync`,
-							crossDomain : true,
-							xhrFields: {
-								withCredentials: true
-							},
-						});
 					}
+
 
 					if (OneSignal.User.PushSubscription.optedIn) {
 
 						const now = new Date();
 						const sessionActive = new Date('<% $session->last_access %>.000Z');
 
-						sessionActive.setHours(sessionActive.getHours() + 2);
+						sessionActive.setHours(sessionActive.getHours() + 4);
 
-						if (sessionActive < now && 1 === 2) {
+						if (sessionActive < now) {
 							await $.ajax({
 								type : 'POST',
 								data : { subscriptionId },
@@ -289,11 +292,11 @@
 						}
 					}
 
-					const subChanger = (event) => {
+					const subChanger = async (event) => {
 
-						if (event?.current?.id && 1 === 2) {
+						if (event?.current?.id) {
 
-							$.ajax({
+							await $.ajax({
 								type        : 'POST',
 								data        : { id: event.current.id, sessionId: <% $session->id %> },
 								url         : `<% $Tab::indexcards_url %>/user/push/${ subscriptionId }/true`,
