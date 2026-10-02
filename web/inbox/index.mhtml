@@ -194,10 +194,10 @@
 					$(`#errorbox`).html(`
 						<p class="semibold">Error encountered:</p>
 						<code>
-							${data}
+							${JSON.stringify(data)}
 						</code>
 						<code>
-							${metadata}
+							${JSON.stringify(metadata)}
 						</code>
 					`);
 					$(`#errorbox`).removeClass('hidden');
