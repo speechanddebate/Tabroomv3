@@ -423,10 +423,12 @@
 
 						const last = new Date('<% $session->last_access %>Z');
 						const dateLimit  = new Date();
-						dateLimit.setHours(dateLimit.getHours() - 2 );
+						dateLimit.setHours(dateLimit.getHours() - 4 );
 						const url = '<% $Tab::indexcards_url %>/user/updateLastAccess';
 
-						if (Number.isNaN(last) || last < dateLimit) {
+						if ( !isFinite(last) || Number.isNaN(last) || last < dateLimit) {
+
+							console.log(`Registering Last Access Update with current timestamp`);
 
 							$.ajax({
 								url,
