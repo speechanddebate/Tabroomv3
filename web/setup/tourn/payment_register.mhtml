@@ -23,6 +23,9 @@
 
 	$tourn->setting("store_carts", "json", $carts);
 
+	my $tourn_name = $tourn->name;
+	$tourn_name =~ s/[^\w\s]//g;
+
 </%init>
 
 	<!-- This feels like a real Bruschke move but it's what I got today -->
@@ -67,7 +70,7 @@
 						quantity  : requests[key],
 						item_data : {
 							addons: [
-								{ name: "TournamentName", value: "<% $tourn->name %>"},
+								{ name: "TournamentName", value: "<% $tourn_name %>"},
 								{ name: "TournamentID", value: "<% $tourn->id %>"},
 								{ name: "TabroomID", value: "<% $tourn->id."-".$invoice_key %>"},
 								{ name: "Start", value: "<% $tourn->start %>"}
