@@ -28,7 +28,6 @@
 	my $category   = $event->category;
 	my $event_type = $event->type;
 	my $round_type = $round->type;
-
 	my $round_settings;
 	%{$round_settings} = $round->all_settings;
 
