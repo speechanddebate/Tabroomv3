@@ -1,7 +1,7 @@
 <%args>
 	$person
 	$perms
-	$region_id
+	$region
 	$tourn_id   => undef
 	$chapter_id => undef
 </%args>
