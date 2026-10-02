@@ -21,11 +21,12 @@
 	}
 
 	unless ($year) {
-		$year = Tab::school_year();
+		my $year_obj = Tab::school_year();
+		$year = $year_obj->year;
 	}
 
-	my $start = $year->year.'-08-01 00:00:00';
-	my $end   = ($year->year + 1).'-08-01 00:00:00';
+	my $start = $year-year.'-08-01 00:00:00';
+	my $end   = ($year-year + 1).'-08-01 00:00:00';
 
 	if ($mode eq "schools") {
 
