@@ -155,7 +155,7 @@
 		next if $event_struck->{$judge->{id}};
 
 		print CSVOUT "\"".$judge->{first}."\",\"".$judge->{last}."\",\"";
-		print CSVOUT ($judge->{school_name} || "Unaffiliated")."\","
+		print CSVOUT ($judge->{school_name} || "Unaffiliated")."\",";
 		print CSVOUT ($judge->{obligation} || 0 + {$judge->hired} || 0).",";
 
 		if ($category_settings{"show_diversity"}) {
