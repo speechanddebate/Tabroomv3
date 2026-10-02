@@ -11,10 +11,16 @@
 
 	<div class="main">
 
+		<div class="centeralign">
+		<span class="ninetenths leftalign">
+
 		<h2>Password Reset</h2>
 
-		<p class="bluetext">
-			Hey, it happens.  The summertime is long, people lose track...you
+		<p class="bluebordertop martopmore">
+		</p>
+
+		<p>
+			Hey, it happens.  The summertime is long, you lost track and..you
 			forgot your password.  I'm here to help.
 		</p>
 
@@ -36,7 +42,7 @@
 
 		<div class="row centeralign">
 			<span class="third semibold">
-				Your Email Address
+				Your Tabroom Email Address
 			</span>
 
 			<span class="twothirds">
@@ -56,6 +62,9 @@
 		</div>
 
 		</form>
+
+		</span>
+		</div>
 	</div>
 
 	<div class="menu">

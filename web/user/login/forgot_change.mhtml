@@ -1,136 +1,276 @@
 <%args>
-	$id     => undef
-	$key    => undef
+	$person    => undef
+	$id        => undef
+	$key       => undef
+	$reset_key => undef
+	$now
 </%args>
 <%init>
 
-	my $now = DateTime->now();
-
 	$m->abort() unless $id;
-	$m->abort() unless $key;
 
-	my $person = Tab::Person->retrieve($id);
+	my $user_person = Tab::Person->retrieve($id);
 
-	unless ($person) {
-		$m->redirect("/");
+	unless ($user_person) {
+		$m->comp("/funclib/abort.mas", message => "Invalid Person ID Sent");
+	}
+
+	if ($person > 0
+		&& (not defined $person->site_admin)
+		&& ($person->id != $user_person->id)
+	) {
+		$m->comp("/funclib/abort.mas", message => "You may not reset the password for another user account");
 	}
 
 	my $err;
-	my %person_settings = $person->all_settings();
+	my $ok;
+	my $invalid;
+	my %person_settings = $user_person->all_settings();
 
-	unless ($person_settings{"pass_change_expires"} && $person_settings{"pass_changekey"}) {
-		$err = "Either something is wrong with the system, or you're pulling shenanigans.";
-	} elsif ($person_settings{"pass_change_expires"}->epoch < $now->epoch) {
-		$err = "That access code has expired.  Please have the system send you another reset email.";
-	} elsif ($person_settings{"pass_changekey"} ne $key) {
-		$err = "The access key is not valid.  Please try again.";
+	if ($reset_key || $key) {
+		unless ($person_settings{"pass_change_expires"} && $person_settings{"pass_changekey"}) {
+			$err = "Either something is wrong with the system, or you're pulling shenanigans.";
+			$invalid++;
+		} elsif ($person_settings{"pass_change_expires"}->epoch < $now->epoch) {
+			$err = "That reset key has expired.  Please have the system send you another reset email.";
+			$invalid++;
+		} elsif ($person_settings{"pass_change_attempts"} > 4) {
+			$err = "For your security, this reset key has been marked invalid after 5 failed attempts. <br /> Please request a new key after waiting 5 minutes.";
+			$invalid++;
+		} elsif (
+			$person_settings{"pass_changekey"} ne $key
+			&& uc(substr($person_settings{pass_changekey},0, 6)) ne uc($reset_key)
+		) {
+			my $attempt = $person_settings{"pass_change_attempts"} + 1;
+			$user_person->setting("pass_change_attempts", $attempt);
+
+			if ($reset_key) {
+				$err = "That reset key was not valid.  Please try again. </p><p> Attempt $attempt of 5.";
+			} else {
+				$err = "That link was not valid.  Was it reformatted by your email system?  Try the reset key instead. </p><p>Attempt $attempt of 5.";
+			}
+		} else {
+			$ok++;
+		}
+
+	} elsif ($person->site_admin) {
+		unless ($person_settings{"pass_change_expires"} && $person_settings{"pass_changekey"}) {
+			$err = "No password change keys existed";
+			$invalid++;
+		} elsif ($person_settings{"pass_change_expires"}->epoch < $now->epoch) {
+			$err = "That reset key has expired.";
+			$invalid++;
+		} elsif ($person_settings{"pass_change_attempts"} > 4) {
+			$err = "Reset key has been marked invalid after 5 failed attempts.";
+			$invalid++;
+		}
 	}
-
-	$m->redirect("/user/login/forgot.mhtml?err=$err") if $err;
 
 </%init>
 
 	<div class="main">
 
-		<h4 class="padvertmore">
-			Change <% $person->email %>'s password
-		</h4>
+		<div class='centeralign'>
+			<span class="ninetenths leftalign">
 
-		<div class="full centeralign">
+%			if ($person > 0 && $person->site_admin && $person->id != $user_person->id) {
 
-			<form
-				action = "forgot_save.mhtml"
-				method = "post"
-			>
-			<input
-				type    = "hidden"
-				name    = "key"
-				value   = "<% $key %>"
-			>
+%				if ($invalid) {
 
-			<input
-				type  = "hidden"
-				name  = "id"
-				value = "<% $id %>"
-			>
+					<p>Invalid request</p>
 
-			<div class="row flexrow">
-				<span class="quarter">
-					Enter a new password:
-				</span>
+%				} else {
 
-				<span class="quarter">
-					<input
-						type    = "password"
-						name    = "pass1"
-						id      = "pass1"
-						value   = ""
-						onfocus = 'value="";'
-						onKeyUp = "checkStrength();"
+%					my $reset_key = uc(substr($person_settings{pass_changekey},0, 6));
+
+					<h5>Hello, Site Admin</h5>
+
+					<% $invalid %>
+
+					<p class="marvertmore">The reset key emailed to the user was</p>
+
+					<h5><% $reset_key %></h5>
+
+					<p class="martopmore">Do NOT use this key to reset the user's password for them,
+					no matter how much they beg. Doing so is a violation of security protocols.</p>
+
+					<p>Remember, I'm always watching, <% $person->first %>.</p>.
+%				}
+
+%			} elsif (not defined $ok) {
+
+				<h2>Check your email</h2>
+
+%					if ($err) {
+						<p class="semibold redtext"><% $err %></p>
+
+%						if ($invalid) {
+							<p><a class="bluetext link-underline" href="/user/login/forgot.mhtml">Request a New Key</a></p>
+%						}
+
+%					} else {
+						<p>
+							If that email address corresponds to a Tabroom.com account,
+							you will have been emailed a reset key and a link.  Enter the reset
+							key below, or click the link, to reset your password.
+						</p>
+
+						<p>
+							If you get no email, check your spam inbox.  It's also possible we
+							have no account for you. If you think that's in error or need help
+							finding the email, contact us at <% $Tab::admin_email %>
+						</p>
+%					}
+
+%					unless ($invalid) {
+
+						<div class="bigger padleft italic semibold martopmore padtopmore">
+							Enter the reset code that was sent to <span class="inline bigger italic"><% $user_person->email %></span>
+						</div>
+
+						<form
+							action = "forgot_change.mhtml"
+							method = "post"
+						>
+
+							<input
+								type  = "hidden"
+								name  = "id"
+								value = "<% $user_person->id %>"
+							>
+
+							<div class="padvertmore martopmore odd flexrow">
+								<span class="quarter">
+								</span>
+								<span class="quarter rightalign padright">
+									<input
+										type        = "text"
+										maxlength   = "8"
+										name        = "reset_key"
+										class       = "padmuchmore bluetext starthere"
+										style       = "font-size: 24px; text-align: center; min-height: 48px;"
+										placeholder = "Enter Key"
+									>
+								</span>
+								<span class="quarter centeralign">
+									<input
+										type  = "submit"
+										value = "Confirm"
+									>
+								</span>
+							</div>
+						</form>
+%					}
+
+%			} elsif (not defined $person) {
+
+				<h4 class="padvertmore">
+					Change <% $user_person->email %>'s password
+				</h4>
+
+				<div class="full centeralign">
+
+					<form
+						action = "forgot_save.mhtml"
+						method = "post"
 					>
-				</span>
-
-				<span class="eighth">
-					Strength:
-				</span>
-
-				<span class="threeeighths">
-					<meter
-						id      = "passwordStrength"
-						value   = "00"
-						max     = "100"
-						low     = "15"
-						high    = "35"
-						optimum = "60"
-						style   = "width: 90%;"
-					></meter>
-				</span>
-			</div>
-
-			<div class="row flexrow">
-				<span class="quarter">
-					Repeat the password:
-				</span>
-
-				<span class="quarter">
 					<input
-						type  = "password"
-						name  = "pass2"
-						value = ""
+						type    = "hidden"
+						name    = "key"
+						value   = "<% $key %>"
 					>
-				</span>
-			</div>
 
-			<div class="libl flexrow rightalign">
-				<span class="third centeralign padvert">
 					<input
-						type  = "submit"
-						value = "Save New Password"
+						type  = "hidden"
+						name  = "id"
+						value = "<% $id %>"
 					>
-				</span>
-			</div>
-		</form>
+
+					<input
+						type  = "hidden"
+						name  = "origin_ip"
+						value = "<% $ENV{HTTP_X_FORWARDED_FOR} %>"
+					>
+
+					<div class="row flexrow">
+						<span class="quarter">
+							Enter a new password:
+						</span>
+
+						<span class="quarter">
+							<input
+								type    = "password"
+								name    = "pass1"
+								id      = "pass1"
+								value   = ""
+								onfocus = 'value="";'
+								onKeyUp = "checkStrength();"
+							>
+						</span>
+
+						<span class="eighth">
+							Strength:
+						</span>
+
+						<span class="threeeighths">
+							<meter
+								id      = "passwordStrength"
+								value   = "00"
+								max     = "100"
+								low     = "15"
+								high    = "35"
+								optimum = "60"
+								style   = "width: 90%;"
+							></meter>
+						</span>
+					</div>
+
+					<div class="row flexrow">
+						<span class="quarter">
+							Repeat the password:
+						</span>
+
+						<span class="quarter">
+							<input
+								type  = "password"
+								name  = "pass2"
+								value = ""
+							>
+						</span>
+					</div>
+
+					<div class="libl flexrow rightalign">
+						<span class="third centeralign padvert">
+							<input
+								type  = "submit"
+								value = "Save New Password"
+							>
+						</span>
+					</div>
+				</form>
+
+				<script
+					type = "text/javascript"
+					src  = "/lib/javascript/sources/jquery.complexify.js"
+				></script>
+				<script
+					type = "text/javascript"
+					src  = "/lib/javascript/sources/jquery.complexify.banlist.js"
+				></script>
+
+				<script type="text/javascript">
+					function checkStrength() {
+						$("#pass1").complexify({}, function (valid, complexity) {
+							$("#passwordStrength").val(complexity);
+						});
+					}
+				</script>
+%			}
+		</span>
 		</div>
 	</div>
 
 	<div class="menu">
 	</div>
-
-    <script
-        type = "text/javascript"
-        src  = "/lib/javascript/sources/jquery.complexify.js"
-    ></script>
-    <script
-        type = "text/javascript"
-        src  = "/lib/javascript/sources/jquery.complexify.banlist.js"
-    ></script>
-
-    <script type="text/javascript">
-        function checkStrength() {
-            $("#pass1").complexify({}, function (valid, complexity) {
-                $("#passwordStrength").val(complexity);
-            });
-        }
-    </script>
 
 

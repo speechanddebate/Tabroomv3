@@ -1,11 +1,11 @@
 <%args>
 	$dbh
 	$now
-	$id    => undef
-	$key   => undef
-	$pass1 => undef
-	$pass2 => undef
-	$session => undef
+	$id        => undef
+	$key       => undef
+	$pass1     => undef
+	$pass2     => undef
+	$session   => undef
 </%args>
 <%init>
 
@@ -13,6 +13,12 @@
 	$m->abort unless $key;
 	$m->abort unless $pass1;
 	$m->abort unless $pass2;
+
+	if ($ENV{HTTP_X_FORWARDED_FOR} ne $ARGS{'origin_ip'}) {
+		$m->comp("/funclib/abort.mas",
+			message => "Your IP address ".$ENV{HTTP_X_FORWARDED_FOR}." differs from the origin of the requested password change ".$ARGS{'origin_ip'}.".  For security purposes, that is not permitted."
+		);
+	}
 
 	my $target = Tab::Person->retrieve($id);
 
@@ -26,7 +32,7 @@
 	my $wipe_sth = $dbh->prepare("
 		delete ps.* from person_setting ps
 		where ps.person = ?
-		and ps.tag IN ('pass_change_expires', 'pass_changekey')
+		and ps.tag IN ('pass_change_expires', 'pass_changekey', 'pass_change_attempts', 'pass_change_ip')
 	");
 
 	unless ($target_settings{"pass_change_expires"} && $target_settings{"pass_changekey"}) {

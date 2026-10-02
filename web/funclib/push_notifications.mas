@@ -69,7 +69,7 @@
 					autoResubscribe     : true,
 					persistNotification : false,
 					notifyButton        : {
-						enable : true,
+						enable          : true,
 					},
 
 				}).then( async () => {

@@ -2,13 +2,12 @@
 	$dbh
 	$now
 	$username => undef
-	$person  => undef
-	$session => undef
+	$person   => undef
+	$session  => undef
 </%args>
 <%init>
 
 	use MIME::Lite;
-	my $err;
 
 	unless ($username) {
 		$m->comp("/funclib/abort.mas",
@@ -23,16 +22,19 @@
 	}
 
 	my $user_person = Tab::Person->search( email => $username )->first;
-	my $url;
-
-	my $nowstring = $m->comp("/funclib/showdt.mas",
-		return => 1,
-		dt     => $now,
-		tz     => "America/Chicago",
-		tzname => 'yep'
-	);
 
 	if ($user_person)  {
+
+		my $err;
+		my $url;
+		my $no_change;
+
+		my $nowstring = $m->comp("/funclib/showdt.mas",
+			return => 1,
+			dt     => $now,
+			tz     => "America/Chicago",
+			tzname => 'yep'
+		);
 
 		# Check the age of any existing password changekey request.  Rate limit
 		# to once every 5 minutes.
@@ -50,14 +52,12 @@
 		if ($refs && scalar @{$refs}) {
 
 			my $ref = shift @{$refs};
-
 			my $age = DateTime::Format::MySQL->parse_datetime($ref->{timestamp});
-
 			$age->add(minutes => 5);
 
 			if ($age > $now) {
-				my $err = "You may only request a password reset key once every 5 minutes. If the email has not arrived, please check your spam mailbox!";
-				$m->redirect("forgot.mhtml?err=$err");
+				$err = "You may only request a password reset key once every 5 minutes. If the email has not arrived, please check your spam mailbox!";
+				$m->redirect("/user/login/forgot.mhtml?err=$err");
 			}
 		}
 
@@ -66,137 +66,62 @@
 
 		# Generate a random authentication string to send to the user
 		my $key =  $m->comp("/funclib/generate_randomstring.mas", length => 30);
+		my $reset = substr($key, 6);
 
 		my $expires = DateTime->now;
-		$expires->add(hours => '2');
+		$expires->add(minutes => '20');
 
-		eval {
-			$user_person->setting("pass_changekey", $key);
-			$user_person->setting("pass_change_ip", $ENV{HTTP_X_FORWARDED_FOR});
-			$user_person->setting("pass_change_expires", "date", $expires);
-			$url = "$Tab::url_prefix/user/login/forgot_change.mhtml?id=$id&key=$key";
+		$user_person->setting("pass_changekey", $key);
+		$user_person->setting("pass_change_ip", $ENV{HTTP_X_FORWARDED_FOR});
+		$user_person->setting("pass_change_expires", "date", $expires);
+		$user_person->setting("pass_change_attempts", 0);
 
-			my $message_text = "
-	Someone, hopefully you, has asked to reset your Tabroom.com password.
+		$url = "$Tab::url_prefix/user/login/forgot_change.mhtml?id=$id&key=$key";
 
-	If you would like to reset your password, please click on this link, or copy & paste it into your web browser:
+		my $message_text = "
+			<p>Someone, hopefully you, has asked to reset your Tabroom.com password.</p>
+			<p>Enter this reset key to change your password:</p>
+			<h4>".uc($reset)."</h4>
+			<p>You may also click on this link, or copy & paste it into your web browser:</p>
+			<p><a href='$url'>$url</a></p>
+			<p>This reset code and link will expires after 15 minutes.</p>
+			<p> If you have any questions, please let us know. </p>
+			<p>help\@tabroom.com</p>
+			<br />
+			<br />
+			<p>Requestor IP: ".$ENV{HTTP_X_FORWARDED_FOR}."</p>
+			<p>Timestamp: $nowstring</p>
+		";
 
-	$url
+		my @ids;
+		push @ids, $user_person->id;
 
-	Once there, you will be able to change your Tabroom.com login password. This link will expire in a couple hours.
+		my $numberwang = substr($now->epoch, -6, 6);
+		my $from_string = "Tabroom Password Reset <iforgot_".$numberwang.'@www.tabroom.com>';
 
-	If you have any questions, please let us know.
+		$m->comp("/funclib/send_notify.mas",
+			from            => $from_string,
+			ids             => \@ids,
+			ignore_no_email => 1,
+			no_inbox        => 1,
+			no_web          => 1,
+			subject         => 'Your Tabroom.com Password Reset',
+			html            => $message_text
+		);
 
-	-- Tabroom.com
-	help\@tabroom.com
+		my $logmsg = "Password change link requested for user ".$user_person->id." ".$user_person->email." from IP: ".$ENV{HTTP_X_FORWARDED_FOR};
 
-	Requestor IP: ".$ENV{HTTP_X_FORWARDED_FOR}."
-	Timestamp: $nowstring
+		if ($ARGS{"session"}) {
+			$logmsg .= "User session ".$ARGS{"session"}." user ".$ARGS{"session"}->person->id." SU ".$ARGS{"session"}->su;
+		}
 
-";
-			my @ids;
-			push @ids, $user_person->id;
-
-			# Send a copy to Palmer to hunt these prankers down
-			if ($user_person->id == 467248) {
-				push @ids, 1;
-			}
-
-			my $numberwang = substr($now->epoch, -6, 6);
-			my $from_string = "Tabroom Password Reset <iforgot_".$numberwang.'@www.tabroom.com>';
-
-			$m->comp("/funclib/send_notify.mas",
-				from            => $from_string,
-				ids             => \@ids,
-				ignore_no_email => 1,
-				no_inbox        => 1,
-				no_web          => 1,
-				subject         => 'Your Tabroom.com Password Reset',
-				body            => $message_text
-			);
-
-			my $logmsg = "Password change link requested for user ".$user_person->id." ".$user_person->email." from IP: ".$ENV{HTTP_X_FORWARDED_FOR};
-
-			if ($ARGS{"session"}) {
-				$logmsg .= "User session ".$ARGS{"session"}." user ".$ARGS{"session"}->person->id." SU ".$ARGS{"session"}->su;
-			}
-
-			Tab::log($logmsg);
-		};
+		Tab::log($logmsg);
+		$m->redirect("forgot_change.mhtml?id=".$user_person->id);
 	}
 
+	sleep 10;
+	my $err = "No such user";
+	$m->redirect("forgot.mhtml?err=$err");
+
+
 </%init>
-
-	<div class="main">
-
-		<h2>Check your email</h2>
-
-		<p>
-			If that email address corresponds to a Tabroom.com account, you
-			will have been emailed instructions on how to achieve truth,
-			enlightenment, and broader awareness of all that is just in the
-			universe.
-		</p>
-
-		<p>
-			Or, you've gotten a method of resetting your password.
-			Gosh, what a disappointment if you only end up with the latter.
-		</p>
-
-		<p>
-			If you get no email, it's because we could not find an account for you
-			If you think that's in error or need help finding the email, contact
-			us at <% $Tab::admin_email %>
-		</p>
-
-%		if ($person && $person->site_admin) {
-
-			<h4 class="nospace padvert">Yo, Site Admin</h4>
-
-%			unless ($user_person) {
-				<p>No account with the email <% $username %> was found.  Did they typo it?</p>
-%			} else {
-				<p>The link I just sent?  It's this:</p>
-				<p><a class="semibold bluetext link-underline" href="<% $url %>"><% $url %></a></p>
-%			}
-
-			<h6 class="padtopmore semibold purpletext">
-				<% $session && $session->su ? "Listen up, ".$session->su->last : $person ? "Listen up, ".$person->last : "" %>
-			</h6>
-
-			<p>
-				<span class="semibold inline redtext">Email</span> this link to
-				the user if they are having trouble with spam filters etc, or
-				have them fill the new password in if they're standing by you
-				at your computer.
-			</p>
-
-			<p>
-				<span class="semibold inline redtext"> Do not use it to create
-				a password for the user and then tell them what it is. </span>
-				Yes I know that is sometimes "easier".  It's also a violation
-				of our security policies and endangers confidential student
-				data, like contact information.
-
-			</p>
-
-			<p class="redtext semibold italic">
-				If you create a password for someone else, it's going to just force
-				them to change it again.
-			</p>
-%		}
-
-	</div>
-
-	<div class="menu">
-
-		<div class="sidenote">
-			<h4>Go Back</h4>
-			<a
-				class="yellow block"
-				href="<% $Tab::url_prefix %>"
-			>Return to Home Page</a>
-		</div>
-
-	</div>
-
