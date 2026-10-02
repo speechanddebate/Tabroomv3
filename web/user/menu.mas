@@ -433,28 +433,36 @@
 
 			<h4>NSDA Campus Test Rooms</h4>
 
-			<div
-				class = "row flexrow"
-				title = "This online room is on the NSDA Campus server.  It will disconnect you after 2 mins."
-			>
-				<span class="twothirds padleft nospace">
-					<div class="semibold bluetext padtopless biggish">
-						Test Campus Room
-					</div>
-					<div class="explain">
-						<% $chapter_name %>
-					</div>
-				</span>
+%			foreach my $cid (
+%				sort {
+%					 ($a == $ARGS{chapter} ? 0 : 1) <=> ($b == $ARGS{chapter} ? 0 : 1)
+%					|| $menus{chapter}{$a}{"sort"} cmp $menus{chapter}{$b}{"sort"}
+%				} keys %{$menus{chapter}}
+%			) {
 
-				<span class="third centeralign" title="<% $chapter_name %>">
-					<& "/funclib/online_room.mas",
-						person      => $person,
-						test        => "private",
-						test_school => $chapter_name,
-						class       => "fa-lg"
-					&>
-				</span>
-			</div>
+				<div
+					class = "row flexrow"
+					title = "This online room is on the NSDA Campus server.  It will disconnect you after 2 mins."
+				>
+					<span class="twothirds padleft nospace">
+						<div class="semibold bluetext padtopless biggish">
+							Test Campus Room
+						</div>
+						<div class="explain">
+							<% $menus{chapter}{$cid}{"name"} %>
+						</div>
+					</span>
+
+					<span class="third centeralign" title="<% $menus{chapter}{$cid}{name} %>">
+						<& "/funclib/online_room.mas",
+							person      => $person,
+							test        => "private",
+							test_school => $menus{chapter}{$cid}{"name"},
+							class       => "fa-lg"
+						&>
+					</span>
+				</div>
+%			}
 
 			<h4>Your Account</h4>
 
