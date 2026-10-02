@@ -33,22 +33,18 @@
 			window.OneSignalDeferred = window.OneSignalDeferred || [];
 
 			OneSignalDeferred.push(function(OneSignal) {
-				OneSignal.init({
+				await OneSignal.init({
 					appId         : "<% $Tab::onesignal_app_id %>",
 					safari_web_id : "<% $Tab::onesignal_safari_id %>",
 					notifyButton  : {
 						enable : false,
 					},
 					persistNotification : false,
-				}).then( async () => {
-
-					// Has to be a string or else it complains the type is
-					// undefined because apparently OneSignal can't write proper
-					// error messages.
-
-					const externalId = "<% $logout == 1 ? 100 : $logout %>";
-					await OneSignal.logout(externalId);
 				});
+
+				const externalId = "<% $logout == 1 ? 100 : $logout %>";
+				console.log(`Deferred push activated. External ID ${externalId}`);
+				await OneSignal.logout(externalId);
 
 			});
 
@@ -63,6 +59,7 @@
 			window.OneSignalDeferred = window.OneSignalDeferred || [];
 
 			OneSignalDeferred.push(function(OneSignal) {
+
 				OneSignal.init({
 					appId           : "<% $Tab::onesignal_app_id %>",
 					safari_web_id   : "<% $Tab::onesignal_safari_id %>",
@@ -72,6 +69,8 @@
 						enable    : true,
 					},
 				}).then( async () => {
+
+					console.log("Deferred push activated");
 
 					// Has to be a string or else it complains the type is
 					// undefined because apparently OneSignal can't write proper

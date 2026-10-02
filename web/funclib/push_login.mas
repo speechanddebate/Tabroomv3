@@ -204,6 +204,13 @@
 						},
 						unsubscribeEnabled: true,
 					},
+				}).then( async(reply) => {
+
+					console.log(`Initialization reply was `);
+					console.log(JSON.stringify(reply));
+
+					console.log(`OneSignal User is now`);
+					console.log(JSON.stringify(OneSignal.User.externalId));
 				});
 
 				if (OneSignal.User) {
@@ -233,15 +240,15 @@
 
 					} else if (subscriptionId !== sessionPushId && 1 === 2) {
 
-					//	await $.ajax({
-					//		type : 'POST',
-					//		data : { subscriptionId },
-					//		url  : `<% $Tab::indexcards_url %>/user/push/sync`,
-					//		crossDomain : true,
-					//		xhrFields: {
-					//			withCredentials: true
-					//		},
-					//	});
+						await $.ajax({
+							type : 'POST',
+							data : { subscriptionId },
+							url  : `<% $Tab::indexcards_url %>/user/push/sync`,
+							crossDomain : true,
+							xhrFields: {
+								withCredentials: true
+							},
+						});
 					}
 
 					if (OneSignal.User.PushSubscription.optedIn) {
