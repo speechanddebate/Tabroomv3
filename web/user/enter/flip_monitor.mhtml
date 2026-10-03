@@ -1,15 +1,12 @@
 <%args>
+	$dbh
+	$now
 	$panel_id => undef
 	$person   => undef
 	$session  => undef
 </%args>
 <%init>
 
-	unless ($person && $session && $session->id > 0) {
-		$m->comp("local_only.mas");
-	}
-
-	my $dbh = Tab::DBI->db_Main();
 	my $limit;
 
 	if (int($panel_id) > 0) {
@@ -75,8 +72,6 @@
 
 			$limit
 	");
-
-	my $now = DateTime->now();
 
 	$sth->execute();
 
