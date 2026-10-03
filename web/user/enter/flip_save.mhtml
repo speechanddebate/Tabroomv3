@@ -319,7 +319,7 @@
 		$now->subtract(minutes => 1);
 		$panel->setting('flip_at', 'date', $now);
 		$panel->update();
-		$m->comp("/api/flip_monitor.mhtml",
+		$m->comp("flip_monitor.mhtml",
 			panel_id => $panel->id,
 			decision => "made"
 		);
