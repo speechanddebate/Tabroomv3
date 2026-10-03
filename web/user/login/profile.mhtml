@@ -895,16 +895,16 @@
 				</div>
 %			}
 
-%			if ($person_settings->{"api_key"}) {
+			<div class="odd flexrow">
+				<span class="half padvertless padleft">
+					Tabroom ID#
+				</span>
+				<span class="half semibold bluetext">
+					<% $person->id %>
+				</span>
+			</div>
 
-				<div class="odd flexrow">
-					<span class="half padvertless padleft">
-						Tabroom ID#
-					</span>
-					<span class="half semibold bluetext">
-						<% $person->id %>
-					</span>
-				</div>
+%			if ($person_settings->{"api_key"}) {
 
 				<div class="odd flexrow">
 					<span class="half padvertless padleft">
