@@ -489,7 +489,7 @@
 						id    = "<% $entry_id %>_side"
 						class = "padvertless row <% $entry_id %> flexrow"
 					>
-						<span class="third marrightmore semibold orangetext padsetting">
+						<span class="third marrightmore semibold orangetext padsetting padleft">
 							Opponent's Choice
 						</span>
 

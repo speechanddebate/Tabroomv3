@@ -1146,7 +1146,14 @@
 </html>
 
 % }	else {
-%		$m->call_next();
-% }
+
+<%perl>
+		$m->call_next(
+			session         => $session,
+			now             => $now,
+			person          => $person,
+			dbh             => $dbh,
+		)
+</%perl>
 
 %	$dbh->disconnect();

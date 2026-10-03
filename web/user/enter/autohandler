@@ -18,6 +18,7 @@
 		$r->uri eq "/user/enter/strike_cards.mhtml"
 		|| $r->uri eq "/user/enter/strike_card_save.mhtml"
 		|| $r->uri eq "/user/enter/flip.mhtml"
+		|| $r->uri eq "/user/enter/flip_monitor.mhtml"
 		|| $r->uri eq "/user/enter/flip_save.mhtml"
 	) {
 		$m->call_next();

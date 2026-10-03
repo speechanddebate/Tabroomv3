@@ -1,4 +1,6 @@
 <%args>
+	$dbh
+	$now
 	$person
 	$entry_id          => undef
 	$panel_id          => undef
@@ -29,8 +31,6 @@
         $m->print('{ "error": true, "message": "No valid entry found for ID '.$entry_id.'"}');
         $m->abort();
 	}
-
-	my $dbh = Tab::DBI->db_Main();
 
 	my $sth = $dbh->prepare("
 		select student.id
@@ -165,8 +165,6 @@
 	my @replace;
 	my $flip_done;
 	my $destroy;
-
-	my $now = DateTime->now(time_zone => "UTC");
 
 	if ($property_name eq "order") {
 
@@ -329,7 +327,8 @@
 
 	my %response = (
         error   => 0,
-        message => $message
+        message => $message,
+		refresh => 1
     );
 
 	if (@replace) {
