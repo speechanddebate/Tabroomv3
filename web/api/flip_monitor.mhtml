@@ -38,8 +38,8 @@
 			flip_status.value,
 
 			( select flip.value_text
-				from event_setting flip
-				where flip.event = round.event
+				from panel_setting flip
+				where flip.panel = panel.id
 				and flip.tag = 'flip'
 			) flip,
 
@@ -77,7 +77,6 @@
 	");
 
 	my $now = DateTime->now();
-
 	$sth->execute();
 
 	my %flips;
@@ -105,13 +104,11 @@
 
 		$new_dt->add(minutes => $at);
 		my $new_at = DateTime::Format::MySQL->format_datetime($new_dt);
-
 		my $new_status;
 
 		if ($flip_status eq "winner") {
 
 			if ($flips{"side_locked"} > 0 && $flips{"order_locked"} > 0) {
-
 				$new_status = "done";
 
 			} elsif ($team_order) {
@@ -151,9 +148,9 @@
 
 			unless ($flips{"side_locked"}) {
 
-				$flips{"side_locked"} = 1;
+				$flips{"side_locked"}      = 1;
 				$flips{"side_auto_chosen"} = 1;
-				$flips{"side_chosen_at"} = DateTime::Format::MySQL->format_datetime($now);
+				$flips{"side_chosen_at"}   = DateTime::Format::MySQL->format_datetime($now);
 
 				my @flips = List::Util::shuffle(1, 2);
 
@@ -209,11 +206,6 @@
 			eval {
 				$create_json_sth->execute($panel_id, "flip", $json);
 			};
-
-			$wipe_sth->finish();
-			$create_sth->finish();
-			$create_date_sth->finish();
-			$create_json_sth->finish();
 
 			$m->comp("/funclib/blast_flips.mas",
 				panel_id    => $panel_id
