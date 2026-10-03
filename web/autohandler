@@ -1153,7 +1153,7 @@
 			now             => $now,
 			person          => $person,
 			dbh             => $dbh,
-		)
+		);
 </%perl>
 
 %	}
