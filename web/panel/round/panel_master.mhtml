@@ -856,13 +856,15 @@
 						if ($ARGS{"parliamentarians"}) {
 
 							$m->comp("judges.mhtml",
-								dbh            => $dbh,
-								round_id       => $round->id,
-								tourn          => $tourn,
-								tourn_settings => $tourn_settings,
-								person         => $person,
-								parlis         => 1,
-								return         => 1
+								dbh             => $dbh,
+								perms           => $perms,
+								person_settings => $person_settings,
+								round_id        => $round->id,
+								tourn           => $tourn,
+								tourn_settings  => $tourn_settings,
+								person          => $person,
+								parlis          => 1,
+								return          => 1
 							);
 						}
 

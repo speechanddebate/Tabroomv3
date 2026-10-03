@@ -64,6 +64,7 @@
 	}
 
 	unless ($add_judges) {
+
 		$m->comp(
 			"/funclib/round_clear_judges.mas",
 			round        => $round,
@@ -105,6 +106,14 @@
 	}
 
 	my $description = "Reassigned the judges in round ".$round->realname." of ".$event->abbr." using judges.mhtml";
+
+	if ($parlis == 1) {
+		$description = "Reassigned the presiders/parlis in round ".$round->realname." of ".$event->abbr." using judges.mhtml";
+	} elsif ($parlis == 2) {
+		$description = "Reassigned the scorers in round ".$round->realname." of ".$event->abbr." using judges.mhtml";
+	} elsif ($parlis == 3) {
+		$description = "Reassigned the scorers and presider/parlis in round ".$round->realname." of ".$event->abbr." using judges.mhtml";
+	}
 
 	$m->comp("/funclib/log.mas",
 		type        => 'tabbing',

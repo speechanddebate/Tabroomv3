@@ -86,9 +86,9 @@
 
 		if ($cleaned) {
 			Tab::ChangeLog->create({
-				person	  => $person,
-				round	   => $round,
-				event	   => $round->event,
+				person      => $person,
+				round       => $round,
+				event       => $round->event,
 				description => "Cleared out phantom rounds and panels"
 			});
 		}
