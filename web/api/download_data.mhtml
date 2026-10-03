@@ -183,7 +183,7 @@
 	}
 
 	if ($event_id && (not defined $event)) {
-		$m->print('{ "error": true, "message": "No such event was found for ID $event_id"}');
+		$m->print('{ "error": true, "message": "No such event was found for ID '.$event_id.'"}');
 		$m->abort();
 	} elsif ($event && $public) {
 		$anon_public = $event->setting('anonymous_public');
