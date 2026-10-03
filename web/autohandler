@@ -1156,4 +1156,6 @@
 		)
 </%perl>
 
+%	}
+
 %	$dbh->disconnect();
