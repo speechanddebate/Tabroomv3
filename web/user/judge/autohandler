@@ -6,6 +6,7 @@
 
 	if ($r->uri eq "/user/judge/panels.mhtml") {
 		$m->call_next();
+		return;
 	}
 
 	my $judge;
