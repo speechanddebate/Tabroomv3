@@ -4,7 +4,8 @@
 </%args>
 <%init>
 
-	return;
+	# Used by TournamentMoney still even though it was originally written for
+	# Classrooms.Cloud -CLP 10/4/26
 
     # Written by ATH, Apr. 2020
     use JSON;
@@ -13,7 +14,7 @@
 
     my $dbh = Tab::DBI->db_Main();
 
-    unless ($key eq $Tab::hacky_api_key) {
+    unless ($key && $key eq $Tab::hacky_api_key) {
         my %err = (message => 'Unauthorized.');
         $r->status(401);
         print $json->pretty->encode(\%err);
