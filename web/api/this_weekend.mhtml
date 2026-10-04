@@ -1,6 +1,7 @@
 <%args>
-	$person   => undef
-	$session  => undef
+	$person  => undef
+	$session => undef
+	$month   => undef
 </%args>
 <%init>
 

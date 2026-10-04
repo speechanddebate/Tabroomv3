@@ -251,7 +251,6 @@
 			$round->post_feedback(2);
 			$round->post_secondary(3);
 			$round->post_primary(3);
-
 			$message = "All results for this round have been published.";
 
 		} elsif ($other_value == 2) {
