@@ -247,7 +247,7 @@
 			whoami => "by_event"
 		&>
 
-		<div class="full padtopmore flexrow">
+		<div class="full padtopmore flexrow ltborderbottom">
 
 			<span class="sixth">
 				<h4 class="nospace">Entries</h4>
@@ -1190,9 +1190,9 @@
 
 %				if ($tourn_settings{nsda_district}) {
 
-					<h6 class="martop">Missing competitors?</h6>
+					<h6 class="semibold martop">Missing competitors?</h6>
 
-					<p class="explain">
+					<p class="explain padvertless">
 						Only competitors eligible to enter District Tournaments
 						will appear on the above list. Use this Check
 						Eligibility page to see why someone may be missing.
@@ -1200,12 +1200,10 @@
 
 					<div class="full centeralign">
 						<a
-							class  = "buttonwhite invert orangetext bigger full centeralign"
+							class  = "buttonwhite invert bluetext bigger centeralign"
 							target = "_blank"
 							href   = "nsda_roster_check.mhtml?chapter_id=<% $school->chapter->id %>&tourn_id=<% $tourn->id %>"
-						>
-							Check Eligibility
-						</a>
+						>Check Districts Eligibility</a>
 					</div>
 
 %				} else {
