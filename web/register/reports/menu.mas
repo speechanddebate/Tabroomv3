@@ -147,6 +147,12 @@
 					href="check_shifts.mhtml
 				">Judge Timeshift Blocks</a>
 
+%				if ($tourn_settings->{"judge_release"}) {
+					<a class="<% ($whoami eq "judge_release_forms") ? "dk" : "" %>blue half"
+						href="judge_release_forms.mhtml"
+					>Judge Forms</a>
+%				}
+
 				<a class="<% ($whoami eq "school_events") ? "dk" : "" %>blue half "
 					href="school_events.mhtml
 				">School entry matrix</a>

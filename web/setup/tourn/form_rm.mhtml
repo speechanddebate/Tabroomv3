@@ -21,17 +21,31 @@
 		$tourn->setting("entry_release", 0);
 		$message = "Entry release form deleted";
 
+	} elsif ($target_id eq "judge_release") {
+
+		my $filename = $tourn_settings->{"judge_release"};
+		system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$filename;
+
+		$tourn->setting("judge_release", 0);
+		$message = "Judge form template deleted";
+
 	} else {
 
 		my $form = Tab::File->retrieve($target_id);
 
-		unless ($form) {
-			$m->print('{ "error": true, "message": "No file found for ID '.$target_id.'"}');
+		unless ($form && $form->tourn == $tourn->id && $form->tag eq "school_form") {
+			$m->print('{ "error": true, "message": "No school form found for ID '.int($target_id).'"}');
 			$m->abort();
 		}
 
 		$message = "School form ".$form->label." deleted";
-		system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_forms/".$form->id."/".$form->filename;
+
+		foreach my $reply ($form->children) {
+			system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$form->id."/".$reply->school."/".$reply->filename;
+			$reply->delete;
+		}
+
+		system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$form->id."/".$form->filename;
 		$form->delete;
 	}
 

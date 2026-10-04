@@ -1,0 +1,56 @@
+<%args>
+	$judge
+	$tourn
+	$person
+	$upload   => undef
+	$deadline => undef
+</%args>
+<%init>
+
+	return unless $upload && $upload->filename;
+
+	unless ($tourn->setting("judge_release")) {
+		$m->comp("/funclib/abort.mas",
+			message => $tourn->name." does not ask judges for a form"
+		);
+	}
+
+	if ($deadline) {
+
+		my $release_deadline = $tourn->setting("release_deadline")
+			|| $tourn->setting("drop_deadline")
+			|| $tourn->reg_end;
+
+		if ($release_deadline && DateTime->now() > $release_deadline) {
+			$m->comp("/funclib/abort.mas",
+				warning => "The deadline for judge form uploads has passed"
+			);
+		}
+	}
+
+	my $filename = $m->comp("/funclib/upload_test.mas", upload => $upload);
+	return unless $filename;
+
+	my $filetemp = $upload->tempname;
+	my $existing = $judge->setting("judge_release");
+
+	if ($existing && $existing ne $filename) {
+		system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$judge->id."/".$existing;
+	}
+
+	system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$judge->id."/".$filename;
+
+	$judge->setting("judge_release", $filename);
+	$judge->setting("judge_release_at", "date", DateTime->now());
+	$judge->setting("judge_release_by", $person->id);
+
+	$m->comp("/funclib/log.mas",
+		type        => "registration",
+		tourn       => $tourn->id,
+		person      => $person->id,
+		description => "Judge form ".$filename." uploaded for ".$judge->first." ".$judge->last
+	);
+
+	return $filename;
+
+</%init>

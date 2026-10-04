@@ -21,6 +21,7 @@
 		"mailing_message",
 		"service_project",
 		"competitor_form_message",
+		"judge_form_message",
 	);
 
 	foreach my $tag (@tags) {

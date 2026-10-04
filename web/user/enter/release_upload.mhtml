@@ -12,37 +12,77 @@
 	my $school = Tab::School->retrieve($school_id);
 	my $student = Tab::Student->retrieve($student_id);
 
+	my @entries = $m->comp(
+		"/funclib/student_entries.mas",
+			student => $student,
+			tourn   => $tourn
+	) if $student;
+
+	unless (
+		$school && $student
+		&& ($student->chapter == $school->chapter || grep { $_->school == $school->id } @entries)
+	) {
+		$m->comp("/funclib/abort.mas",
+			message => "That competitor is not part of this school"
+		);
+	}
+
 	my $upload_error;
 
 	my $req = Apache2::Request->new($r);
-	my $upload = $req->upload("release_form");
 
-    my %release_forms = eval {
-        return %{JSON::decode_json($school->setting("release_forms"))};
-    };
+	foreach my $type ("release", "eligibility") {
 
-	if ($upload) {
+		my $upload = $req->upload($type."_form");
+		next unless $upload && $upload->filename;
+
+		my $tag = $type."_forms";
+		my $folder = "entry_release";
+
+		if ($type eq "eligibility") {
+
+			$folder = "eligibility";
+
+			next unless $tourn->setting("entry_upload");
+
+			my $release_deadline = $m->comp("/funclib/release_deadline.mas",
+				tourn   => $tourn,
+				entries => \@entries
+			);
+
+			if ($release_deadline && DateTime->now() > $release_deadline) {
+				$m->comp("/funclib/abort.mas",
+					warning => "The deadline for eligibility uploads has passed"
+				)
+			}
+		}
+
+		my %forms = eval {
+			return %{JSON::decode_json($school->setting($tag))};
+		};
 
 		my $filename = $m->comp("/funclib/upload_test.mas", upload => $upload);
+		next unless $filename;
+
 		my $filetemp = $upload->tempname;
 
-		my $reply = system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/entry_release/".$school->id."/".$student->id."/".$filename;
+		my $reply = system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/".$folder."/".$school->id."/".$student->id."/".$filename;
 
-		$release_forms{$student->id} = $filename;
+		$forms{$student->id} = $filename;
+
+		$school->setting(
+			$tag,
+			"text",
+			JSON::encode_json(\%forms)
+		);
 
 		if ($reply ne '0') {
 			$err .= "<br />" if $err;
 			$err .= "Possible error: $reply";
 		}
 		$msg .= "<br />" if $msg;
-		$msg .= $student->first." ".$student->last."'s forms are uploaded: $reply";
+		$msg .= $student->first." ".$student->last."'s ".$type." form is uploaded";
 	}
-
-	$school->setting(
-		"release_forms",
-		"text",
-		JSON::encode_json(\%release_forms)
-	);
 
 	$err .= "No valid upload processed" unless $msg;
 

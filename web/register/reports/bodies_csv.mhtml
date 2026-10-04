@@ -90,12 +90,14 @@
 
 		if ($done{$student_id}) {
 
-			unless($done{$student_id}{"event"}) {
-				$done{$student_id}{"event"} = $event_code;
-			}
+			foreach my $tag ("event", "supp") {
 
-			unless($done{$student_id}{"supp"}) {
-				$done{$student_id}{"supp"} = $supp_code;
+				my $code = $tag eq "event" ? $event_code : $supp_code;
+				next unless $code;
+				next if grep { $_ eq $code } split(/,/, $done{$student_id}{$tag});
+
+				$done{$student_id}{$tag} .= "," if $done{$student_id}{$tag};
+				$done{$student_id}{$tag} .= $code;
 			}
 
 		} else {
@@ -106,6 +108,7 @@
 			}
 
 			my $person = ({
+				student_id  => $student_id,
 				first       => $student_first,
 				last        => $student_last,
 				nsda        => $nsda,
@@ -137,7 +140,7 @@
 	}
 
 	my $judge_sth = $dbh->prepare('
-		select judge.first, judge.last, nsda.value,
+		select judge.id, judge.first, judge.last, nsda.value,
 			category.abbr,
 			diamonds.value,
 			chapter.id, chapter.nsda, school.name, school.state,
@@ -169,7 +172,7 @@
 
     while(
 		my (
-			$judge_first, $judge_last, $nsda,
+			$judge_id, $judge_first, $judge_last, $nsda,
 			$event_code,
 			$diamonds,
 			$chapter_id, $chapter_nsda, $chapter_name, $chapter_state,
@@ -184,6 +187,7 @@
 		$chapter_name =~ s/Hired //g;
 
 		my $person = ({
+			judge_id    => $judge_id,
 			first       => $judge_first,
 			last        => $judge_last,
 			nsda        => $nsda,
@@ -211,7 +215,7 @@
 		push @{$chapters{$chapter_id}{"judges"}}, $person;
 	}
 
-	$m->print("First,Last,Merit,Diamonds,School,SchoolID,State,Type,Event,Active,Region,District,DCode,Timestamp\n");
+	$m->print("First,Last,Merit,Diamonds,School,SchoolID,State,Type,Event,Active,Region,District,DCode,Timestamp,StudentID,JudgeID\n");
 
 	foreach my $chapter_id (
 		sort {
@@ -223,11 +227,11 @@
 		my @people;
 
 		if ($chapters{$chapter_id}{"students"}) {
-			push @people, sort {$_->{"last"} cmp $_->{"last"}} @{$chapters{$chapter_id}{"students"}};
+			push @people, sort {$a->{"last"} cmp $b->{"last"}} @{$chapters{$chapter_id}{"students"}};
 		}
 
 		if ($chapters{$chapter_id}{"judges"}) {
-			push @people, sort {$_->{"last"} cmp $_->{"last"}} @{$chapters{$chapter_id}{"judges"}};
+			push @people, sort {$a->{"last"} cmp $b->{"last"}} @{$chapters{$chapter_id}{"judges"}};
 		}
 
 		foreach my $person (@people) {
@@ -249,13 +253,15 @@
 			$m->print('"'.$person->{"state"}.'"');
 			$m->print(',');
 
-			if ($person->{'event'} eq "ATTN") { 
+			if ($person->{'event'} && not grep { $_ ne "ATTN" } split(/,/, $person->{'event'})) {
 				$m->print('"attendee"');
 				$m->print(',');
 			} elsif ($person->{'event'}) {
 				$m->print('"'.$person->{"type"}.'"');
 				$m->print(',');
-				$m->print('"'.$person->{"event"}.'"');
+				$m->print('"'.$person->{"event"});
+				$m->print(','.$person->{"supp"}) if $person->{"supp"};
+				$m->print('"');
 			} else {
 				$m->print('"supp only"');
 				$m->print(',');
@@ -271,6 +277,10 @@
 			$m->print('"'.$person->{"dcode"}.'"');
 			$m->print(',');
 			$m->print('"'.$person->{"timestamp"}.'"');
+			$m->print(',');
+			$m->print('"'.$person->{"student_id"}.'"');
+			$m->print(',');
+			$m->print('"'.$person->{"judge_id"}.'"');
 			$m->print("\n");
 
 		}

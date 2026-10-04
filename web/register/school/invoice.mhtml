@@ -769,14 +769,15 @@
 			<h4>Discounts</h4>
 
 			<p class="explain">
-				Discounts are the percentage of the fee you wish to charge; so
-				to knock 10% off the fees, enter '90%'
+				Enter the percentage to take off; 100% waives that fee
+				entirely. Entry fees do not include judging fees, fines or
+				concessions.
 			</p>
 
 			<div class="row flexrow">
 				<span
 					class = "threefifths padleft"
-					title = "Does not include judging fees or concessions"
+					title = "Does not include judging fees, fines or concessions"
 				>
 					Entry Fees only
 				</span>
@@ -784,13 +785,34 @@
 				<span class="twofifths rightalign nospace padright">
 					<input
 						type  = "number"
-						name  = "entry_fee_discount"
+						name  = "entry_fee_percent_off"
 						min   = 0
-						max   = 999
-						value = "<% $school_settings{"entry_fee_discount"} %>"
+						max   = 100
+						value = "<% $school_settings{"entry_fee_percent_off"} %>"
 					> %
 				</span>
 			</div>
+
+%			if ($school_settings{"entry_fee_discount"}) {
+				<div class="row flexrow">
+					<span
+						class = "threefifths padleft"
+						title = "Older setting: entry fees are charged at this percentage of the normal rate. Clear it to use the discount above instead."
+					>
+						Entry fees charged at
+					</span>
+
+					<span class="twofifths rightalign nospace padright">
+						<input
+							type  = "number"
+							name  = "entry_fee_discount"
+							min   = 0
+							max   = 999
+							value = "<% $school_settings{"entry_fee_discount"} %>"
+						> %
+					</span>
+				</div>
+%			}
 
 			<div class="row flexrow">
 				<span

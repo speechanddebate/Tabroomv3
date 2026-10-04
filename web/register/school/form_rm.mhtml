@@ -1,0 +1,40 @@
+<%args>
+	$person
+	$tourn
+	$school_id => undef
+	$file_id   => undef
+</%args>
+<%init>
+
+	my $reply_form = Tab::File->retrieve($file_id) if $file_id;
+
+	unless (
+		$reply_form
+		&& $reply_form->tag eq "form_reply"
+		&& $reply_form->tourn == $tourn->id
+		&& $reply_form->school == $school_id
+	) {
+		$m->comp("/funclib/abort.mas",
+			message => "No form response found with ID ".int($file_id)." for this school.  Maybe it was already deleted?"
+		);
+	}
+
+	my $school = $reply_form->school;
+
+	system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$reply_form->parent."/".$school->id."/".$reply_form->filename;
+
+	my $msg = "Form ".$reply_form->filename." has been deleted";
+
+	Tab::ChangeLog->create({
+		person      => $person,
+		tourn       => $tourn,
+		school      => $school->id,
+		tag         => "registration",
+		description => $msg
+	});
+
+	$reply_form->delete();
+
+	$m->redirect("edit.mhtml?school_id=".$school->id."&msg=$msg");
+
+</%init>
