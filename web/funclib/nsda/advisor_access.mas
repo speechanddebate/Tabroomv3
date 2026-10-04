@@ -51,10 +51,10 @@
 			push @new_roles, $role;
 		}
 
-		if (scalar @new_roles > 10 || $person->id == 1) {
+		if (scalar @new_roles) > 50 || $person->id == 1) {
 
 			my $description = "Tabroom email account ".$person->email." TRID ".$person->id." NSDA ID ".$person->nsda." was DENIED automatic access because they have ";
-			$description .= scalar @new_roles." inactive roles in the NSDA over the 10 limit. ";
+			$description .= scalar @new_roles." active roles in the NSDA over the 10 limit. ";
 			$description .= "If these permissions are allowed, please copy them over manually. ";
 			$description .= "If it is not, then we may have a problem.";
 
