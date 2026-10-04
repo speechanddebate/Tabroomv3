@@ -45,10 +45,6 @@
 					</th>
 
 					<th>
-						Paid
-					</th>
-
-					<th>
 						Email
 					</th>
 
@@ -128,23 +124,6 @@
 									%>"></span>
 								</span>
 %							}
-
-						</td>
-
-						<td class="centeralign">
-
-%							if ($member_data) {
-								<p class="hiddencsv">
-									<% $member_data->{"paid"} ? "Y" : "N" %>
-								</p>
-
-								<span class="fa  <%
-									$member_data->{"paid"}
-									? "fa-check graytext"
-									: "fa-times orangetext"
-								%>"></span>
-%							}
-
 						</td>
 
 						<td class="centeralign">

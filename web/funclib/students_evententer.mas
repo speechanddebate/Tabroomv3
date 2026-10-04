@@ -22,6 +22,7 @@
 	my %event_settings = $event->all_settings;
 
 	my $nsda_district;
+
 	if ($tourn_settings{'nsda_district'} && (not defined $skip_district)) {
 		$nsda_district = Tab::District->retrieve($tourn_settings{'nsda_district'});
 	}
@@ -130,7 +131,7 @@
 		where student.chapter = ?
 			and student.retired = 0
 			and student.id = ss.student
-			and ss.tag IN ('districts_eligible')
+			and ss.tag IN ('districts_eligible', 'nsda_paid')
 	");
 
 	my %student_settings;
@@ -247,10 +248,10 @@
 			}
 
 			# Middle School nonsense
-			# nsda_paid for individuals is no more
-			#if ($tourn_settings{"nsda_members_only"} && (not defined $skip_district) && (not defined $nsda_district)) {
-			#	next STUDENT unless $student_settings{$student_id}{"nsda_paid"};
-			#}
+
+			if ($tourn_settings{"nsda_members_only"} && (not defined $skip_district) && (not defined $nsda_district)) {
+				next STUDENT unless $student_settings{$student_id}{"nsda_paid"};
+			}
 
 			# If this is districts, students who are not NSDA members in good
 			# standing and with linked email addresses

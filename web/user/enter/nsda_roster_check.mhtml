@@ -47,15 +47,17 @@
 			Districts Competitor Eligibility
 		</h4>
 
-		<span class="fivesixths semibold italic linemore">
-			Competitors must be a paid member, with 25 or more points &amp; an
-			email address on file.
-		</span>
+		<div class='full flexrow'>
+			<span class="fivesixths semibold italic linemore">
+				Competitors must be a member, with 25 or more points &amp; an
+				email address on file.
+			</span>
 
-		<span
-			class = "sixth rightalign"
-			id    = "status_sortable_buttonarea"
-		></span>
+			<span
+				class = "sixth rightalign padright"
+				id    = "status_sortable_buttonarea"
+			></span>
+		</div>
 
 		<& "/funclib/nsda/show_roster.mas", chapter => $chapter &>
 
@@ -67,7 +69,7 @@
 
 			<h5>NSDA Membership</h5>
 
-			<div class="full nospace centeralign">
+			<div class="full nospace centeralign ltbordertop">
 
 				<a
 					class  = "buttonwhite bluetext invert threequarters  bigger centeralign padless martopmore"
@@ -85,7 +87,7 @@
 %				if ($school) {
 
 					<a
-						class = "buttonwhite redtext invert redtext threequarters bigger centeralign padless martopmore"
+						class = "buttonwhite redtext invert redtext threequarters bigger centeralign padless martopmore marbottommore"
 						href  = "/user/enter/entry.mhtml?school_id=<% $school->id %>"
 					>Continue to registration</a>
 %				}

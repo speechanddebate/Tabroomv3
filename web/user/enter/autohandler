@@ -175,7 +175,7 @@
 				return;
 			}
 
-		} elsif ($r->uri eq "/user/enter/create.mhtml") {
+		} elsif ($r->uri eq "/user/enter/create.mhtml" || $r->uri eq "/user/enter/nsda_roster_check.mhtml") {
 			$m->call_next(chapter => $chapter);
 			return;
 		}

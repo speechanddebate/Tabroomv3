@@ -314,7 +314,7 @@
 
 			</span>
 
-			<span class="sixth rightalign padright">
+			<span class="sixth rightalign padright grow">
 				<a
 					href="entry_print.mhtml?&school_id=<% $school->id %>"
 					class="fa fa-sm fa-file-pdf-o buttonwhite redtext hover marno"
@@ -400,16 +400,16 @@
 </%perl>
 			<div class="<% $event_id %> roster full nospace marbottom">
 
-				<div class="full nospace">
-					<span class="half nospace">
+				<div class="full flexrow">
+					<span class="half">
 						<h6 class="semibold"><% $event->name %></h5>
 					</span>
-					<span class="quarter nospace rightalign semibold redtext biggish">
+					<span class="quarter rightalign semibold redtext biggish padright">
 %						if (@waitlist) {
 							<% scalar @waitlist %> waitlisted
 %						}
 					</span>
-					<span class="quarter nospace rightalign semibold bluetext biggish">
+					<span class="quarter rightalign semibold bluetext biggish padright">
 						<% scalar @already %> entries
 					</span>
 				</div>
@@ -668,8 +668,8 @@
 %										}
 
 %										if ($event_settings{$event_id}{"ask_for_titles"}) {
-											<div class="full nospace">
-												<span class="full marno padless smallish">
+											<div class="full nospace flexrow flexwrap smallish">
+												<span class="marno padless">
 													<%
 														$entry_setting{$entry->id}{"title"}
 														? '"'.$entry_setting{$entry->id}{"title"}.'"'
@@ -678,7 +678,7 @@
 												</span>
 
 %												if ($entry_setting{$entry->id}{"author"}) {
-													<span class="full marno padless rightalign italic smallish">
+													<span class="grow marno padless rightalign italic">
 														by <% $entry_setting{$entry->id}{"author"} %>
 													</span>
 %												}

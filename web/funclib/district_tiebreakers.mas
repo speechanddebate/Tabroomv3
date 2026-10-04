@@ -92,6 +92,20 @@
 			$event->nsda_category($codes->{$event->abbr});
 			$event->update();
 		}
+
+		if ($event->nsda_category != 108) {
+			$event->setting('school_cap', 4);
+			if ($event->abbr eq "HSE") {
+				$event->setting('school_cap', 10);
+			}
+			if ($event->abbr eq "SEN") {
+				$event->setting('school_cap', 2);
+			}
+		} elsif (not defined $event->setting("school_cap")) {
+			$event->setting('school_cap', 4);
+		}
+
+		$event->setting("no_waitlist", 1);
 	}
 
 	# CONGRESS only has one ruleset now

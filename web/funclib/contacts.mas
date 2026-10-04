@@ -184,11 +184,11 @@
 		nobuttons => 1
 	&>
 
-	<div class="full nospace">
+	<div class="full nospace flexrow">
 
 %		if ($results && scalar @{$results} > 0) {
 
-			<table id="contacts_<% int($school) %>">
+			<table id="contacts_<% int($school) %>" class="marno">
 				<thead>
 					<tr class="yellowrow smallish">
 						<th class="padleft nospace">

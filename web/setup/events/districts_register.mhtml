@@ -73,7 +73,7 @@
 							Start Speaker Codes With
 						</span>
 
-						<span class="quarter centeralign">
+						<span class="quarter centeralign padright">
 							<input
 								type  = "text"
 								class = "thin"
@@ -172,7 +172,7 @@
 								max   = "999"
 								step  = "1"
 								value = <% $event_settings{"adjust_judge_rounds_owed"} %>
-							>%
+							> %
 						</span>
 					</div>
 
@@ -195,7 +195,7 @@
 								max   = "999"
 								step  = "1"
 								value = <% $event_settings{"adjust_judges_owed"} %>
-							>%
+							> %
 						</span>
 					</div>
 %				}
@@ -217,7 +217,7 @@
 							max   = "999"
 							step  = ".01"
 							value = <% $event_settings{"adjust_judges_fees"} %>
-							>%
+						> %
 					</span>
 				</div>
 
@@ -396,7 +396,6 @@
 %			}
 
 			<span class="pagehalf right">
-
 				<h5>
 					Entry Caps
 				</h5>
@@ -405,13 +404,13 @@
 					<span class="twothirds padleft">
 						Per-School Cap
 					</span>
-					<span class="third centeralign">
-%						if ($person->site_admin) {
+					<span class="third centeralign padright">
+%						if ($person->site_admin || $event->nsda_category == 108) {
 							<input
 								id       = "school_cap"
+								name     = "school_cap"
 								type     = "text"
 								class    = "thin"
-								name     = "school_cap"
 								onChange = "waitlistExists();"
 								size     = "5"
 								value    = "<% $event_settings{"school_cap"} %>"
