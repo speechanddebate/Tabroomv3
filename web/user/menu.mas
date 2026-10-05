@@ -208,6 +208,8 @@
 %							}
 						</select>
 					</div>
+
+					</form>
 <%perl>
 				} else {
 
@@ -444,20 +446,21 @@
 					class = "row flexrow"
 					title = "This online room is on the NSDA Campus server.  It will disconnect you after 2 mins."
 				>
-					<span class="twothirds padleft nospace">
-						<div class="semibold bluetext padtopless biggish">
+					<span class="grow padleft">
+						<div class="semibold bluetext padtopless biggish full nospace">
 							Test Campus Room
 						</div>
-						<div class="explain">
+						<div class="explain nospace padleft">
 							<% $menus{chapter}{$cid}{"name"} %>
 						</div>
 					</span>
 
-					<span class="third centeralign" title="<% $menus{chapter}{$cid}{name} %>">
+					<span class="padmore" title="<% $menus{chapter}{$cid}{name} %>">
 						<& "/funclib/online_room.mas",
 							person      => $person,
 							test        => "private",
 							test_school => $menus{chapter}{$cid}{"name"},
+							test_id     => $cid,
 							class       => "fa-lg"
 						&>
 					</span>

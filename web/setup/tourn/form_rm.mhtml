@@ -25,7 +25,7 @@
 
 		my $form = Tab::File->retrieve($target_id);
 
-		unless ($form) {
+		unless ($form && $form->tourn->id == $tourn->id) {
 			$m->print('{ "error": true, "message": "No file found for ID '.$target_id.'"}');
 			$m->abort();
 		}

@@ -31,7 +31,7 @@
 
 		my $result_set = Tab::ResultSet->retrieve($result_set_id);
 
-		if ($result_set) {
+		if ($result_set && $result_set->tourn->id == $tourn->id) {
 			foreach my $result ($result_set->results) {
 				$result->place($ARGS{"place_".$result->id});
 				$result->rank($ARGS{"rank_".$result->id});

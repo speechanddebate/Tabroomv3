@@ -1,5 +1,6 @@
 <%args>
 	$tourn
+	$school
 	$file_id => undef
 </%args>
 <%init>
@@ -11,14 +12,12 @@
 
 		my $reply_form = Tab::File->retrieve($file_id);
 
-		if ($reply_form) {
+		if ($reply_form && $reply_form->school == $school->id) {
 			system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$reply_form->parent->id."/".$reply_form->id."/".$reply_form->filename;
 			$msg = "Form ".$reply_form->filename." has been deleted";
-			$school = $reply_form->school;
 			$reply_form->delete();
 		} else {
-
-			$m->comp("/funclib/abort.mas", message => "No form found with ID $file_id.  Maybe it was already deleted?");
+			$m->comp("/funclib/abort.mas", message => "No form found with ID $file_id from  your school.  Maybe it was already deleted?");
 		}
 	}
 

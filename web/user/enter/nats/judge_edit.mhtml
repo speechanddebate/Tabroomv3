@@ -117,6 +117,8 @@
     }
 
 	my %coach_by_id = map { $_->{person_id} => $_ } @coaches;
+	my $coach_json = JSON::encode_json(\%coach_by_id);
+	$chapter->coaches("nsda_coaches", "json", $coach_json);
 
 	my %seen;
 	my $diamonds;
@@ -686,13 +688,11 @@
 									value="<% $judge->person->nsda %>"
 									selected
 								><% $judge->first." ".$judge->last." (#".$judge->person->nsda %>)</option>
-
 %							}
 %						}
 
 %						foreach my $coach (@coaches) {
 %							next if $seen{$coach->{person_id}}++;
-
 							<option
 								value="<% $coach->{person_id} %>"
 								<% $judge

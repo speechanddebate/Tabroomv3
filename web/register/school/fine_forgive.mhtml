@@ -20,6 +20,12 @@
 	}
 
 	my $school = $fine->school;
+	if ($school->tourn !== $tourn){
+		$m->comp('/funclib/abort.mas',
+			message => "That fine does not belong to your tournamnent";
+		);
+	}
+
 	my $msg;
 
 	if ($undo) {

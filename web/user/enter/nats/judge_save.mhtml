@@ -219,12 +219,6 @@
 				}
 			}
 
-			if ($judge_person && $person_ref && $judge_person->nsda != $person_ref->{person_id}) {
-
-				$judge_person->nsda($person_ref->{person_id});
-				eval { $judge_person->update; };
-			}
-
 			if ($chapter_judge) {
 
 				if ($judge_person) {
@@ -375,17 +369,6 @@
 
 			$chapter_judge->update();
 			$judge->update();
-		}
-
-		if ($judge_person && $ARGS{"nsda"}) {
-
-			if ($judge_person->nsda) {
-
-			} elsif ($ARGS{"nsda"}) {
-				$judge_person->nsda($ARGS{'nsda'});
-				$judge_person->update();
-			}
-			my $membership = $m->comp("/funclib/nsda/membership.mas", persn => $judge_person);
 		}
 
 		my $prefer;

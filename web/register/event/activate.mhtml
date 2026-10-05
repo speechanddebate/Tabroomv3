@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$tourn
 	$tourn_settings
 	$perms
@@ -16,19 +17,16 @@
 	);
 
 	my @event_ids = keys %events;
-
 	my $ids;
 
 	if ($event_id) {
-		$ids = $event_id;
+		$ids = $event_id if $events{$event_id};
 	} elsif (scalar @event_ids == 1) {
 		$event_id = $event_ids[0];
 		$ids = $event_id;
 	} else {
 		$ids = join (",", keys %events);
 	}
-
-	my $dbh = Tab::DBI->db_Main();
 
 	if ($ARGS{"activate"} && $ids) {
 		my $sth = $dbh->prepare("

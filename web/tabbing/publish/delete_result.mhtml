@@ -16,7 +16,7 @@
 
 	my $result = Tab::Result->retrieve($result_id);
 
-	unless ($result) {
+	unless ($result && $result->tourn->id == $tourn->id) {
 		$m->print('{ "error": true, "message": "No result found for ID '.$result_id.'"}');
 		$m->abort();
 	}

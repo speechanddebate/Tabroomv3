@@ -1502,12 +1502,14 @@
 				my %students;
 				my %sc;
 
-				foreach my $student (@{$students}) {
+				foreach my $student (@{$students}) {Z
+
 					$students{$student->{chapter}}{by_id}{$student->{id}} = $student;
 
 					if ($student->{nsda} > 0) {
 						$students{$student->{chapter}}{by_nsda}{$student->{nsda}} = $student;
 					}
+
 					$students{$student->{chapter}}{by_name}{$student->{first}."-".$student->{last}} = $student;
 					$sc{$student->{chapter}} = $student->{chapter};
 				}
@@ -1680,12 +1682,6 @@
 						});
 
 						&outlog("<p class='specific'>No chapter with name ".$school->{name}." or NSDA ID ".$school->{nsda}." found.  Created $ochapter</p>");
-					} else {
-
-						eval {
-							$ochapter->nsda($school->{nsda});
-							$ochapter->update();
-						}
 					}
 
 					$school->{onsite} = 0 unless $school->{onsite};

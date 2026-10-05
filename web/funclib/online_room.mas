@@ -67,7 +67,6 @@
 		$json{"server"}           = "private";
 		$json{"panel_type"}       = "test_private";
 		$json{"mode"}             = "nsda_campus";
-		$json{"panel_id"}         = $json{"uuid"};
 		$json{"forceClose"}       = "true";
 
 		if ($ARGS{"test_school"}) {
@@ -77,6 +76,9 @@
 		} else {
 			$json{"uuid"} = 'NSDACampusCompetitionTest';
 		}
+
+		$json{"uuid"} =~ s/[\W_]//g;
+		$json{"panel_id"}         = $json{"uuid"};
 
 	} elsif ($ARGS{"test"} eq "public") {
 
@@ -610,9 +612,7 @@
 <%perl>
 
 	} elsif (
-		$json{"mode"} eq "public_jitsi"
-		|| $json{"mode"} eq "public_jitsi_observers"
-		|| $json{"mode"} eq "nsda_campus"
+		$json{"mode"} eq "nsda_campus"
 		|| $json{"mode"} eq "nsda_campus_observers"
 	) {
 
@@ -661,6 +661,7 @@
 %				}
 
 				<span class="rightalign  fifth nospace padvertless">
+
 					<button
 						type          = "button"
 						target_id     = "<% $json{"panel_id"} %>"

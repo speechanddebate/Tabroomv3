@@ -1,11 +1,12 @@
 <%args>
+	$tourn
 	$school_id
 </%args>
 <%init>
 
 	my $school = Tab::School->retrieve($school_id) if $school_id;
 
-	if ($school) { 
+	if ($school && $school->tourn == $tourn) {
 		$school->setting("all_fee_discount", $ARGS{"all_fee_discount"});
 		$school->setting("concession_fee_discount", $ARGS{"concession_fee_discount"});
 		$school->setting("entry_fee_discount", $ARGS{"entry_fee_discount"});

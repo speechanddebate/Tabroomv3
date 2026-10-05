@@ -85,9 +85,8 @@
 					<td>
 						<a
 							class="full white"
-							href="<% $Tab::s3_url %>/<% $tourn->id %>/postings/<% $file->{id} %>/<% $file->{filename} %>">
-							<% $file->{label} %>
-						</a>
+							href="<% $Tab::s3_url %>/<% $tourn->id %>/postings/<% $file->{id} %>/<% $file->{filename} %>"
+						><% $file->{label} %></a>
 					</td>
 
 					<td class="centeralign">
@@ -111,7 +110,9 @@
 					</td>
 
 					<td>
-						<& "/funclib/showdt.mas", string => $file->{uploaded} &>
+						<& "/funclib/showdt.mas",
+							string => $file->{uploaded}
+						&>
 					</td>
 
 					<td class="centeralign">
@@ -143,7 +144,6 @@
 						<div id="events_<% $file->{id} %>" class="full nospace events martopless">
 							<select
 								name          = "event"
-								class         = "fixedsmall"
 								property_name = "event"
 								file_id     = "<% $file->{id} %>"
 								onChange      = "postSwitch(this, 'file_switch.mhtml'); showEvents();"
