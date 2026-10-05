@@ -15,8 +15,10 @@
 	my $limit;
 
 	if ($ARGS{other_value} && $ARGS{other_value} ne "all") {
+
 		# This should be the event that will be MERGED, not the event it will
 		# be MERGED INTO.
+
 		$ARGS{other_value} =~ s/[\W_]//g
 		$limit = ' and event.type = "'.$ARGS{other_value}.'" ';
 	}
