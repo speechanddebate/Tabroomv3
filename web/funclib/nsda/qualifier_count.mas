@@ -6,8 +6,11 @@
 
 	use Math::Round;
 
+	my $dbh = Tab::DBI->db_Main();
 	my $tourn = $event->tourn;
 	my $worst_year_ever;
+
+	my $full_prelim_requirement = DateTime::Format::MySQL->parse_datetime('2026-08-01 00:00:00');
 
 	my $start_bound = DateTime->new(
 		year      => 2020,
@@ -31,12 +34,24 @@
 		$worst_year_ever = "true";
 	}
 
+	my %rounds;
+	my $num_entries;
+	my $num_schools;
+
 	my @entries;
 	my $answers = $tourn->setting("nsda_district_questions");
 
 	if ($answers->{"nsda_tabbing_software"} eq "speechwire") {
+
 		@entries = $event->entries(active => 1);
-	} else {
+		$num_entries = scalar @entries;
+
+	} elsif ($round && $round->name == 1) {
+
+		@entries = $event->entries( active => 1);
+		$num_entries = scalar @entries;
+
+	} elsif ($tourn->start <  $full_prelim_requirement) {
 
 		Tab::Entry->set_sql(competed_once => "
 			select distinct entry.id
@@ -52,15 +67,38 @@
 		");
 
 		@entries = Tab::Entry->search_competed_once($event->id);
-	}
+		$num_entries = scalar @entries;
 
-	unless (@entries) {
-		if ($round && $round->name == 1) {
-			@entries = $event->entries( active => 1);
+	} else {
+
+		my $sth = $dbh->prepare("
+			select
+				round.id, round.name, round.type,
+				count(distinct entry.id) entries,
+				count(distinct entry.school) schools
+			from round, panel, ballot, entry
+
+			where round.event = ?
+				and round.id = panel.round
+				and panel.id = ballot.panel
+				and ballot.entry = entry.id
+				and ballot.forfeit != 1
+				and round.type IN ('highhigh', 'highlow', 'prelim')
+		");
+
+		$sth->execute($event->id);
+
+		my $round_counts = $sth->fetchall_hash();
+
+		foreach my $ref (@{$round_counts}) {
+			$rounds{$ref->{name}} = $ref->{entries};
+			if ($ref->{entries} > $num_entries) {
+				$num_entries = $ref->{entries};
+				$num_schools = $ref->{schools};
+			}
 		}
 	}
 
-	my $num_entries = scalar @entries;
 	my $alternates = POSIX::ceil($num_entries / 2);
 	$alternates = 14 if $alternates > 14;
 
@@ -90,32 +128,26 @@
 		$level = $tourn->setting("nsda_district_level_force");
 	}
 
-	my $quals;
+	my $quals = 0;
 
-	if ($event->abbr eq "BQ") {
-
+	if (@entries && (not defined $num_schools)) {
 		my %schools;
 		foreach my $entry (@entries) {
 			$schools{$entry->school->id}++;
 		}
+		$num_schools = scalar (keys %schools));
+	}
 
-		if ( ($num_entries > 9)
-			&& ((scalar (keys %schools)) > 1)
-		) {
+	if ($event->abbr eq "BQ") {
+
+		if ($num_entries > 9 && $num_schools > 1) {
 			$quals = 2;
 		}
 
 	} elsif ($event->abbr eq "SEN") {
 
-		my %schools;
-		foreach my $entry (@entries) {
-			$schools{$entry->school->id}++;
-		}
-
-		if ((scalar (keys %schools)) > 5) {
+		if ($num_entries > 9 && $num_schools > 5) {
 			$quals = 2;
-		} else {
-			$quals = 0;
 		}
 
 	} elsif ($event->abbr eq "HOU" || $event->abbr eq "HSE") {
@@ -140,46 +172,14 @@
 
 		my $team_event++ if $event->setting('max_entry') > 1;
 
-		if ($worst_year_ever) {
-
-			if ($level == 1) {
-
-				$quals = 2 if $num_entries > 3;
-				$quals = 3 if $num_entries > 15;
-				$quals = 4 if $num_entries > 31;
-
-			} elsif ($level == 2) {
-
-				$quals = 2 if $num_entries > 3;
-				$quals = 3 if $num_entries > 9;
-				$quals = 4 if $num_entries > 19;
-
-			} elsif ($level == 3) {
-
-				$quals = 2 if $num_entries > 3;
-				$quals = 4 if $num_entries > 9;
-
-			} else {
-
-				$m->print('<div class="main">');
-				$m->print("<h3>There seems to be a problem</h3>");
-
-				$m->print("<p>Your district, ".$district->name." does ");
-				$m->print(" not have a valid level: ".$level."</p>");
-
-				$m->print('<p>Please contact us at <a href="mailto:help@tabroom.com">help@tabroom.com</a> for assistance.</p>');
-				$m->print('</div>');
-				$m->abort();
-			}
-
-		} else {
+		if ($num_schools > 1) {
 
 			if ($level == 1) {
 
 				$quals = 1 if $num_entries > 3;
 				$quals = 2 if $num_entries > 15;
-				$quals = 3 if $num_entries > 31;
-				$quals = 4 if $num_entries > 55;
+				$quals = 3 if $num_entries > 29;
+				$quals = 4 if $num_entries > 49;
 
 			} elsif ($level == 2) {
 
