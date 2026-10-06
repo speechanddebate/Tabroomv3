@@ -192,7 +192,7 @@
 
 	$events_sth->execute($school->id);
 
-	my $online_events;
+	my $campus_events;
 	my %supp_status;
 
 	while (
@@ -236,9 +236,12 @@
 		$events{$event_id}{"show_totals"}         = $show_totals;
 		$events{$event_id}{"online_mode"}         = $online_mode;
 
-		if ($online_mode && $online_mode ne "none") {
-			$online_events++;
+		if ($online_mode eq "nsda_campus_observers"
+			|| $online_mode eq "nsda_campus"
+		) {
+			$campus_events++;
 		}
+
 		$events{$event_id}{"flight_offset"}       = $flight_offset;
 	}
 
@@ -1351,10 +1354,9 @@
 	<div class="main">
 
 		<div class="full flexrow">
-
-			<span class="half">
-				<h5 class="wrap"><% $school->name %>'s Dashboard</h5>
-				<p class="bigger semibold redtext"><% $tourn->name %></p>
+			<span class="half nospace padleft">
+				<h5 class="padno wrap"><% $school->name %>'s Dashboard</h5>
+				<p class="bigger nospace padvertless semibold redtext"><% $tourn->name %></p>
 			</span>
 
 			<span class="half wrap nospace flexrow">
@@ -1363,7 +1365,7 @@
 					<div class="padvertless">
 						<% $counts[0] %> active competitors
 					</div>
-					<div class="nospace">
+					<div class="padvertless">
 						<% $judge_counts[0] %> active judges
 					</div>
 				</span>
@@ -1453,11 +1455,11 @@
 			</div>
 %		}
 
-		<div class="ltbordervert odd leftalign">
+		<div class="ltbordervert odd centeralign flexrow flexwrap ltborderleft ltborderright">
 <%perl>
 			my %rooms;
 
-			if ($online_events) {
+			if ($campus_events) {
 
 				my @arr = eval {
 					return @{$tourn_settings->{"online_rooms"}};
@@ -1470,13 +1472,12 @@
 					}
 				}
 </%perl>
-				<span class="third leftalign">
-					<span class="threequarters semibold bluetext">
-						<% $school_name %>
-						<br />Squad Room
+				<span class="third leftalign flexrow ltborderleft ltborderright">
+					<span class="semibold greentext grow padleft">
+						Squad Room <% $school_name %>
 					</span>
 
-					<span class="quarter centeralign padvert nospace">
+					<span class="padleft padright centeralign padvert nospace">
 						<& "/funclib/online_room.mas",
 							school => $school->id,
 							person => $person,
@@ -1493,12 +1494,12 @@
 				&& (not defined $tourn_settings->{'observer_violation'})
 			) {
 </%perl>
-				<span class="third leftalign">
-					<span class="threequarters semibold bluetext">
+				<span class="third leftalign flexrow ltborderleft ltborderright">
+					<span class="semibold bluetext grow padleft">
 						Observer Permissions
 					</span>
 
-					<span class="quarter centeralign padvert nospace">
+					<span class="padright padleft centeralign padvert nospace">
 						<a
 							class = "fa fa-lg invert buttonwhite bluetext fa-eye"
 							href  = "campus_observers.mhtml?school_id=<% $school->id %>"
@@ -1508,14 +1509,15 @@
 				</span>
 <%perl>
 			}
+
 			if ($tourn_settings->{"allow_dashboard_drops"} ) {
 </%perl>
-				<span class="third leftalign">
-					<span class="threequarters semibold bluetext">
+				<span class="third leftalign flexrow ltborderleft ltborderright">
+					<span class="grow semibold bluetext padleft">
 						Drop/Withdraw Entries
 					</span>
 
-					<span class="quarter centeralign padvert nospace">
+					<span class="padright padleft centeralign padvert nospace">
 						<a
 							class = "fa fa-lg invert buttonwhite redtext fa-edit"
 							href  = "dashboard_drop.mhtml?school_id=<% $school->id %>"
@@ -1523,17 +1525,15 @@
 						></a>
 					</span>
 				</span>
-
 %			}
 
 %			foreach my $room_id (keys %{$rooms{"coach"}}) {
-				<span class="third leftalign">
-					<span class="threequarters semibold bluetext">
-						<span class="halfspace"></span>
+				<span class="third leftalign flexrow ltborderleft ltborderright">
+					<span class="grow semibold bluetext padleft">
 						<% $rooms{"coach"}{$room_id}{"name"} %>
 					</span>
 
-					<span class="quarter centeralign padvert nospace">
+					<span class="padright centeralign padvert nospace">
 						<& "/funclib/online_room.mas",
 							util   => $rooms{"coach"}{$room_id}{"thing"},
 							person => $person,
@@ -2344,7 +2344,7 @@
 				table => $school_id."_judges"
 			&>
 
-			<div class="full flexrow">
+			<div class="full flexrow martopless">
 				<span class="threequarters">
 					<h5>Judges</h5>
 				</span>
@@ -2359,10 +2359,8 @@
 				id    = "<% $school_id %>_judges"
 				class = "smallish"
 			>
-
 				<thead>
-					<tr class="yellowrow">
-
+					<tr class="yellowrow smaller">
 						<th>
 							Judge
 						</th>
@@ -2391,8 +2389,8 @@
 							Results
 						</th>
 
-						<th>
-							Feedback
+						<th style="max-width:24px;">
+							Fdbk
 						</th>
 					</tr>
 				</thead>
@@ -2532,15 +2530,12 @@
 
 												my @students = keys %{$entry->{students}};
 </%perl>
-												<div class="full nospace padvertmuchless
+												<div class="full nospace padvertmuchless flexrow
 													<% scalar @students > 1 ? "ltborderbottom" : "padvertless" %>"
 												>
-
-													<span class="fifth semibold nospace centeralign
-														<% $entry->{winloss} eq "W" ? "greentext" : "redtext" %>"
-													>
-														<% $entry->{winloss} %>
-													</span>
+													<span class="fifth semibold nospace centeralign <%
+														$entry->{winloss} eq "W" ? "greentext" : "redtext"
+													%>"><% $entry->{winloss} %></span>
 
 													<span class="fourfifths nospace">
 %														if (scalar @students > 1) {
@@ -2548,10 +2543,10 @@
 
 																<div
 																	title="<% $entry->{students}{$student_id}{"name"} %>"
-																	class="full nospace hover"
+																	class="full nospace hover flexrow flexwrap smaller"
 																>
 
-																	<span class="half nowrap nospace padvertless">
+																	<span class="grow half nowrap nospace padvertless">
 																		<% $entry->{students}{$student_id}{"name"} %>
 																	</span>
 
@@ -2559,7 +2554,7 @@
 																		<% $entry->{point} ? $entry->{point}{$student_id} : "" %>
 																	</span>
 
-																	<span class="eighth nospace">
+																	<span class="nospace padleftless">
 																		<% $entry->{rank}{$student_id} %>
 																		<% $entry->{reply}{$student_id} %>
 																	</span>
@@ -2588,11 +2583,9 @@
 
 %											} else {
 
-												<div class="full nospace padvertless semibold leftalign padleft
-													<% $entry->{winloss} eq "W" ? "greentext" : "redtext" %>"
-												>
-													<% $entry->{winloss} %>
-												</div>
+												<div class="full nospace padvertless semibold leftalign padleft <%
+													$entry->{winloss} eq "W" ? "greentext" : "redtext"
+												%>"><% $entry->{winloss} %></div>
 %											}
 
 %										} elsif ($section->{event_type} eq "speech") {
@@ -2601,7 +2594,6 @@
 												<span class="sixth centeralign nospace">
 													<% $entry->{rank} %>
 												</span>
-
 												<span class="third rightalign nospace">
 													<% $entry->{point} %>
 												</span>

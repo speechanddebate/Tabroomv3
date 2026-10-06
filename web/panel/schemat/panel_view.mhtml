@@ -475,6 +475,7 @@
 	my $section = "Debate";
 	$section = "Section" if $event_type eq "speech";
 	$section = "Chamber" if $event_type eq "congress";
+	$section = "Trial" if $event_type eq "mock_trial";
 
 	my $room = $panel->room if $panel->room;
 	my $panel_room = $room->id if $room;
@@ -684,9 +685,7 @@
 
 	my %judge_strings;
 	my %judge_headers;
-
 	my $active;
-
 	my %region_override;
 
 	if ($tourn_settings->{"mock_trial_registration"}) {
@@ -786,14 +785,15 @@
 
 	<div class="main">
 
-		<div class="full padvertless flexrow">
-			<span class="third">
-				<h4 class="nospace smallish">
+		<div class="flexrow ltborderbottom padvertless">
+			<span class="third nospace">
+				<h5 class="nospace">
 					<% $round->realname %>
-				</h4>
+				</h5>
 			</span>
 
 			<span class="third centeralign bigger semibold nospace">
+				Starts:
 				<& "/funclib/showtime.mas",
 					dt     => $start,
 					format => "murica",
@@ -801,15 +801,15 @@
 				&>
 			</span>
 
-			<span class="third flexrow rightalign padright">
+			<span class="third flexrow padright">
 				<span class="threequarters rightalign nowrap grow">
-					<h5 class="nospace">
+					<h6 class="nospace semibold">
 						<% $section %>
 						<% $panel->letter %> of <% $event->abbr %>
-					</h5>
+					</h6>
 				</span>
 %				if ($event_settings{"online_mode"} && ( (not defined $event_settings{"online_hybrid"}) || $panel_online)) {
-					<span class="quarter centeralign top">
+					<span class="padleft top">
 						<& "/funclib/online_room.mas",
 							panel   => $panel,
 							person  => $person,
@@ -892,7 +892,7 @@
 
 		<div class="judgebar full nospace">
 
-			<h6 class="semibold">Judges</h6>
+			<h6 class="semibold">Judging</h6>
 
 			<& "/funclib/tablesorter.mas", table => 'panel_judges', nobuttons => 1 &>
 
@@ -1489,8 +1489,8 @@
 
 			<div class="row smallish martopmore flexrow">
 
-				<span class="padleft semibold padright" style="min-width: 12ex;">
-					Available:
+				<span class="padleft semibold padright" style="min-width: 14ex;">
+					Available
 				</span>
 
 				<span class="grow">
@@ -1597,9 +1597,11 @@
 					value = "yes"
 				>
 
-				<div class="even smallish martop flexrow">
-					<span class="padleft semibold padright" style="min-width: 12ex;">
-						Judging
+				<div class="even smallish martop flexrow"
+					title="These judges fit constraint wise in this round, but are judging another round this timeslot"
+				>
+					<span class="padleft semibold padright" style="min-width: 14ex;">
+						Now Judging
 					</span>
 
 					<span class="grow">
@@ -1639,9 +1641,9 @@
 %			}
 		</div>
 
-		<h5 class="martopmore">
+		<h6 class="martop semibold">
 			<% scalar (keys %entries) %> Entries
-		</h5>
+		</h6>
 
 		<& "/funclib/tablesorter.mas", table => "Entries", nobuttons => 1 &>
 
@@ -2247,7 +2249,7 @@
 <%perl>
 		}
 
-			$m->print("<h5 class='semibold martopmore marbottom'>Room Log</h5>");
+			$m->print("<h6 class='semibold martopmore marbottom blueborderbottom'>Room Log</h6>");
 
 			my %logdata;
 			my $counter = 1;
@@ -2363,7 +2365,7 @@
 				$ts =~  s/[\D_]//g;
 
 				$logdata{$counter++} = ({
-					tag       => "Present",
+					tag       => "Presence",
 					time      => $entry->{timestamp},
 					timestamp => $ts,
 					name      => $name,
@@ -2441,8 +2443,8 @@
 			) {
 
 </%perl>
-				<div class="row smallish flexrow">
-					<span class="tenth semibold padvertless smallhide">
+				<div class="row smallish flexrow padleft marleft marright ltborderleft">
+					<span class="tenth semibold padvertless smallhide smaller">
 						<% ucfirst($logdata{$key}{'tag'}) %>
 					</span>
 					<span class="fifth nospace smallhide">
@@ -2575,9 +2577,7 @@
 <%perl>
 			if (
 				(
-					$event_settings{"online_mode"} ne "public_jitsi"
-					&& $event_settings{"online_mode"} ne "public_jitsi_observers"
-					&& $event_settings{"online_mode"} ne "nsda_campus"
+					$event_settings{"online_mode"} ne "nsda_campus"
 					&& $event_settings{"online_mode"} ne "nsda_campus_observers"
 					&& $event_settings{"online_mode"} ne "async"
 				) || ($event_settings{"online_hybrid"})
@@ -2644,10 +2644,10 @@
 %			} else {
 
 				<div class="row flexrow">
-					<span class="half semibold padleft">
-						Enter Room
+					<span class="grow semibold padleft">
+						Enter Section <% $panel->letter %>
 					</span>
-					<span class="half padvertless">
+					<span class="padvertless quarter centeralign padright">
 						<& "/funclib/online_room.mas",
 							panel   => $panel,
 							person  => $person,
@@ -2680,13 +2680,12 @@
 						Section
 					</span>
 
-					<span class="quarter padright">
+					<span class="quarter nospace padvertless">
 						<input
 							type          = "text"
 							name          = "letter"
 							class         = "marno"
 							value         = "<% $panel->letter %>"
-							size          = 4
 							maxlength     = 3
 							panel_id     = "<% $panel->id %>"
 							property_name = "letter"
@@ -2889,11 +2888,11 @@
 
 %			if ($settings{'share'}) {
 				<div class="row flexrow">
-					<span class="twofifths semibold padleft">
+					<span class="grow semibold padleft">
 						Share Room
 					</span>
 
-					<span class="threefifths padvertno marno">
+					<span class="nospace padright">
 						<a
 							href="https://share.tabroom.com/<% $settings{"share"} %>"
 							class="full biggish bluetext link-underline hover padvertless"

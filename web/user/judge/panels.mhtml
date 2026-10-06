@@ -205,17 +205,28 @@
 			person.tz,
 			tourn.name, tourn.tz, tourn.hidden,
 			CONVERT_TZ(tourn.end, '+00:00', tourn.tz) tourn_end,
-			score.id, permission.chapter, school.id, school.name,
+			score.id,
+
+			(select permission.chapter
+				from permission
+				where permission.person = judge.person
+				and permission.tag = 'chapter'
+				and permission.chapter = school.chapter
+			) as chapter,
+
+			(select contact.id
+				from contact
+				where contact.school = school.id
+				and contact.person = judge.person
+			) as contact,
+
+			school.id, school.name,
 			rounds_per.value,
 			flip_status.value
 
 		from (judge, category, event, round, panel, ballot, entry, tourn, timeslot, person)
 
 			left join school on judge.school = school.id
-
-			left join permission on permission.person = judge.person
-				and permission.tag = 'chapter'
-				and permission.chapter = school.chapter
 
 			left join category_setting rounds_per
 				on rounds_per.category = category.id
@@ -316,7 +327,6 @@
 	my %open_panels;
 	my %dashboards;
 	my %schools;
-
 	my $sp;
 
 	$sth->execute($person->id);
@@ -351,14 +361,22 @@
 			$person_tz,
 			$tourn_name, $tourn_tz, $tourn_hidden,
 			$tourn_end,
-			$score, $chapter, $school, $school_name,
+			$score,
+			$chapter, $contact,
+			$school, $school_name,
 			$rounds_per,
 			$flip_status
 		) = $sth->fetchrow_array()
 	) {
 
-		if ($chapter) {
+		Tab::debuglog("Here with school $school_name and such");
+
+		if ($chapter || $contact) {
+
+			Tab::debuglog("I am here with chapter $chapter and contact $contact");
+
 			$dashboards{$school} = $tourn_name;
+
 			$schools{$school}{'name'} = $m->comp(
 				"/funclib/short_name.mas",
 					name   => $school_name,
@@ -675,20 +693,23 @@
 			judge.obligation, judge.hired,
 			category.id, category.abbr,
 			school.name, school.id,
-			online_rooms.value_text,
-			nc_purchased.value
+
+			(select online_rooms.value_text
+				from tourn_setting online_rooms
+				where online_rooms.tourn = tourn.id
+				and online_rooms.tag = 'online_rooms'
+			) as online_rooms,
+
+			(select nc_purchased.value
+				from tourn_setting nc_purchased
+				where nc_purchased.tourn = tourn.id
+				and nc_purchased.tag IN ('nc_purchased', 'nco_purchased')
+				limit 1
+			) as nc_purchased
 
 		from (tourn, judge, category)
 
-			left join tourn_setting online_rooms
-				on online_rooms.tourn = tourn.id
-				and online_rooms.tag = 'online_rooms'
-
 			left join school on school.id = judge.school
-
-			left join tourn_setting nc_purchased
-				on nc_purchased.tourn = tourn.id
-				and nc_purchased.tag = 'nc_purchased'
 
 		where judge.person = ?
 			and judge.category = category.id
@@ -713,6 +734,8 @@
 			$online_rooms, $campus
 		) = $sth->fetchrow_array()
 	) {
+
+		Tab::debuglog("Here with $judge_id school $school_id campus $campus");
 
 		if ($school_id && $campus) {
 			$schools{$school_id}{'name'} = $m->comp("/funclib/short_name.mas", name => $school_name, return => 1);
@@ -1040,25 +1063,22 @@
 							<span class='quarter semibold padvert padleft'>
 								Round
 							</span>
-							<span class="threequarters">
-								<span class='fourfifths true nospace padvertless'>
-%									unless ($open_panels{$panel_id}{"event_type"} eq "mock_trial") {
-										<% $open_panels{$panel_id}{"event_abbr"} %>
-%									}
-									<% $open_panels{$panel_id}{"round_name"} %>
-									<% $open_panels{$panel_id}{"round_flighted"} > 1
-										? "Flt ".$open_panels{$panel_id}{"panel_flight"}
-										: ""
-									%>
-								</span>
-								<span class='fifth rightalign padright padvertless'>
-									<a
-										class  = "buttonwhite bluetext fa fa-table fa-sm"
-										target = "_blank"
-										title  = "Public Round Schematic"
-										href   = "/index/tourn/postings/round.mhtml?tourn_id=<% $tourn_id %>&round_id=<% $round_id %>"
-									></a>
-								</span>
+							<span class="threequarters nospace">
+								<a
+									class  = "bluetext link-underline semibold padvert hover"
+									target = "_blank"
+									title  = "Public Round Schematic"
+									href   = "/index/tourn/postings/round.mhtml?tourn_id=<% $tourn_id %>&round_id=<% $round_id %>"
+								>
+%								unless ($open_panels{$panel_id}{"event_type"} eq "mock_trial") {
+									<% $open_panels{$panel_id}{"event_abbr"} %>
+%								}
+								<% $open_panels{$panel_id}{"round_name"} %>
+								<% $open_panels{$panel_id}{"round_flighted"} > 1
+									? "Flt ".$open_panels{$panel_id}{"panel_flight"}
+									: ""
+								%>
+								</a>
 							</span>
 						</div>
 
@@ -1086,12 +1106,18 @@
 
 %								} elsif ($open_panels{$panel_id}{"online_mode"}) {
 
-									<& "/funclib/online_room.mas",
-										panel    => $panel_id,
-										person   => $person,
-										show     => 1,
-										class    => "fa-sm",
-									&>
+									<span class="threequarters">
+										Section <% $open_panels{$panel_id}{"panel_letter"} %>
+									</span>
+									<span class="quarter rightalign padright">
+										<& "/funclib/online_room.mas",
+											panel    => $panel_id,
+											person   => $person,
+											show     => 1,
+											class    => "fa",
+										&>
+									</span>
+
 %								} else {
 
 %									if ($open_panels{$panel_id}{"room_url"}) {
@@ -1332,7 +1358,7 @@
 			|| (scalar (keys %dashboards) > 0)
 			|| (scalar @{$livedocs} > 0)
 		) {
-			$m->print('<span class="padleft half">');
+			$m->print('<span class="padleft half top">');
 		}
 
 		if (@{$livedocs}) {
@@ -1439,11 +1465,11 @@
 			</div>
 
 %			if ($dashboards{$school_id}) {
-				<div class="odd bluebordertop">
+				<div class="odd bluebordertop flexrow">
 					<span class="threequarters semibold padleft">
-						Dashboard
+						Dashboard!
 					</span>
-					<span class="quarter centeralign padvert nospace">
+					<span class="quarter centeralign padvert">
 						<a
 							class  = "buttonwhite greentext invert fa fa-dashboard"
 							target = "_blank"
@@ -1455,8 +1481,8 @@
 
 %			if ($squad_rooms{$school_id}) {
 				<div class="odd bluebordertop flexrow">
-					<span class="threequarters semibold padleftmore">
-						Squad Room
+					<span class="threequarters semibold padleft">
+						<% $schools{$school_id}{'name'} %> Squad Room
 					</span>
 					<span class="quarter centeralign padvert">
 						<& "/funclib/online_room.mas",
@@ -1503,6 +1529,7 @@
 					<span class="threequarters semibold padleftmore">
 						<% $rooms{$tourn_id}{"judge"}{$room_id}{"name"} %>
 					</span>
+
 					<span class="quarter centeralign padvert nospace">
 						<& "/funclib/online_room.mas",
 							util     => $rooms{$tourn_id}{"judge"}{$room_id}{"thing"},

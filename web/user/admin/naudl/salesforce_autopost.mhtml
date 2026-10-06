@@ -1,5 +1,6 @@
 <%args>
 	$person          => undef
+	$session         => undef
 	$person_settings => undef
 	$tourn_id        => undef
 	$testing         => undef
@@ -7,8 +8,6 @@
 	$download        => undef
 	$now
 	$dbh
-	$person   => undef
-	$session  => undef
 </%args>
 <%init>
 

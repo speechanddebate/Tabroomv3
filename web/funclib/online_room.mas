@@ -113,8 +113,6 @@
 
 		} elsif ($util->{type} eq "jitsi") {
 
-			$json{"mode"}     = "public_jitsi";
-			$json{"server"}   = "public";
 			$json{"uuid"}     = $util->{"uuid"};
 			$json{"tourn_id"} = $util->{tourn_id};
 			$json{"tourn_id"} = int($tourn) unless $json{"tourn_id"};
@@ -152,16 +150,17 @@
 		");
 
 		$sth->execute($school);
-
 		my ($id, $name, $tourn_id, $tz) = $sth->fetch();
-
 		$sth->finish();
 
-		$json{"mode"}         = "public_jitsi";
-		$json{"uuid"}         = substr(Digest::SHA::sha256_hex("school".$id),0,32);
-		$json{"tourn_id"}     = $tourn_id;
-		$json{"roomName"}     = $name." Squad Room";
-		$json{"displayName"}  = $person->first." ".$person->last;
+		$json{"uuid"}           = substr(Digest::SHA::sha256_hex("school".$id),0,32);
+		$json{"tourn_id"}       = $tourn_id;
+		$json{"roomName"}       = $name." Squad Room";
+		$json{"color"}         .= " greentext ";
+		$json{"displayName"}    = $person->first." ".$person->last;
+		$json{"mode"}           = "nsda_campus";
+		$json{"panel_id"}       = $id;
+		$json{"panel_type"}     = "school";
 
 		if ($zones{$tz}) {
 			$json{"server"} = $zones{$tz};
@@ -169,8 +168,6 @@
 			$json{"server"} = $default_server;
 		}
 
-		$json{"panel_id"}   = $id;
-		$json{"panel_type"} = "school";
 
 	} elsif ($ARGS{"entry"}) {
 
@@ -221,7 +218,6 @@
 				use_normal_rooms.value,
 				event.abbr, event.tourn, event.id,
 				online_mode.value, online_hybrid.value,
-				nsda_campus_public_elims.value,
 				online_public.value,
 				online_support.value,
 				online_instructions.value_text,
@@ -276,10 +272,6 @@
 				left join round_setting use_normal_rooms
 					on use_normal_rooms.round = round.id
 					and use_normal_rooms.tag = 'use_normal_rooms'
-
-				left join event_setting nsda_campus_public_elims
-					on nsda_campus_public_elims.event = event.id
-					and nsda_campus_public_elims.tag = 'nsda_campus_public_elims'
 
 				left join event_setting online_judge_display
 					on online_judge_display.event = event.id
@@ -384,7 +376,7 @@
 				$use_normal_rooms,
 				$event_abbr, $tourn_id, $event_id,
 				$online_mode, $hybrid,
-				$nsda_campus_public_elims, $online_public, $online_support,
+				$online_public, $online_support,
 				$online_instructions,
 				$online_judge_display,
 				$online_entry_display,
@@ -414,30 +406,9 @@
 
 				$json{"mode"} = $online_mode;
 
-				if ($hidden
-					&& ($online_mode eq "nsda_campus" || $online_mode eq "nsda_campus_observers")
-				) {
-					$json{"mode"} = "public_jitsi";
-					$online_mode = "public_jitsi";
-				}
-
-				if (
-					($online_mode eq "nsda_campus" ||  $online_mode eq "nsda_campus_observers")
-					&& (defined $nsda_campus_public_elims)
-					&& ($round_type eq "elim" || $round_type eq "final")
-				) {
-					$json{"mode"} = "public_jitsi";
-					$online_mode = "public_jitsi";
-				}
-
-				if ($campus_force_public) {
-					$json{"mode"} = "public_jitsi";
-					$online_mode = "public_jitsi";
-				}
-
 				if ($use_normal_rooms) {
 					$json{"mode"} = "sync";
-					$online_mode = "sync";
+					$online_mode  = "sync";
 				}
 
 				$json{"tourn_id"} = $tourn_id;
@@ -468,8 +439,6 @@
 				} elsif (
 					$online_mode eq "nsda_campus"
 					|| $online_mode eq "nsda_campus_observers"
-					|| $online_mode eq "public_jitsi"
-					|| $online_mode eq "public_jitsi_observers"
 				) {
 
 					unless ($json{"link"}) {
@@ -479,9 +448,7 @@
 						$json{"supportEmail"}     = $online_support;
 
 						if (
-							$online_mode eq "public_jitsi"
-							|| $online_mode eq "public_jitsi_observers"
-							|| $online_mode eq "nsda_campus"
+							$online_mode eq "nsda_campus"
 							|| $online_mode eq "nsda_campus_observers"
 						) {
 							if ($campus_zone) {
@@ -562,7 +529,6 @@
 				}
 			}
 		}
-
 		$sth->finish();
 	}
 
@@ -593,7 +559,7 @@
 			<a
 				href          = "<% $json{"url"} %>"
 				target        = "_blank"
-				class         = "invert fa fa-video-camera buttonwhite bluetext marno <% $ARGS{"class"} ? $ARGS{"class"} : "fa-lg" %>"
+				class         = "invert fa fa-video-camera buttonwhite marno <% $json{color} ? $json{color} : "bluetext" %>  <% $ARGS{"class"} ? $ARGS{"class"} : "fa-lg" %>"
 				property_name = "<% $json{"object_id"} %>"
 				alt			  = "<% $json{"roomName"} %>"
 				setting_name  = "<% $json{"panel_type"} %>"
@@ -693,7 +659,7 @@
 					related_thing = "<% $json{"roomName"} %>"
 					alt			  = "<% $json{"roomName"} %>"
 					tourn_id      = "<% $json{"tourn_id"} %>"
-					class         = "invert fa fa-video-camera <% $ARGS{"class"} ? $ARGS{"class"} : "fa-lg" %> buttonwhite bluetext marno notfirst"
+					class         = "invert buttonwhite fa fa-video-camera marno notfirst <% $ARGS{"class"} ? $ARGS{"class"} : "fa-lg" %> <% $json{color} ? $json{color} : "bluetext" %>"
 					onClick       = "postSwitch(this, '/user/campus/room_log.mhtml'); this.form.submit();"
 				></button>
 			</form>
