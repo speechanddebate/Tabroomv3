@@ -601,6 +601,7 @@
 			method = "post"
 			target = "_blank"
 		>
+			<div class='full flexrow nospace centeralign'>
 
 			<input
 				name  = "json"
@@ -626,8 +627,7 @@
 					</span>
 %				}
 
-				<span class="rightalign  fifth nospace padvertless">
-
+				<span class="rightalign fifth nospace padvertless">
 					<button
 						type          = "button"
 						target_id     = "<% $json{"panel_id"} %>"
@@ -641,6 +641,25 @@
 					></button>
 				</span>
 
+				</div>
+
+				<div class="full flexrow centeralign">
+%					if ($ARGS{'link_text'}) {
+						<a
+							target_id     = "<% $json{"panel_id"} %>"
+							property_name = "<% $json{"object_id"} %>"
+							setting_name  = "<% $json{"panel_type"} %>"
+							related_thing = "<% $json{"roomName"} %>"
+							alt			  = "<% $json{"roomName"} %>"
+							tourn_id      = "<% $json{"tourn_id"} %>"
+							class         = "bluetext semibold link-underline padright <% $ARGS{link_class} %>"
+							onClick       = "postSwitch(this,
+								'/user/campus/room_log.mhtml');
+							    document.getElementById('meet_<% $json{"panel_id"} %>').submit();"
+						><% $ARGS{'link_text'} %></a>
+%					}
+				</div>
+
 				</form>
 
 %			} else {
@@ -651,6 +670,7 @@
 					</p>
 %				}
 
+				<span>
 				<button
 					type          = "button"
 					target_id     = "<% $json{"panel_id"} %>"
@@ -662,6 +682,23 @@
 					class         = "invert buttonwhite fa fa-video-camera marno notfirst <% $ARGS{"class"} ? $ARGS{"class"} : "fa-lg" %> <% $json{color} ? $json{color} : "bluetext" %>"
 					onClick       = "postSwitch(this, '/user/campus/room_log.mhtml'); this.form.submit();"
 				></button>
+				</span>
+
+%					if ($ARGS{'link_text'}) {
+						<span class="grow">
+						<a
+							target_id     = "<% $json{"panel_id"} %>"
+							property_name = "<% $json{"object_id"} %>"
+							setting_name  = "<% $json{"panel_type"} %>"
+							related_thing = "<% $json{"roomName"} %>"
+							alt			  = "<% $json{"roomName"} %>"
+							tourn_id      = "<% $json{"tourn_id"} %>"
+							class         = "bluetext semibold padright <% $ARGS{link_class} %> full"
+							onClick       = "postSwitch(this, '/user/campus/room_log.mhtml'); document.getElementById('meet_<% $json{"panel_id"} %>').submit();"
+						><% $ARGS{'link_text'} %></a>
+						</span>
+%					}
+				</div>
 			</form>
 
 %			if ($json{"hybrid"} && (not defined $ARGS{"no_name"})) {

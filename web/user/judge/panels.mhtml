@@ -1105,16 +1105,14 @@
 									Test Tournament - No Room
 
 %								} elsif ($open_panels{$panel_id}{"online_mode"}) {
-
-									<span class="threequarters">
-										Section <% $open_panels{$panel_id}{"panel_letter"} %>
-									</span>
-									<span class="quarter rightalign padright">
+									<span class="rightalign padright padvertless grow">
 										<& "/funclib/online_room.mas",
-											panel    => $panel_id,
-											person   => $person,
-											show     => 1,
-											class    => "fa",
+											panel      => $panel_id,
+											person     => $person,
+											show       => 1,
+											class      => "fa padleft",
+											link_class => "grow leftalign padleftmore hover underline",
+											link_text  => "Enter Online Room",
 										&>
 									</span>
 
@@ -1306,7 +1304,7 @@
 								<span class="half centeralign">
 								</span>
 
-								<span class="half centeralign padright padtop">
+								<span class="half rightalign padright padtop">
 <%perl>
 									if ($open_panels{$panel_id}{"online_ballots"}) {
 
@@ -1467,7 +1465,7 @@
 %			if ($dashboards{$school_id}) {
 				<div class="odd bluebordertop flexrow">
 					<span class="threequarters semibold padleft">
-						Dashboard!
+						Team Dashboard
 					</span>
 					<span class="quarter centeralign padvert">
 						<a
