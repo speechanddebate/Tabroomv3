@@ -12,6 +12,10 @@
 
 	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
 
+	unless ($entry && $entry->school == $school->id) {
+		$m->comp("/funclib/abort.mas", message => "No such entry found from your school");
+	}
+
 	my $event    = $entry->event;
 	my $category = $event->category;
 	my $tourn    = $school->tourn;
