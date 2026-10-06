@@ -6,7 +6,6 @@
 <%init>
 
 	my $msg;
-	my $school;
 
 	if ($file_id) {
 
@@ -21,6 +20,6 @@
 		}
 	}
 
-	$m->redirect("entry.mhtml?school_id=".$school."&msg=$msg");
+	$m->redirect("entry.mhtml?school_id=".$school->id."&msg=$msg");
 
 </%init>
