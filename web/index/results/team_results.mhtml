@@ -35,7 +35,7 @@
 	if ($r->hostname eq "www.tabroom.com") {
 		if ($defaults->{team_record}
 			&& $defaults->{team_record}{timestamp} > $then->epoch
-			&& $defaults->{team_record}{accesses} > 3
+			&& $defaults->{team_record}{accesses} > 12
 		) {
 			$m->comp("/funclib/abort.mas",
 				message => "Your requests have hit our rate limit; you may not access this page for another hour.  <br /><br />
