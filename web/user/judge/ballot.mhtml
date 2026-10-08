@@ -544,25 +544,33 @@
 				let totalPoints = 0;
 
 				$(`.${ballotId}_rubric`).each( (index, item) => {
-					let localPoints = parseInt($(item).val());
 
-					const maxPoints = parseInt($(item).attr('max'));
-					const minPoints = parseInt($(item).attr('min'));
+					const localPoints = parseFloat($(item).val());
 
-					if (! isNaN(localPoints)) {
+					const step = parseFloat(<% $step || 1 %>);
+					const inverseStep = parseInt( (1/step));
 
-						if (localPoints > maxPoints) {
-							localPoints = maxPoints;
-							$(item).val(localPoints);
+					const stepPoints = (function(){
+
+						let local;
+						const maxPoints = parseFloat($(item).attr('max'));
+						const minPoints = parseFloat($(item).attr('min'));
+
+						if (! isNaN(localPoints)) {
+							local = Math.round( inverseStep * localPoints) / inverseStep;
 						}
 
-						if (localPoints < minPoints) {
-							localPoints = minPoints;
-							$(item).val(localPoints);
-						}
+						if (local > maxPoints) local = maxPoints;
+						if (local < minPoints) local = minPoints;
 
-						totalPoints += localPoints;
+						return local;
+					})();
+
+					if (localPoints !== stepPoints) {
+						parseFloat($(item).val(stepPoints));
 					}
+
+					totalPoints += stepPoints;
 				});
 
 				$(`#total_${ballotId}_points`).text(totalPoints);
@@ -703,7 +711,6 @@
 									$(`.online_status`).addClass("hidden");
 								}
 							} else {
-								console.log(data);
 								alertify.warning("An error condition was tripped.");
 							}
 						}
@@ -2275,6 +2282,7 @@
 																			name     = "<% $ballot->id %>-<% $row->{uuid} %>"
 																			max      = "<% $row->{max} %>"
 																			min      = "<% $row->{min} %>"
+																			step     = "<% $step %>"
 																			value    = "<% $rubric->{$row->{uuid}}{points} %>"
 																			onChange = "totalRubric(<% $ballot->id %>);"
 																		>
