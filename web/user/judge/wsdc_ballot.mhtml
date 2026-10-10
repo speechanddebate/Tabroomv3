@@ -28,11 +28,11 @@
 
 	$m->comp("/funclib/panel_dedupe.mas", panel => $panel);
 
-	my $round = $panel->round;
-	my $event = $round->event;
-	my $event_type = $event->type;
-	my %event_settings = $event->all_settings();
-	my $category = $event->category;
+	my $round             = $panel->round;
+	my $event             = $round->event;
+	my $event_type        = $event->type;
+	my %event_settings    = $event->all_settings();
+	my $category          = $event->category;
 	my %category_settings = $category->all_settings();
 
     if ($round->setting("use_normal_rooms")) {
@@ -109,30 +109,10 @@
         $judge->id,
     );
 
-	my $wins;
-	my $points;
-	my $ranks;
-
-	foreach my $tb ($round->protocol->tiebreaks) {
-
-		$ranks++ if (
-			   $tb->name eq "ranks"
-			|| $tb->name eq "reciprocals"
-		);
-
-		$wins++ if (
-			   $tb->name eq "opp_wins"
-			|| $tb->name eq "winloss"
-			|| $tb->name eq "ballots"
-		);
-
-		$points++ if (
-			   $tb->name eq "points"
-			|| $tb->name eq "competition"
-			|| $tb->name eq "opp_points"
-		);
-
-	}
+	my %tb_types = $m->comp(
+		"/funclib/tiebreak_types.mas",
+		round => $round
+	);
 
 	my @panel_students = $m->comp('/funclib/panel_students.mas', panel => $panel);
 
@@ -148,12 +128,12 @@
 	my $min_poi_points = $event_settings{"min_poi_points"};
 	my $max_poi_points = $event_settings{"max_poi_points"};
 
-	$min_content_points = 24 unless $min_content_points;
-	$min_style_points = 24 unless $min_style_points;
+	$min_content_points  = 24 unless $min_content_points;
+	$min_style_points    = 24 unless $min_style_points;
 	$min_strategy_points = 12 unless $min_strategy_points;
 
-	$max_content_points = 32 unless $max_content_points;
-	$max_style_points = 32 unless $max_style_points;
+	$max_content_points  = 32 unless $max_content_points;
+	$max_style_points    = 32 unless $max_style_points;
 	$max_strategy_points = 16 unless $max_strategy_points;
 
 	my $increments = $event_settings{"point_increments"};
@@ -171,7 +151,6 @@
 
 	my $locked =  $m->comp("/funclib/round_elim_dueaff.mas", panel => $panel)
 		if $sidelocks;
-
 
 	my $entry_sth = $dbh->prepare("
 		select entry.id, entry.code, entry.name, entry.active, entry.dropped,
@@ -507,7 +486,7 @@
 			<table>
 <%perl>
 
-			if ($points) {
+			if ($tb_types{point}) {
 
 				foreach my $position (1 .. 4) {
 
@@ -527,13 +506,13 @@
 								Speaker
 							</th>
 
-%							if  ($ranks) {
+%							if  ($tb_types{rank}) {
 								<th>
 									Rank
 								</th>
 %							}
 
-%							if ($points) {
+%							if ($tb_types{point}) {
 
 								<th>
 									<% $position == 4 ? "" : "Style" %>
@@ -634,12 +613,10 @@
 										<% $position == 4 ? 'disabled="true"' : "" %>
 									><% $student->first." ".$student->last %></option>
 %								}
-
 							</select>
-
 						</td>
 
-%						if ($ranks) {
+%						if ($tb_types{rank}) {
 							<td class="centeralign">
 %								unless ($position == 4) {
 									<input
@@ -659,7 +636,7 @@
 %						}
 
 <%perl>
-						if ($points) {
+						if ($tb_types{point}) {
 
 							if ($ARGS{'random'}) {
 								$ARGS{$position."_".$ballot->id."_style"} = random_points( $min_style_points * $multiplier, $max_style_points * $multiplier, $step );
@@ -775,7 +752,7 @@
 %			}
 %		}
 
-%		if ($wins) {
+%		if ($tb_types{winloss}) {
 
 			<div class="odd fullpage">
 				<span class="third padleft semibold">
@@ -826,15 +803,12 @@
 								<% $ARGS{"winner_side"} == 2 ? "checked" : "" %>
 							>
 							<% $neg_string %>
-
 						</span>
 					</label>
-
 				</span>
-
 			</div>
 
-%			if ($points && $no_lpw < 1) {
+%			if ($tb_types{point} && $no_lpw < 1) {
 
 				<div class="yellowrow">
 					<label for="lpw">
@@ -1266,7 +1240,6 @@
 %			}
 
 %			foreach my $opanel ($m->comp("/funclib/person_panels.mas", person => $person, done => 1)) {
-
 %				next if $opanel->id == $panel->id;
 
 				<a class="blue full"
@@ -1277,9 +1250,7 @@
 					<% $opanel->round->flighted > 1 ? "Flt ".$opanel->flight : "" %>  Done
 				</a>
 %			}
-
 		</div>
-
 	</div>
 
 <%perl>

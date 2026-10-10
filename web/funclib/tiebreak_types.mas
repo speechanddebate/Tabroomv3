@@ -44,6 +44,7 @@
 
 		if ($event_type eq "wsdc") {
 			$busywork_points_in_elims = $round->event->setting('busywork_points_in_elims');
+			Tab::debuglog("Force busywork in elims $busywork_points_in_elims round $round event ".$round->event);
 		}
 	}
 
@@ -189,13 +190,6 @@
 				}
 			}
 
-			if ($busywork_points_in_elims) {
-				$types{"point"}++;
-				if ($event_type eq "wsdc") {
-					$types{"refute"}++;
-				}
-			}
-
 			if ($tiebreaks{$tiebreak_id}{"child"}) {
 				# If we have everything we're done.
 				unless ($types{'point'} && $types{"winloss"} && $types{"rank"}) {
@@ -204,6 +198,18 @@
 			}
 		}
 	}
+
+	Tab::debuglog("I am here.  BPIE $busywork_points_in_elims");
+
+	if ($busywork_points_in_elims) {
+
+		Tab::debuglog("I should be here!");
+		$types{"point"}++;
+		if ($event_type eq "wsdc") {
+			$types{"refute"}++;
+		}
+	}
+
 
 	return %types;
 

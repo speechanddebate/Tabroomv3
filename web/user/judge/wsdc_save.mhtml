@@ -47,14 +47,12 @@
         $m->redirect("/user/home.mhtml?err=$err");
 	}
 
-	my $round = $panel->round;
-	my $event = $round->event;
+	my $round          = $panel->round;
+	my $event          = $round->event;
 	my %event_settings = $event->all_settings();
-
-    my $type = $event->type;
-
-	my $aff_string = $event_settings{"aff_label"} || "Aff";
-	my $neg_string = $event_settings{"neg_label"} || "Neg";
+    my $type           = $event->type;
+	my $aff_string     = $event_settings{"aff_label"} || "Aff";
+	my $neg_string     = $event_settings{"neg_label"} || "Neg";
 
 	my $no_lpw;
 
