@@ -46,7 +46,7 @@
 
 			</tr>
 
-%			foreach my $school ($tourn->schools(region => $region_id)) {
+%			foreach my $school ($tourn->schools(region => $region->id)) {
 
 				<tr class="row">
 
@@ -88,7 +88,7 @@
 						</a>
 					</span>
 					<span class="fifth rightalign marno">
-						<a class="full dkred" href="admin_rm.mhtml?region_id=<% $region_id %>&chapter_id=<% $chapter_id %>&admin_id=<% $admin->id %>">
+						<a class="full dkred" href="admin_rm.mhtml?region_id=<% $region->id %>&chapter_id=<% $chapter_id %>&admin_id=<% $admin->id %>">
 							Delete
 						</a>
 					</span>
@@ -97,25 +97,37 @@
 %			}
 
 			<form action="admin_add.mhtml" method="post">
-			<input type="hidden" name="chapter_id" value="<% $chapter->id %>">
-			<input type="hidden" name="region_id" value="<% $region->id %>">
+
+			<input
+				type  ="hidden"
+				name  ="chapter_id"
+				value ="<% $chapter->id %>"
+			>
+
+			<input
+				type  ="hidden"
+				name  ="region_id"
+				value ="<% $region->id %>"
+			>
 
 			<div class="libl full nospace">
-
 				<span class="twofifth padleft">
 					Add an admin:
 				</span>
 
 				<span class="twofifth">
-					<input type="text" name="email" placeholder="Email address..." size="16">
+					<input
+						type        ="text"
+						name        ="email"
+						placeholder ="Email address..."
+						size        ="16"
+					>
 				</span>
 
 				<span class="fifth centeralign">
 					<input type="submit" value="Add" class="thin">
 				</span>
-
 			</div>
-
 		</span>
 
 		<h4>Tournaments for <% $chapter->name %> this year</h4>
@@ -211,7 +223,7 @@
 				<h4>Schools</h4>
 
 %				foreach my $chapter ($region->chapters) {
-					<a class="<% $chapter->id == $chapter_id ? "dk" : "" %>blue full" href="tournaments.mhtml?region_id=<% $region_id %>&chapter_id=<% $chapter->id %>">
+					<a class="<% $chapter->id == $chapter_id ? "dk" : "" %>blue full" href="tournaments.mhtml?region_id=<% $region->id %>&chapter_id=<% $chapter->id %>">
 						<% $chapter->name %>
 					</a>
 %				}
@@ -221,7 +233,7 @@
 				<h4>Tournaments:</h4>
 
 %				foreach my $tourn ($circuit->tourns) {
-					<a class="blue full" href="tournaments.mhtml?region_id=<% $region_id %>&tourn_id=<% $tourn->id %>">
+					<a class="blue full" href="tournaments.mhtml?region_id=<% $region->id %>&tourn_id=<% $tourn->id %>">
 						<% $tourn->name %> <% $tourn->start->year %>
 					</a>
 %				}
