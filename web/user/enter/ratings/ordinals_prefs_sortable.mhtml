@@ -21,9 +21,7 @@
 
 	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
 	$category = $entry->event->category unless $category;
-
 	my %category_settings = $category->all_settings;
-
 	my $rounds_per = $category_settings{"rounds_per"};
 
 	my $no_others++;
@@ -54,7 +52,6 @@
     }
 
 	my $coach_ratings = $category_settings{"coach_ratings"};
-
     my %coach_rating_by_judge = ();
 
     foreach my $rating (
@@ -111,7 +108,7 @@
 <%perl>
 		} else {
 
-			@judges = $m->comp("judges.mas", category => $category);
+			@judges = $m->comp("judges.mas", category => $category, active => 1);
 			@judges = sort {$a->last cmp $b->last} @judges;
 			@judges = sort {$a->short_name cmp $b->short_name} @judges;
 
@@ -161,7 +158,6 @@
 							$('#subme').removeClass("hidden");
 							$('#submoi').removeClass("hidden");
 						}
-
 					});
 
 					return false;
@@ -209,16 +205,14 @@
 					id   = "sortorder"
 				>
 
-			<div class="ltborder">
+			<div class="ltborder padtop">
 
 				<ul
-					id="prefsort"
-					class="prefs centeralign"
-					style="margin: auto;"
+					id    = "prefsort"
+					class = "prefs centeralign"
+					style = "margin: auto;"
 				>
-
 <%perl>
-
 					foreach my $judge (@judges) {
 
 						next if ($judge->school && $judge->school->id == $school->id)
@@ -227,19 +221,15 @@
 						next if $conflicts_by_id{$judge->id};
 						next if $event_struck{$judge->id};
 </%perl>
-
-						<li class = "leftalign ui-state-default semibold <% $freebie{$judge->id} ? "greentext greenborder" : "" %>"
+						<li class = "leftalign ltyellowhover flexrow ui-state-default border full semibold <% $freebie{$judge->id} ? "greentext greenborder" : "" %>"
 							id    = "judge_<% $judge->id %>"
 							style = "font-size: 105%;"
 						>
-
-							<span class="ui-icon ui-icon-arrowthick-3-n-s sortarrow left"></span>
-
 							<span class="twenty marno">
 								<%  $ordinal_by_judge{$judge->id} ? $ordinal_by_judge{$judge->id} : "0" %>
 							</span>
 
-							<span class="third marno nowrap">
+							<span class="quarter marno nowrap">
 								<% $judge->first." ".$judge->last %>
 							</span>
 
@@ -251,19 +241,18 @@
 							</span>
 
 							<span class="twofifths marno nowrap">
-								<% ($judge->school && $judge->school->id) ? $judge->short_name.", ".$judge->school->chapter->state : "Unaffilated "%>
+								<% ($judge->school && $judge->school->id)
+									? $judge->school->short_name.", ".$judge->school->chapter->state
+									: "Unaffilated "%>
 							</span>
 
 %							if ($rounds_per) {
-								<span class="tenth marno">
+								<span class="tenth marno padleft">
 									<% ($judge->obligation + $judge->hired) ? ($judge->obligation + $judge->hired) : "0" %> rds
 								</span>
 %							}
-
 						</li>
-
 %					}
-
 				</ul>
 
 			</div>
@@ -276,7 +265,6 @@
 					>
 				</span>
 			</div>
-
 %		}
 
 	</div>
@@ -335,9 +323,8 @@
 
 						<span class="fivesixths">
 
-						<select name="student_id" class="fixedmed">
+						<select name="student_id">
 <%perl>
-
 							my @chapters;
 							my %used;
 							my $school_year = Tab::school_year->year;
@@ -350,9 +337,7 @@
 									value="<% $student->id %>"
 								><% $student->last.", ".$student->first %></option>
 %							}
-
 <%perl>
-
 							my %chapter;
 
 							foreach my $chapter (@chapters) {

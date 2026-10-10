@@ -7,6 +7,12 @@
 
 	my $pref_jpool = $category->setting("pref_jpool");
 
+	my $limit;
+
+	if ($ARGS{active}) {
+		$limit = " and judge.active = 1 ";
+	}
+
 	if ($category->setting("pref_jpool")) {
 
 		Tab::Judge->set_sql(by_jpool => "
@@ -17,6 +23,7 @@
 			where 1=1
 				and judge.id = jpj.judge
 				and jpj.jpool = ?
+				$limit
 			order by school.name, judge.last
 		");
 
@@ -30,6 +37,7 @@
 			left join school on school.id = judge.school
 		where 1=1
 			and judge.category = ?
+			$limit
 		order by school.name, judge.last
 	");
 

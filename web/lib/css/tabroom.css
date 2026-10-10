@@ -2041,7 +2041,6 @@ td.more {
 	padding-left : .75em;
 	font-size    : 1.4em;
 	height       : 26px;
-	width        : 575px;
 }
 
 .sortarrow {
@@ -7000,7 +6999,6 @@ span.status {
 	height: 75vh;
 }
 
-.prefs span:hover,
 .decisions:hover {
 	background-color: var(--medium-gray);
 }
