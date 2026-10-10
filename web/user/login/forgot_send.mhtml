@@ -4,6 +4,7 @@
 	$username => undef
 	$person   => undef
 	$session  => undef
+	$submit   => undef
 </%args>
 <%init>
 
@@ -24,6 +25,10 @@
 	my $user_person = Tab::Person->search( email => $username )->first;
 
 	if ($user_person)  {
+
+		if ($submit eq "I Have A Code") {
+			$m->redirect("forgot_change.mhtml?id=".$user_person->id);
+		}
 
 		my $err;
 		my $url;

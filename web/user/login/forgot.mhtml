@@ -33,33 +33,45 @@
 			action = "forgot_send.mhtml"
 			method = "post"
 		>
+			<input
+				type  = "hidden"
+				name  = "origin_ip"
+				value = "<% $ENV{HTTP_X_FORWARDED_FOR} %>"
+			>
 
-		<input
-			type  = "hidden"
-			name  = "origin_ip"
-			value = "<% $ENV{HTTP_X_FORWARDED_FOR} %>"
-		>
+			<div class="row centeralign">
+				<span class="third semibold">
+					Your Tabroom Email Address
+				</span>
 
-		<div class="row centeralign">
-			<span class="third semibold">
-				Your Tabroom Email Address
-			</span>
+				<span class="twothirds">
+					<input
+						type        = "text"
+						name        = "username"
+						placeholder = "Enter email"
+					>
+				</span>
+			</div>
 
-			<span class="twothirds">
-				<input
-					type        = "text"
-					name        = "username"
-					size        = "64"
-					placeholder = "Enter email"
-				>
-			</span>
-		</div>
-
-		<div class="liblrow rightalign">
-			<span class="third centeralign">
-				<input type="submit" value="Send Reset Code">
-			</span>
-		</div>
+			<div class="liblrow rightalign">
+				<span class="third centeralign">
+					<input
+						name  ="submit"
+						class ="greentext"
+						type  ="submit"
+						value ="I Have A Code"
+					>
+				</span>
+				<span class="third centeralign">
+				</span>
+				<span class="third centeralign">
+					<input
+						type  ="submit"
+						name  ="submit"
+						value ="Send Reset Code"
+					>
+				</span>
+			</div>
 
 		</form>
 
