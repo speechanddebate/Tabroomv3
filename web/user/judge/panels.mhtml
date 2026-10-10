@@ -212,12 +212,14 @@
 				where permission.person = judge.person
 				and permission.tag = 'chapter'
 				and permission.chapter = school.chapter
+				limit 1
 			) as chapter,
 
 			(select contact.id
 				from contact
 				where contact.school = school.id
 				and contact.person = judge.person
+				limit 1
 			) as contact,
 
 			school.id, school.name,
