@@ -1,0 +1,161 @@
+<%args>
+	$api_key        => undef
+	$api_id         => undef
+	$tourn_id       => undef
+	$include_events => undef
+</%args>
+<%init>
+
+    $m->clear_buffer();
+    $r->content_type('application/json');
+
+	my $json = JSON->new->allow_nonref->convert_blessed->utf8;
+
+	my ($person, $tourn) = $m->comp("login_api.mas",
+		method    => "api_key",
+		person_id => $api_id,
+		api_key   => $api_key,
+		tourn_id  => $tourn_id,
+	);
+
+	unless ($person && $tourn) {
+
+		my %output = (
+			error   => \1,
+			message => 'No valid API user or key sent'
+		);
+
+		$m->print($json->encode(\%output));
+		$m->abort();
+	}
+
+	my $now = DateTime->now();
+	my $dbh = Tab::DBI->db_Main();
+
+	my %output = (
+		id      => $tourn->id,
+		name    => $tourn->name,
+		webname => $tourn->webname,
+		city    => $tourn->city,
+		state   => $tourn->state,
+		country => $tourn->country,
+		tz      => $tourn->tz,
+		hidden  => $tourn->hidden ? \1 : \0,
+	);
+
+	foreach my $key ("start", "end", "reg_start", "reg_end") {
+		$output{$key} = $m->comp('/funclib/showdt.mas',
+			dt     => $tourn->$key,
+			length => "json",
+			return => "yep"
+		);
+	}
+
+	my @weekends = $tourn->weekends();
+	my @windows = @weekends ? @weekends : ($tourn);
+
+	my $not_yet = 1;
+	my $closed = 1;
+
+	foreach my $window (@windows) {
+		undef $not_yet if $window->reg_start && $window->reg_start <= $now;
+		undef $closed if $window->reg_end && $window->reg_end >= $now;
+	}
+
+	if ($not_yet) {
+		$output{"registration_status"} = "not_open";
+	} elsif ($closed) {
+		$output{"registration_status"} = "closed";
+	} else {
+		$output{"registration_status"} = "open";
+	}
+
+	my $contact_sth = $dbh->prepare("
+		select GROUP_CONCAT(person.email)
+		from permission, person
+		where permission.tourn = ?
+			and permission.tag = 'contact'
+			and permission.person = person.id
+	");
+
+	$contact_sth->execute($tourn->id);
+	($output{"tourn_contact"}) = $contact_sth->fetchrow_array();
+	$contact_sth->finish();
+
+	my $event_sth = $dbh->prepare("
+		select event.id, event.abbr, event.name, event.type,
+			online_mode.value, online_hybrid.value
+		from event
+			left join event_setting online_mode
+				on online_mode.event = event.id
+				and online_mode.tag = 'online_mode'
+			left join event_setting online_hybrid
+				on online_hybrid.event = event.id
+				and online_hybrid.tag = 'online_hybrid'
+		where event.tourn = ?
+		order by event.name
+	");
+
+	$event_sth->execute($tourn->id);
+
+	my @events;
+	my %counts = (
+		in_person => 0,
+		online    => 0,
+		hybrid    => 0,
+	);
+	my %online_modes;
+
+	while (
+		my (
+			$id, $abbr, $name, $type,
+			$online_mode, $online_hybrid
+		) = $event_sth->fetchrow_array()
+	) {
+
+		undef $online_mode if $online_mode eq "none" || (not $online_mode);
+
+		my $modality = "in_person";
+		$modality = "online" if $online_mode;
+		$modality = "hybrid" if $online_hybrid;
+
+		$counts{$modality}++;
+		$online_modes{$online_mode}++ if $online_mode;
+
+		push @events, {
+			id            => $id,
+			abbr          => $abbr,
+			name          => $name,
+			type          => $type,
+			modality      => $modality,
+			online_mode   => $online_mode,
+			online_hybrid => $online_hybrid ? \1 : \0,
+		};
+	}
+
+	my @present = grep { $counts{$_} } keys %counts;
+
+	$output{"modality"} = (scalar @present == 1) ? $present[0]
+		: (scalar @present > 1) ? "mixed"
+		: undef;
+
+	$output{"online"}       = $counts{"online"} ? \1 : \0;
+	$output{"in_person"}    = $counts{"in_person"} ? \1 : \0;
+	$output{"hybrid"}       = $counts{"hybrid"} ? \1 : \0;
+	$output{"event_counts"} = \%counts;
+	$output{"online_modes"} = \%online_modes;
+
+	$output{"events"} = \@events if $include_events;
+
+	if ($person->site_admin || $person->id == 741030) {    # Tournament Money API user
+		$output{"tmoney"} = {
+			enabled           => $tourn->setting("tmoney_enable") ? \1 : \0,
+			require_epayments => $tourn->setting("tmoney_require_epayments") ? \1 : \0,
+			staging           => $tourn->setting("tmoney_staging") ? \1 : \0,
+		};
+	}
+
+	$m->print($json->encode(\%output));
+	$m->abort();
+
+</%init>
