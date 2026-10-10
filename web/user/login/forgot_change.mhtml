@@ -41,6 +41,7 @@
 			$person_settings{"pass_changekey"} ne $key
 			&& uc(substr($person_settings{pass_changekey},0, 6)) ne uc($reset_key)
 		) {
+
 			my $attempt = $person_settings{"pass_change_attempts"} + 1;
 			$user_person->setting("pass_change_attempts", $attempt);
 
