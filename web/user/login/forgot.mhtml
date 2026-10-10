@@ -57,7 +57,7 @@
 
 		<div class="liblrow rightalign">
 			<span class="third centeralign">
-				<input type="submit" value="Send Reset">
+				<input type="submit" value="Send Reset Code">
 			</span>
 		</div>
 

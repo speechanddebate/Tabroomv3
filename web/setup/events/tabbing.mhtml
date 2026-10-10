@@ -1247,6 +1247,27 @@
 			</div>
 		</span>
 
+%#		Disabled for now except for Palmer because it'll be extensive
+%		if ($event->type eq "wsdc" && $person->id == 1) {
+			<span class="pagehalf">
+				<label for="busywork_points_in_elims">
+					<div class="hover row oddrow flexrow">
+						<span class="fivesixths padleft">
+							Use Points Rubric in Elims
+						</span>
+						<span class="sixth centeralign">
+							<& "/funclib/bool_switch.mas",
+								tag      => "busywork_points_in_elims",
+								value    => $event_settings->{"busywork_points_in_elims"},
+								event_id => $event,
+								smaller  => 1,
+							&>
+						</span>
+					</div>
+				</label>
+			</span>
+%		}
+
 %		if ($event->type eq "debate" || $event->type eq "wsdc") {
 			<span class="pagehalf">
 				<label for="flip_online">

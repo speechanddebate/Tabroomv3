@@ -35,11 +35,16 @@
 	my $event_type;
 	my $round_type;
 	my $round_name;
+	my $busywork_points_in_elims;
 
 	if ($round) {
 		$event_type = $round->event->type;
 		$round_type = $round->type;
 		$round_name = $round->name;
+
+		if ($event_type eq "wsdc") {
+			$busywork_points_in_elims = $round->event->setting('busywork_points_in_elims');
+		}
 	}
 
 	if ($round_type eq "preset"
@@ -56,6 +61,7 @@
 	return unless $protocol;
 
 	my $dbh = Tab::DBI->db_Main();
+
 	my $sth = $dbh->prepare("
 		select tiebreak.id, tiebreak.name,
 			tiebreak.count, tiebreak.count_round, tiebreak.child,
@@ -98,7 +104,6 @@
 	}
 
 	my %done;
-
 	my @sets = ($protocol->id);
 
 	SET:
@@ -178,6 +183,13 @@
 				|| $tb_name eq "judgevar"
 				|| $tb_name eq "judgevar2"
 			) {
+				$types{"point"}++;
+				if ($event_type eq "wsdc") {
+					$types{"refute"}++;
+				}
+			}
+
+			if ($busywork_points_in_elims) {
 				$types{"point"}++;
 				if ($event_type eq "wsdc") {
 					$types{"refute"}++;

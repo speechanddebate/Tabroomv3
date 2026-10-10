@@ -2,15 +2,20 @@
 	$person   => undef
 	$session  => undef
     $district => undef
+	$key      => undef
 </%args>
 <%init>
 
-	unless ($person && $session && $session->id > 0) {
+	if (
+		($key && $key eq $Tab::hacky_api_key)
+		|| ($person && $session && $session->id > 0 && $person->site_admin)
+	) {
+
+	} else {
 		$m->comp("local_only.mas");
-	}
+    }
 
     # Written by ATH, Feb. 2020
-
     use JSON;
 
     my $dbh = Tab::DBI->db_Main();

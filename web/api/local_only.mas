@@ -6,6 +6,7 @@
 		&& (index ($ip, "172.18") == -1)
 		&& (index ($ip, "172.17") == -1)
 	) {
+        $r->status(401);
 		$m->print("Permission denied\n");
 		$m->abort();
 	}
