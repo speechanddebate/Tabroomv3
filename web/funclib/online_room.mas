@@ -693,7 +693,7 @@
 							related_thing = "<% $json{"roomName"} %>"
 							alt			  = "<% $json{"roomName"} %>"
 							tourn_id      = "<% $json{"tourn_id"} %>"
-							class         = "bluetext semibold padright <% $ARGS{link_class} %> full"
+							class         = "bluetext semibold padright <% $ARGS{link_class} %>"
 							onClick       = "postSwitch(this, '/user/campus/room_log.mhtml'); document.getElementById('meet_<% $json{"panel_id"} %>').submit();"
 						><% $ARGS{'link_text'} %></a>
 						</span>
