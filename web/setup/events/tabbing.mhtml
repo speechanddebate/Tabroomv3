@@ -85,8 +85,7 @@
 						Point increments
 					</span>
 
-					<span class="half rightalign">
-
+					<span class="half rightalign padright">
 						<select name  = "point_increments">
 							<option value="whole" <% ($increments eq "whole") ? "selected" : "" %>>
 								Whole
@@ -409,9 +408,8 @@
 %				}
 
 %				if ($event->type eq "wsdc") {
-
-					<label for="wsdc_subtotal_ballot">
-						<div class="row hover">
+					<div class="row hover flexrow">
+						<label for="wsdc_subtotal_ballot">
 							<span class="fivesixths padleft">
 								Show WSDC subpoints on ballot entry
 							</span>
@@ -421,12 +419,12 @@
 									tag      => "wsdc_subtotal_ballot",
 									function => "checkWSDCPoints();",
 									value    => $event_settings->{"wsdc_subtotal_ballot"},
-									event_id   => $event,
+									event_id => $event,
 									smaller  => 1,
 								&>
 							</span>
-						</div>
-					</label>
+						</label>
+					</div>
 %				}
 
 				<div class="subpoints wrap flexrow nospace <%
@@ -438,7 +436,7 @@
 %					foreach my $tag ("style", "content", "strategy", "poi") {
 
 						<div class="row flexrow flexkids">
-							<span class="third semibold bluetext padleftmuchmore">
+							<span class="third smallish italic padleftmuchmore">
 								<% $tag eq "poi"?  "P.O.I. Bonus" : ucfirst($tag)." Points" %>
 							</span>
 
@@ -586,14 +584,10 @@
 						Presiding Officer Award
 					</span>
 
-					<span class="half rightalign">
+					<span class="half rightalign padright">
 %						my $set = $event_settings->{"po_protocol"} if $event;
 
-						<select
-							name  = "po_protocol"
-							class = "fixedsmall"
-						>
-
+						<select name  = "po_protocol">
 							<option value="">None</option>
 %							foreach my $protocol (Tab::Protocol->search( tourn => $tourn->id)) {
 								<option value="<% $protocol->id %>"
@@ -612,12 +606,9 @@
 						Leadership Bowl
 					</span>
 
-					<span class="half rightalign">
+					<span class="half rightalign padright">
 %						$set = $event_settings->{"leadership_protocol"} if $event;
-						<select
-							name  = "leadership_protocol"
-							class = "fixedsmall"
-						>
+						<select name  = "leadership_protocol" >
 							<option value="">None</option>
 %							foreach my $protocol (Tab::Protocol->search( tourn => $tourn->id)) {
 								<option value="<% $protocol->id %>"
@@ -638,10 +629,10 @@
 
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "student_online_ballots",
-								value   => $event_settings->{"student_online_ballots"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "student_online_ballots",
+								value    => $event_settings->{"student_online_ballots"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
 					</div>
@@ -661,11 +652,8 @@
 							Linked PO Event
 						</span>
 
-						<span class="half rightalign">
-							<select
-								name  = "po_contest"
-								class = "fixedsmall"
-							>
+						<span class="half rightalign padright">
+							<select name  = "po_contest">
 								<option value="">None</option>
 %								foreach my $other (@others) {
 									<option value="<% $other->id %>"
@@ -727,13 +715,9 @@
 %						}
 					</span>
 
-					<span class="half rightalign">
+					<span class="half rightalign padright">
 %						my $set = $event_settings->{"speaker_protocol"} if $event;
-
-						<select
-							name  = "speaker_protocol"
-							class = "fixedmost"
-						>
+						<select name  = "speaker_protocol">
 
 							<option value="">None</option>
 %							foreach my $protocol (Tab::Protocol->search( tourn => $tourn->id)) {
@@ -887,9 +871,8 @@
 							Maverick points
 						</span>
 
-						<span class="half rightalign">
-							<select name="mavericks" class="fixedmost">
-
+						<span class="half rightalign padright">
+							<select name="mavericks">
 								<option value="double_rank"
 									<% $mavericks eq "double_rank" ? "selected" : "" %>
 								>Double points of speaking debater, maximum rank</option>
@@ -925,7 +908,7 @@
 						Final Round Bowl
 					</span>
 
-					<span class="half rightalign">
+					<span class="half rightalign padright">
 %						my $set = $event_settings->{"final_bowl_protocol"} if $event;
 						<select
 							name  = "final_bowl_protocol"
@@ -950,9 +933,8 @@
 						Top novice award
 					</span>
 
-					<span class="half rightalign">
+					<span class="half rightalign padright">
 %						my $top_novice = $event_settings->{"top_novice"};
-
 						<select
 							name  = "top_novice"
 							class = "fixedsmall"
@@ -1104,8 +1086,8 @@
 				</div>
 
 %				if ($event->abbr eq "HSE") {
-					<label for="nsda_qual_nohousepilot">
-						<div class="row hover">
+					<div class="row hover flexrow">
+						<label for="nsda_qual_nohousepilot">
 							<span class="fivesixths padleft">
 								No Bonus House Entries
 							</span>
@@ -1118,8 +1100,8 @@
 									smaller => 1,
 								&>
 							</span>
-						</div>
-					</label>
+						</label>
+					</div>
 %				}
 
 				<div class="row flexrow">
@@ -1224,11 +1206,10 @@
 
 		</script>
 
-
 		<h5>Online Ballots</h5>
 
-		<span class="pagehalf flexkids">
-			<div class="flexrow hover row oddrow">
+		<span class="pagehalf">
+			<div class="flexrow hover row">
 				<label for="online_ballots">
 					<span class="fivesixths padleft">
 						Use Online Ballots
@@ -1245,13 +1226,11 @@
 					</span>
 				</label>
 			</div>
-		</span>
 
-%#		Disabled for now except for Palmer because it'll be extensive
-%		if ($event->type eq "wsdc" && $person->id == 1) {
-			<span class="pagehalf">
-				<label for="busywork_points_in_elims">
-					<div class="hover row oddrow flexrow">
+%#			Disabled for now except for Palmer because it'll be extensive
+%			if ($event->type eq "wsdc" && $person->id == 1) {
+				<div class="hover row flexrow onlineballots">
+					<label for="busywork_points_in_elims">
 						<span class="fivesixths padleft">
 							Use Points Rubric in Elims
 						</span>
@@ -1263,94 +1242,68 @@
 								smaller  => 1,
 							&>
 						</span>
-					</div>
-				</label>
-			</span>
-%		}
-
-%		if ($event->type eq "debate" || $event->type eq "wsdc") {
-			<span class="pagehalf">
-				<label for="flip_online">
-					<div class="hover row oddrow flexrow">
-						<span class="fivesixths padleft">
-							Use Online Coinflips
-						</span>
-
-						<span class="sixth centeralign">
-							<& "/funclib/bool_switch.mas",
-								tag      => "flip_online",
-								function => "checkOnlineCoinflips();",
-								value    => $event_settings->{"flip_online"},
-								event_id => $event,
-								smaller  => 1,
-							&>
-						</span>
-					</div>
-				</label>
-			</span>
-%		}
-
-		<div class="nospace onlineballots <% $event_settings->{"online_ballots"} ? "" : "hidden" %>">
-			<span class="pagehalf flexkids">
+					</label>
+				</div>
+%			}
 
 %			if ($event->type eq "congress") {
-				<label for="po_points_required">
-					<div class="hover row">
+				<div class="hover row onlineballots flexrow">
+					<label for="po_points_required">
 						<span class="fivesixths padleft">
 							Require PO points for ballot submission
 						</span>
 
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "po_points_required",
-								value   => $event_settings->{"po_points_required"},
-								event_id  => $event,
-								smaller => 1,
+								tag      => "po_points_required",
+								value    => $event_settings->{"po_points_required"},
+								event_id => $event,
+								smaller  => 1,
 							&>
 						</span>
-					</div>
-				</label>
+					</label>
+				</div>
 
-				<label for="enforce_equal_speeches">
-					<div class="hover row">
+				<div class="hover row onlineballots flexrow">
+					<label for="enforce_equal_speeches">
 						<span class="fivesixths padleft">
 							Require scorers to record equal numbers of speeches
 						</span>
 
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag     => "enforce_equal_speeches",
-								value   => $event_settings->{"enforce_equal_speeches"},
-								event_id  => $event,
-								smaller => 1,
-							&>
-						</span>
-					</div>
-				</label>
-%			}
-
-%			unless ($event_settings->{"ballot_rubric"}) {
-
-				<label for="no_judge_violations">
-					<div class="hover row">
-						<span class="fivesixths padleft">
-							Judges cannot mark violations
-						</span>
-
-						<span class="sixth centeralign">
-							<& "/funclib/bool_switch.mas",
-								tag      => "no_judge_violations",
-								value    => $event_settings->{"no_judge_violations"},
-								event_id   => $event,
+								tag      => "enforce_equal_speeches",
+								value    => $event_settings->{"enforce_equal_speeches"},
+								event_id => $event,
 								smaller  => 1,
 							&>
 						</span>
+					</label>
+				</div>
+%			}
+
+%			unless ($event_settings->{"ballot_rubric"}) {
+%				if ($event->type eq 'speech') {
+					<div class="hover row onlineballots flexrow">
+						<label for="online_ballots">
+							<span class="fivesixths padleft">
+								Judges Cannot mark violations
+							</span>
+
+							<span class="sixth centeralign">
+								<& "/funclib/bool_switch.mas",
+									tag      => "no_judge_violations",
+									value    => $event_settings->{"no_judge_violations"},
+									event_id => $event,
+									smaller  => 1,
+								&>
+							</span>
+						</label>
 					</div>
-				</label>
+%				}
 
 %				if ($event->type ne 'speech' && $event->type ne "congress") {
-
-					<div class="row flexrow">
+					<div class="row onlineballots flexrow">
 						<span class="fivesixths padleft">
 							RFD Minimum word count
 						</span>
@@ -1368,8 +1321,7 @@
 					</div>
 
 %				} elsif ($event->type ne 'congress') {
-
-					<div class="row flexrow">
+					<div class="row onlineballots flexrow">
 						<span class="fivesixths padleft">
 							Comments minimum word count
 						</span>
@@ -1393,11 +1345,10 @@
 			$timer_default = 10 if $event->type eq "speech";
 			$timer_default = 3 if $event->type eq "congress";
 			my $prep_default = 4;
-
 </%perl>
 
 %			if ($event->type ne "mock_trial") {
-				<div class="row flexrow">
+				<div class="row onlineballots flexrow">
 					<span class="fivesixths padleft">
 						Default Timer Speech Time
 					</span>
@@ -1415,7 +1366,7 @@
 				</div>
 %			}
 
-			<div class="row flexrow">
+			<div class="row onlineballots flexrow">
 				<span class="fivesixths padleft">
 					Decision Deadline (minutes post start)
 				</span>
@@ -1429,7 +1380,7 @@
 				</span>
 			</div>
 
-			<div class="row flexrow">
+			<div class="row onlineballots flexrow">
 				<span class="fivesixths padleft">
 					Elim Decision Deadline
 				</span>
@@ -1450,7 +1401,7 @@
 					&& $event->type ne "mock_trial"
 				) {
 </%perl>
-					<div class="row flexrow">
+					<div class="onlineballots row flexrow">
 						<span class="fivesixths padleft">
 							Timer Default Prep Time
 						</span>
@@ -1467,7 +1418,7 @@
 						</span>
 					</div>
 
-					<div class="hover row flexrow">
+					<div class="hover row onlineballots flexrow">
 						<label for="hide_panel_decision">
 							<span class="fivesixths padleft">
 								Hide all panel decisions from judges
@@ -1484,25 +1435,25 @@
 						</label>
 					</div>
 
-					<label for="hide_final_decision">
-						<div class="hover row">
+					<div class="hover row onlineballots flexrow">
+						<label for="hide_final_decision">
 							<span class="fivesixths padleft">
 								Hide only final round decision from judges
 							</span>
 
 							<span class="sixth centeralign">
 								<& "/funclib/bool_switch.mas",
-									tag     => "hide_final_decision",
-									value   => $event_settings->{"hide_final_decision"},
-									event_id  => $event,
-									smaller => 1,
+									tag      => "hide_final_decision",
+									value    => $event_settings->{"hide_final_decision"},
+									event_id => $event,
+									smaller  => 1,
 								&>
 							</span>
 						</div>
 					</label>
 %				}
 
-				<div class="row flexrow">
+				<div class="hover row onlineballots flexrow">
 					<span class="twofifths padleft">
 						Start Button Label
 					</span>
@@ -1520,134 +1471,154 @@
 					</span>
 				</div>
 
-				<div class="row flexrow">
+				<div class="hover row onlineballots flexrow">
 					<span class="twofifths padleft">
 						Start Instructions
 					</span>
-					<span class="threefifths centeralign">
+					<span class="threefifths centeralign padright">
 						<textarea
 							name        = "start_button_text"
 							placeholder = "Text appearing above start button"
 							maxlength   = "128"
+							rows        = 3
 						><% $event_settings->{"start_button_text"} %></textarea>
 					</span>
 				</div>
 			</span>
+		</span>
 
-			<span class="marno pagehalf flexkids fliponline <% $event_settings->{"flip_online"} ? "" : "hidden" %>">
-				<div
-					class = "row flexrow"
-					title = "How many minutes each side has to make their decision"
-				>
-					<span class="fourfifths padleft">
-						Auto-flip after publishing round (minutes)
-					</span>
+		<span class="marno pagehalf">
 
-					<span class="fifth centeralign">
-						<input
-							type         = "number"
-							name         = "flip_autopublish"
-							id           = "flip_autopublish"
-							min          = "0"
-							max          = "999"
-							value        = "<% $event_settings->{'flip_autopublish'} %>"
-							setting_name = "flip_autopublish"
-							event_id     = "<% $event->id %>"
-							onChange     = "postSwitch( this, 'setting_switch.mhtml');"
-						>
-					</span>
-				</div>
-
-				<div
-					class = "row flexrow"
-					title = "How many minutes each side has to make their decision"
-				>
-					<span class="fourfifths padleft">
-						OR auto-flip before start time
-						<span class="semibold orangetext inline">&lowast;</span>
-					</span>
-
-					<span class="fifth centeralign padvertless">
-						<input
-							type         = "number"
-							name         = "flip_before_start"
-							id           = "flip_before_start"
-							min          = "0"
-							max          = "999"
-							value        = "<% $event_settings->{'flip_before_start'} %>"
-							setting_name = "flip_before_start"
-							event_id     = "<% $event->id %>"
-							onChange     = "postSwitch( this, 'setting_switch.mhtml');"
-						>
-					</span>
-				</div>
-
-				<div
-					class = "row flexrow"
-					title = "How many minutes each side has to make their decision"
-				>
-					<span class="fourfifths padleft">
-						Flip Deadline (mins after flip publication)
-					</span>
-
-					<span class="fifth centeralign">
-						<input
-							type         = "number"
-							name         = "flip_deadline"
-							min          = "0"
-							max          = "999"
-							value        = "<% $event_settings->{'flip_deadline'} %>"
-							setting_name = "flip_deadline"
-							event_id     = "<% $event->id %>"
-							onChange     = "postSwitch( this, 'setting_switch.mhtml');"
-						>
-					</span>
-				</div>
-
-				<label for="flip_team_order">
-					<div class="hover row">
+%			if ($event->type eq "debate" || $event->type eq "wsdc") {
+				<div class="hover row flexrow">
+					<label for="flip_online">
 						<span class="fivesixths padleft">
-							Winner chooses side OR order (Public Forum)
+							Use Online Coinflips
 						</span>
+
 						<span class="sixth centeralign">
 							<& "/funclib/bool_switch.mas",
-								tag      => "flip_team_order",
-								value    => $event_settings->{"flip_team_order"},
+								tag      => "flip_online",
+								function => "checkOnlineCoinflips();",
+								value    => $event_settings->{"flip_online"},
 								event_id => $event,
 								smaller  => 1,
 							&>
 						</span>
-					</div>
-				</label>
+					</label>
+				</div>
+%			}
 
+			<div
+				class ="row flexrow fliponline"
+				title = "How many minutes each side has to make their decision"
+			>
+				<span class="fourfifths padleft">
+					Auto-flip after publishing round (minutes)
+				</span>
+
+				<span class="fifth centeralign">
+					<input
+						type         = "number"
+						name         = "flip_autopublish"
+						id           = "flip_autopublish"
+						min          = "0"
+						max          = "999"
+						value        = "<% $event_settings->{'flip_autopublish'} %>"
+						setting_name = "flip_autopublish"
+						event_id     = "<% $event->id %>"
+						onChange     = "postSwitch( this, 'setting_switch.mhtml');"
+					>
+				</span>
+			</div>
+
+			<div
+				class ="row flexrow fliponline"
+				title = "How many minutes each side has to make their decision"
+			>
+				<span class="fourfifths padleft">
+					OR auto-flip before start time
+					<span class="semibold orangetext inline">&lowast;</span>
+				</span>
+
+				<span class="fifth centeralign padvertless">
+					<input
+						type         = "number"
+						name         = "flip_before_start"
+						id           = "flip_before_start"
+						min          = "0"
+						max          = "999"
+						value        = "<% $event_settings->{'flip_before_start'} %>"
+						setting_name = "flip_before_start"
+						event_id     = "<% $event->id %>"
+						onChange     = "postSwitch( this, 'setting_switch.mhtml');"
+					>
+				</span>
+			</div>
+
+			<div
+				class ="row flexrow fliponline"
+				title = "How many minutes each side has to make their decision"
+			>
+				<span class="fourfifths padleft">
+					Flip Deadline (mins after flip publication)
+				</span>
+
+				<span class="fifth centeralign">
+					<input
+						type         = "number"
+						name         = "flip_deadline"
+						min          = "0"
+						max          = "999"
+						value        = "<% $event_settings->{'flip_deadline'} %>"
+						setting_name = "flip_deadline"
+						event_id     = "<% $event->id %>"
+						onChange     = "postSwitch( this, 'setting_switch.mhtml');"
+					>
+				</span>
+			</div>
+
+			<div class ="row flexrow fliponline">
+				<label for="flip_team_order">
+					<span class="fivesixths padleft">
+						Winner chooses side OR order (Public Forum)
+					</span>
+					<span class="sixth centeralign">
+						<& "/funclib/bool_switch.mas",
+							tag      => "flip_team_order",
+							value    => $event_settings->{"flip_team_order"},
+							event_id => $event,
+							smaller  => 1,
+						&>
+					</span>
+				</label>
+			</div>
+
+			<div class ="row flexrow fliponline">
 				<label
 					for   = "flip_anyone_chooses"
 					title = "After the initial deadline passes, whoever picks their side first wins.  Otherwise only the coinflip user can choose for the same period of time, after which the sides are locked."
 				>
+					<span class="fivesixths padleft">
+						Either entry can choose after deadline
+					</span>
 
-					<div class="hover row">
-						<span class="fivesixths padleft">
-							Either entry can choose after deadline
-						</span>
-
-						<span class="sixth centeralign">
-							<& "/funclib/bool_switch.mas",
-								tag      => "flip_anyone_chooses",
-								value    => $event_settings->{"flip_anyone_chooses"},
-								event_id   => $event,
-								smaller  => 1,
-							&>
-						</span>
-					</div>
+					<span class="sixth centeralign">
+						<& "/funclib/bool_switch.mas",
+							tag      => "flip_anyone_chooses",
+							value    => $event_settings->{"flip_anyone_chooses"},
+							event_id   => $event,
+							smaller  => 1,
+						&>
+					</span>
 				</label>
+			</div>
 
-				<label
-					for   = "flip_split_flights"
+			<div
+				class ="row flexrow fliponline"
+				title = "Does a second conflip <% $event_settings->{"flight_offset"} %> minutes after the first flip for the 2nd flight of a double flighted event.  Delay is set by the 'Flight length in minutes' setting above"
 				>
-					<div
-						class = "hover row flexrow"
-						title = "Does a second conflip <% $event_settings->{"flight_offset"} %> minutes after the first flip for the 2nd flight of a double flighted event.  Delay is set by the 'Flight length in minutes' setting above"
-					>
+					<label for = "flip_split_flights">
 						<span class="threefifths padleft grow">
 							Individual deadline for each flight
 						</span>
@@ -1666,20 +1637,20 @@
 								Set flight length first (above left)
 							</span>
 %						}
-					</div>
-				</label>
+					</label>
+				</div>
 
-				<div class="row padleft padtopless">
-					<span class="explain semibold orangetext setting padbottom">
-						&lowast; The flip will be scheduled once the pairing is
+				<div class="row padleft padtopless fliponline">
+					<span class="explain semibold setting padbottom">
+						<span class="orangetext">&lowast;</span>
+						The flip will be scheduled once the pairing is
 						published.  Changing the start time after publish won't
 						change the flip time; adjust under Actions on
 						schematic.
 					</span>
 				</div>
 			</span>
-
-		</div>
+		</span>
 
 		<div class="liblrow rightalign pagefull">
 			<span class="third centeralign">

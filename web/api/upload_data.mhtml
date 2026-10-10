@@ -1502,7 +1502,7 @@
 				my %students;
 				my %sc;
 
-				foreach my $student (@{$students}) {Z
+				foreach my $student (@{$students}) {
 
 					$students{$student->{chapter}}{by_id}{$student->{id}} = $student;
 
