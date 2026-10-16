@@ -170,6 +170,7 @@
 				return         => 1,
 				add_judges     => 1,
 				limit_judges   => $num_judges,
+				perms          => $perms,
 				dbh            => $dbh
 			);
 		}
