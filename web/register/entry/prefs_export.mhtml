@@ -114,7 +114,7 @@
 
 		from judge
 		where 1=1
-			and $limiter
+			$limiter
 			and judge.active = 1
 		order by school.name, judge.last
 	");
