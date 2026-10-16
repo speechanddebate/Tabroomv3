@@ -1,5 +1,6 @@
 <%args>
 	$dbh
+	$now
 	$person
 	$school
 	$category_id => undef
@@ -96,13 +97,12 @@
 	my $judge_deadline = $tourn->setting("judge_deadline");
 	$judge_deadline = $tourn->setting("drop_deadline") unless $judge_deadline;
 
-	my $now = DateTime->now();
-
+	my $chapter = $schol->chapter;
 	my $closed;
 	$closed++ if $now > $judge_deadline;
 
     my @coaches;
-	my ($roster_ref, $raw) = $m->comp("/funclib/nsda/school_roster.mas", chapter => $school->chapter);
+	my ($roster_ref, $raw) = $m->comp("/funclib/nsda/school_roster.mas", chapter => $chapter);
 
     my @roster = eval {
         return @{$roster_ref};
@@ -118,6 +118,7 @@
 
 	my %coach_by_id = map { $_->{person_id} => $_ } @coaches;
 	my $coach_json = JSON::encode_json(\%coach_by_id);
+
 	$chapter->coaches("nsda_coaches", "json", $coach_json);
 
 	my %seen;
@@ -626,7 +627,7 @@
 %					}
 <%perl>
 					foreach my $chapter_judge (
-						$school->chapter->chapter_judges(retired => 0)
+						$chapter->chapter_judges(retired => 0)
 					) {
 
 						next if $already{$chapter_judge->id};
