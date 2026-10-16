@@ -423,7 +423,7 @@
 %							}
 						</span>
 						<span class="sixth rightalign padright">
-%							if ($release_forms{$student->id}) {
+%							if ($entry->id && $student->id && $release_forms{$student->id}) {
 								<a
 									class="redtext buttonwhite fa fa-sm fa-trash"
 									<& "/funclib/confirm.mas", warn => "Are you sure you mean to delete this student's forms?" &>
