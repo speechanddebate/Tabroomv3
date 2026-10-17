@@ -3,16 +3,20 @@
 	$now
 	$id        => undef
 	$key       => undef
+	$reset_key => undef
 	$pass1     => undef
 	$pass2     => undef
 	$session   => undef
 </%args>
 <%init>
 
-	$m->abort unless $id;
-	$m->abort unless $key;
-	$m->abort unless $pass1;
-	$m->abort unless $pass2;
+	foreach my $tag ("id", "pass1", "pass2") {
+		unless ($ARGS{$tag}) {
+			$m->comp("/funclib/abort.mas", message => "No value sent for $tag");
+
+		}
+	}
+
 
 	if ($ENV{HTTP_X_FORWARDED_FOR} ne $ARGS{'origin_ip'}) {
 		$m->comp("/funclib/abort.mas",
@@ -47,7 +51,10 @@
 		$err = "No valid password change key found";
 		$wipe_sth->execute($target->id);
 
-	} elsif ($target_settings{"pass_changekey"} ne $key) {
+	} elsif (
+		$target_settings{"pass_changekey"} ne $key
+		&& uc(substr($target_settings{pass_changekey},0, 6)) ne uc($reset_key)
+	) {
 
 		$err = "No valid password change key found";
 		$wipe_sth->execute($target->id);
@@ -72,7 +79,7 @@
 		}
 	}
 
-	$m->redirect("/user/login/forgot.mhtml?id=$id&key=$key&err=$err") if $err;
+	$m->redirect("/user/login/forgot.mhtml?id=$id&key=$key&reset_key=$reset_key&err=$err") if $err;
 
 	my $salt = $m->comp("/funclib/generate_randomstring.mas");
 	my $new_sha2_hash = crypt($pass1, '$6$' . $salt);

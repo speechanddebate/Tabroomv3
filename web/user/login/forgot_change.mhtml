@@ -8,7 +8,6 @@
 <%init>
 
 	$m->abort() unless $id;
-
 	my $user_person = Tab::Person->retrieve($id);
 
 	unless ($user_person) {
@@ -28,6 +27,7 @@
 	my %person_settings = $user_person->all_settings();
 
 	if ($reset_key || $key) {
+
 		unless ($person_settings{"pass_change_expires"} && $person_settings{"pass_changekey"}) {
 			$err = "Either something is wrong with the system, or you're pulling shenanigans.";
 			$invalid++;
@@ -180,10 +180,17 @@
 						action = "forgot_save.mhtml"
 						method = "post"
 					>
+
 					<input
 						type    = "hidden"
 						name    = "key"
 						value   = "<% $key %>"
+					>
+
+					<input
+						type    = "hidden"
+						name    = "reset_key"
+						value   = "<% $reset_key %>"
 					>
 
 					<input
