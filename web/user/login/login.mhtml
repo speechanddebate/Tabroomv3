@@ -153,19 +153,12 @@
 		<h4>Having trouble?</h4>
 
 		<p style="padding: 5px;">
-
 			Be sure that you're using the email address you used when you first
-			signed up for an account; tabroom.com doesn't know when you get a
-			new address.</p>
-
+			signed up for an account, if you have multiple emails.
+		</p>
 		<p style="padding: 5px;">
-
-			If you're totally unable to log in, please email <% $Tab::admin_email %>
-			with your name, school name and the text of any error messages you
-			might get.  And remember, tabroom.com is a volunteer effort; we
-			don't have paid staff to answer your email, so it might be a couple
-			days before I can get back to you
-
+			If you are still unable to log in, please email <% $Tab::admin_email %>
+			with your name, school name and email address.
 		</p>
 
 	</div>
