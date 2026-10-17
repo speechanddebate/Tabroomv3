@@ -113,6 +113,7 @@
 
 		} elsif ($util->{type} eq "jitsi") {
 
+			$json{"mode"}     = "nsda_campus";
 			$json{"uuid"}     = $util->{"uuid"};
 			$json{"tourn_id"} = $util->{tourn_id};
 			$json{"tourn_id"} = int($tourn) unless $json{"tourn_id"};
@@ -398,10 +399,8 @@
 			}
 
 			if ($hybrid && (not defined $panel_hybrid)) {
-
 				$json{"mode"}     = "physical";
 				$json{"roomName"} = $room_name;
-
 			} else {
 
 				$json{"mode"} = $online_mode;
@@ -716,6 +715,7 @@
 				</p>
 %			}
 %		}
+
 %	} elsif (not defined $ARGS{"no_name"}) {
 
 %		if ($ARGS{'vertical'}) {
