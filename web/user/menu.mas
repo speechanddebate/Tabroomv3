@@ -86,6 +86,9 @@
 			$menus{"chapter"}{$chapter_id}{"sort"} = $perm_chapter_name;
 			$menus{"chapter"}{$chapter_id}{"name"} = $perm_chapter_name;
 
+			$menus{"rchapter"}{$chapter_id}{"sort"} = $perm_chapter_name;
+			$menus{"rchapter"}{$chapter_id}{"name"} = $perm_chapter_name;
+
 			if ($tag eq "prefs_only" || $tag eq "prefs") {
 				$menus{"chapter"}{$chapter_id}{"extra"} = "Prefs Only";
 			}
@@ -133,22 +136,47 @@
 
 	$sth->finish();
 
+	my $judge_sth = $dbh->prepare("
+		select
+			judge.id, chapter.id chapter_id, chapter.name chapter_name
+		from judge, school, chapter, tourn
+		where judge.person = ?
+			and judge.school = school.id
+			and school.chapter = chapter.id
+			and school.tourn = tourn.id
+			and tourn.end > NOW()
+	");
+
+	$judge_sth->execute($person->id);
+
+	my $judges = $judge_sth->fetchall_hash();
+
+	foreach my $sref (@{$judges}) {
+		$menus{"rchapter"}{$sref->{chapter_id}}{"sort"} = $sref->{chapter_id};
+		$menus{"rchapter"}{$sref->{chapter_id}}{"name"} = $sref->{chapter_name}." ".$sref->{id};
+	}
+
 	my $student_sth = $dbh->prepare("
-		select student.id, chapter.name
+		select student.id, chapter.name, chapter.id chapter_id
 			from (student, chapter)
 		left join entry_student es on es.student = student.id
 		where student.person = ?
 			and student.chapter = chapter.id
+			and student.retired = 0
 		order by es.id DESC, student.id DESC
 		limit 1
 	");
 
 	$student_sth->execute($person->id);
 
-	my ($entries, $student_chapter_name) = $student_sth->fetchrow_array();
+	my $students = $student_sth->fetchall_hash();
 
-	unless ($chapter_name) {
-		$chapter_name = $student_chapter_name;
+	my $entries;
+
+	foreach my $sref (@{$students}) {
+		$menus{"rchapter"}{$sref->{chapter_id}}{"sort"} = $sref->{chapter_id};
+		$menus{"rchapter"}{$sref->{chapter_id}}{"name"} = $sref->{name};
+		$entries++;
 	}
 
 	$student_sth->finish();
@@ -438,8 +466,8 @@
 %			foreach my $cid (
 %				sort {
 %					 ($a == $ARGS{chapter} ? 0 : 1) <=> ($b == $ARGS{chapter} ? 0 : 1)
-%					|| $menus{chapter}{$a}{"sort"} cmp $menus{chapter}{$b}{"sort"}
-%				} keys %{$menus{chapter}}
+%					|| $menus{rchapter}{$a}{"sort"} cmp $menus{rchapter}{$b}{"sort"}
+%				} keys %{$menus{rchapter}}
 %			) {
 
 				<div
@@ -451,15 +479,15 @@
 							Test Campus Room
 						</div>
 						<div class="explain nospace padleft">
-							<% $menus{chapter}{$cid}{"name"} %>
+							<% $menus{rchapter}{$cid}{"name"} %>
 						</div>
 					</span>
 
-					<span class="padmore" title="<% $menus{chapter}{$cid}{name} %>">
+					<span class="padmore" title="<% $menus{rchapter}{$cid}{name} %>">
 						<& "/funclib/online_room.mas",
 							person      => $person,
 							test        => "private",
-							test_school => $menus{chapter}{$cid}{"name"},
+							test_school => $menus{rchapter}{$cid}{"name"},
 							test_id     => $cid,
 							class       => "fa-lg"
 						&>
