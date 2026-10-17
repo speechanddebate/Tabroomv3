@@ -43,7 +43,12 @@
 		) {
 
 			my $attempt = $person_settings{"pass_change_attempts"} + 1;
-			$user_person->setting("pass_change_attempts", $attempt);
+			eval {
+				$user_person->setting("pass_change_attempts", $attempt);
+			};
+			eval {
+				$user_person->setting("pass_change_attempts", $attempt);
+			};
 
 			if ($reset_key) {
 				$err = "That reset key was not valid.  Please try again. </p><p> Attempt $attempt of 5.";
