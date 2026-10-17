@@ -78,8 +78,6 @@
 		my $expires = DateTime->now;
 		$expires->add(minutes => '20');
 
-		Tab::debuglog("I am here with kye $key");
-
 		$user_person->setting("pass_changekey", $key);
 		$user_person->setting("pass_change_ip", $ENV{HTTP_X_FORWARDED_FOR});
 		$user_person->setting("pass_change_expires", "date", $expires);
