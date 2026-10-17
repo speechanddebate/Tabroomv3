@@ -20,10 +20,10 @@
 	my $default_site;
 
 	if (
-		$event->setting('nsda_campus')
-		|| $event->setting('nsda_campus_observers')
+		$event->setting('online_mode') eq 'nsda_campus'
+		|| $event->setting('online_mode') eq 'nsda_campus_observers'
 	) {
-		$default_site = 1;
+		$default_site = 0;
 	} elsif ($tourn_settings->{"nsda_district"}) {
 
 		my $weekend_id = $event->setting('weekend');
@@ -141,7 +141,14 @@
 				}
 
 				$round->label($label);
-				$round->site($site_id);
+
+				if ($site_id > 0) {
+					$round->site($site_id);
+				} elsif ($round->site > 0) {
+					my $sth = $dbh->prepare("update round set site = NULL where id = ?");
+					$sth->execute($round->id);
+				}
+
 				$round->type($round_type);
 				$round->protocol($protocol_id) if $protocol_id;
 				$round->flighted($ARGS{$key."_flight"});
@@ -159,9 +166,12 @@
 					start_time => $timeslot->start,
 					label      => $label,
 					type       => $round_type,
-					site       => $site_id,
 					flighted   => $ARGS{$key."_flight"}
 				};
+
+				if ($site_id > 0) {
+					$ref->{site} = $site_id;
+				}
 
 				if ($protocol_id) {
 					$ref->{protocol} = $protocol_id;
