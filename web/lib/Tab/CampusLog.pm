@@ -2,7 +2,7 @@ package Tab::CampusLog;
 use base 'Tab::DBI';
 Tab::CampusLog->table('campus_log');
 Tab::CampusLog->columns(Primary => qw/id/);
-Tab::CampusLog->columns(Essential => qw/tag uuid description tourn school person panel entry judge student timestamp/);
+Tab::CampusLog->columns(Essential => qw/tag uuid description tourn school person panel entry judge student ip timestamp/);
 
 Tab::CampusLog->has_a(person  => "Tab::Person");
 Tab::CampusLog->has_a(panel   => "Tab::Panel");

@@ -45,6 +45,7 @@
 			tag         => "campus",
 			tourn       => $tourn_id,
 			uuid        => $target_id,
+			ip          => $ENV{HTTP_X_FORWARDED_FOR} || $ENV{REMOTE_ADDR},
 			description => "Entered ".$related_thing." from Tabroom"
 		});
 
@@ -55,6 +56,7 @@
 			tag         => "school",
 			tourn       => $tourn_id,
 			school      => $target_id,
+			ip          => $ENV{HTTP_X_FORWARDED_FOR} || $ENV{REMOTE_ADDR},
 			description => "Entered ".$related_thing." from Tabroom"
 		});
 
@@ -69,6 +71,7 @@
 			tourn       => $tourn_id,
 			panel       => $target_id,
 			entry       => $property_name,
+			ip          => $ENV{HTTP_X_FORWARDED_FOR} || $ENV{REMOTE_ADDR},
 			description => "Entered ".$related_thing." as an observer"
 		});
 
@@ -97,6 +100,7 @@
 				panel       => $target_id,
 				entry       => $entry_id,
 				judge       => $judge_id,
+				ip          => $ENV{HTTP_X_FORWARDED_FOR} || $ENV{REMOTE_ADDR},
 				description => "Entered ".$related_thing." from Tabroom"
 			});
 		};

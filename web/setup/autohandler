@@ -8,6 +8,10 @@
 
 <%init>
 
+	foreach my $key (keys %ARGS) {
+		Tab::debuglog("Autohandler Key $key value ".$ARGS{$key});
+	}
+
 	unless ($person) {
 		my $err = "You are not logged in.  Log in to continue";
 		$m->redirect("/index/index.mhtml?err=$err");

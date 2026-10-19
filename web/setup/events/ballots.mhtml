@@ -1010,9 +1010,7 @@
 					><% $event_settings->{"strike_card_message"} %></textarea>
 			</div>
 <%perl>
-
 		}
-
 
 		unless ($tourn_settings->{"nsda_district"}) {
 </%perl>
@@ -1081,26 +1079,39 @@
 					</div>
 				</span>
 
-%			if ($event->type eq "mock_trial" || $event->type eq "speech") {
-				<span class="half">
-					<h5>Ballot Rubrics</h5>
-
-					<div class="odd flexrow">
-						<span class="fourfifths padleft">
-							Rubric for Ballots
-						</span>
-
-						<span class="fifth padvert">
-							<a
-								href  = "rubric_ballot.mhtml?event_id=<% $event->id %>"
-								class = "buttonwhite padleft padright padvertless invert bluetext submit"
-								title = "Configure Ballot Rubric"
-							>Rubric</a>
-						</span>
-					</div>
-				</span>
-%			}
-
+%				if ($event->type eq "speech") {
+					<span class="half">
+						<h5>Ballot Rubrics</h5>
+						<div class="odd flexrow">
+							<span class="fourfifths padleft">
+								Rubric for Ballots
+							</span>
+							<span class="fifth padvert">
+								<a
+									href  = "rubric_ballot.mhtml?event_id=<% $event->id %>"
+									class = "buttonwhite padleft padright padvertless invert bluetext submit"
+									title = "Configure Ballot Rubric"
+								>Rubric</a>
+							</span>
+						</div>
+					</span>
+%				} elsif ($event->type eq "debate" && $person->site_admin) {
+					<span class="half">
+						<h5>Ballot Rubrics</h5>
+						<div class="odd flexrow">
+							<span class="fourfifths padleft">
+								Rubric for Ballots
+							</span>
+							<span class="fifth padvert">
+								<a
+									href  = "debate_rubric.mhtml?event_id=<% $event->id %>"
+									class = "buttonwhite padleft padright padvertless invert bluetext submit"
+									title = "Configure Ballot Rubric"
+								>Rubric</a>
+							</span>
+						</div>
+					</span>
+%				}
 			</div>
 %		}
 

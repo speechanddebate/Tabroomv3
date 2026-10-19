@@ -228,7 +228,7 @@
 				<h4>Points Rubric for <% $event->abbr %></h4>
 			</span>
 
-			<span class="quarter true nospace centeralign">
+			<span class="quarter flexrow nospace centeralign">
 				<span class="twofifths semibold rightalign">
 					New Rows
 				</span>
@@ -279,7 +279,7 @@
 						Label
 					</span>
 
-					<span class="threetenths padleft">
+					<span class="threetenths padleft grow">
 						Description
 					</span>
 
@@ -329,7 +329,7 @@
 								value = "<% $existing->{$side}{$key}{"label"} %>"
 							>
 						</span>
-						<span class="threetenths padleft">
+						<span class="threetenths padleft grow">
 							<input
 								type  = "text"
 								name  = "<% $side %>_<% $key %>_description"
@@ -379,7 +379,7 @@
 							>
 						</span>
 
-						<span class="twenty grow rightalign padright">
+						<span class="twenty rightalign padright">
 %							unless ($key > $limit) {
 								<a
 									class    = 'fa fa-trash fa-sm buttonwhite redtext'
@@ -407,12 +407,12 @@
 					<h4>Overall Outstanding Speaker Points for <% $event->abbr %></h4>
 				</span>
 
-				<span class="quarter true nospace rightalign martopmore">
+				<span class="quarter flexrow nospace rightalign martopmore">
 					<span class="twofifths semibold rightalign">
 						New Points
 					</span>
 
-					<span class="twofifths">
+					<span class="twofifths padright">
 						<input
 							type     = "number"
 							class    = "sizeme"
@@ -527,30 +527,31 @@
 				</span>
 			</div>
 
-			<span class="threequarters nospace martopmore">
-				<h4>Role-Based Outstanding Speaker Points for <% $event->abbr %></h4>
-			</span>
-
-			<span class="true quarter nospace rightalign martopmore">
-				<span class="twofifths semibold rightalign">
-					New Roles
+			<div class="flexrow">
+				<span class="threequarters nospace martopmore">
+					<h4>Role-Based Outstanding Speaker Points for <% $event->abbr %></h4>
 				</span>
 
-				<span class="twofifths">
-					<input
-						type     = "number"
-						class = "sizeme"
-						name     = "rolespots"
-						value    = "<% $rolespots %>"
-						onChange = 'this.form.submit();'
-					>
+				<span class="flexrow quarter nospace rightalign martopmore">
+					<span class="twofifths semibold rightalign">
+						New Roles
+					</span>
+
+					<span class="twofifths padright">
+						<input
+							type     = "number"
+							class = "sizeme"
+							name     = "rolespots"
+							value    = "<% $rolespots %>"
+							onChange = 'this.form.submit();'
+						>
+					</span>
 				</span>
-			</span>
+			</div>
 
 			<div class="centeralign full nospace">
 				<p class="ninetenths">
-					Use these to give awards for the best individual speaker in a given role,
-					not overall.
+					Use these to give awards for the best individual speaker in a given role (Best 2nd Witness, Best Attorney, etc).
 				</p>
 			</div>
 

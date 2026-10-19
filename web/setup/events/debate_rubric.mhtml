@@ -1,0 +1,329 @@
+<%args>
+	$dbh
+	$now
+	$tourn
+	$tourn_settings
+	$perms
+	$person
+	$person_settings
+	$event_id  => undef
+</%args>
+<%init>
+
+	my $event = Tab::Event->retrieve($event_id);
+	my $existing = $event->setting("debate_rubric");
+
+	my $existing_json = eval {
+		return JSON::encode_json($existing);
+	};
+
+#	unless ($existing->{1}) {
+#		undef $existing;
+#	}
+
+	my $categories = scalar(keys %{$existing}) || 5;
+
+</%init>
+
+	<script>
+
+		$(document).ready(function() {
+			changeCategoryCount();
+			populateDefaults();
+			showCategory();
+		});
+
+		async function collateRubric ( save = false ) {
+
+			const catCount = $("#num_categories").val() || catDefault;
+			const numbers  = Array.from({ length: catCount }, (_, index) => index + 1);
+			const categories = {};
+
+			for (const n of numbers) {
+
+				if (!categories[n]) {
+					categories[n] = {
+						name   : '',
+						scores : {}
+					}
+				}
+
+				const catName = $(`#category_${n}`).val();
+				categories[n].name = catName;
+
+				if (catName) {
+					$(`#option_${n}`).text(catName);
+					$(`#scorebox_${n}_name`).text(`${catName} Score Levels`);
+				}
+
+				const scoreCount = $(`#num_levels_${n}`).val() || scoreDefault;
+				const levels  = Array.from({ length: scoreCount }, (_, index) => index + 1);
+
+				for (const l of levels) {
+
+					if (!categories[n].scores[l]) {
+						categories[n].scores[l] = {
+							name        : '',
+							points      : 0,
+							description : '',
+						};
+					}
+
+					categories[n].scores[l].name        = $(`#name_${n}_${l}`).val();
+					categories[n].scores[l].points      = $(`#points_${n}_${l}`).val();
+					categories[n].scores[l].description = $(`#description_${n}_${l}`).val();
+				}
+			}
+
+			console.log(`Collated rubric.  Save value ${save}`);
+
+			if (save) {
+
+				console.log(`Saving rubric`);
+
+				const data = {
+					event_id : <% $event_id %>,
+					rubric   : JSON.stringify(categories),
+				};
+
+				$.post('debate_rubric_save.mhtml', data,
+					function(returnedData){
+						console.log(returnedData);
+						alertify.notify(returnedData, "custom");
+					}
+				);
+			}
+
+			fixVisual();
+		};
+
+		function populateDefaults() { 
+
+			const categories = JSON.parse(`<% $existing_json %>`);
+
+			Object.keys(categories).forEach( (n)  => {
+				if (categories[n]?.name) {
+					const catName = categories[n].name;
+					$(`#category_${n}`).val(catName);
+					$(`#option_${n}`).text(catName);
+					$(`#scorebox_${n}_name`).text(`${catName} Score Levels`);
+				}
+
+				if (categories[n].scores) {
+					Object.keys(categories[n].scores).forEach( (l)  => {
+						$(`#name_${n}_${l}`).val(categories[n].scores[l].name);
+						$(`#points_${n}_${l}`).val(categories[n].scores[l].points);
+						$(`#description_${n}_${l}`).val(categories[n].scores[l].description);
+					});
+				}
+			});
+			fixVisual();
+		}
+
+		function showCategory() {
+
+			const selectedId = $(`#category_id`).val();
+			$(`.scoreboxes`).addClass('hidden');
+
+			console.log(`Selected ID is ${selectedId}`);
+
+			if (selectedId) {
+				$(`#scorebox_${selectedId}`).removeClass('hidden');
+				console.log(`Removing hidden from #scorebox_${selectedId}`);
+			}
+		}
+
+		function changeCategoryCount( catDefault = 5 ) {
+
+			const catCount = $("#num_categories").val() || catDefault;
+			const numbers  = Array.from({ length: catCount }, (_, index) => index + 1);
+
+			for (const n of numbers) {
+
+				const existing = $(`#row_${n}`).length;
+
+				if (!existing) {
+					const formElement = `
+						<div class="full flexrow row" id="row_${n}">
+							<span class="tenth padleftmore">${ n }</span>
+							<span class="twothirds padrightmore grow">
+								<input
+									type     = "text"
+									name     = "category_${n}"
+									id       = "category_${n}"
+									onChange = "collateRubric();"
+								>
+							</span>
+						</div>`;
+
+					$(`#categories`).append(formElement);
+					const optionElement = `<option id="option_${n}" value="${n}">Category ${n}</option>`;
+
+					$(`#category_id`).append(optionElement);
+					changeScoreCount(n)
+				}
+			}
+
+			fixVisual();
+		}
+
+		function changeScoreCount(n, scoreDefault = 5) {
+
+			const existingScore = $(`#scorebox_${n}`).length;
+
+			if (!existingScore) {
+				let scoreBox = `
+					<div id="scorebox_${n}" class='nospace full ltborderbottom scoreboxes padbottommore ltbordertop'>
+						<div class="full flexrow martop ltborderbottom">
+							<span class="half">
+								<h6 class="semibold" id="scorebox_${n}_name">
+									${n} Score Levels
+								</h6>
+							</span>
+							<span class="half rightalign padright">
+								Number of Levels:
+								<input
+									id       = "num_levels_${n}"
+									type     = "number"
+									value    = "5"
+									onChange = "changeScoreCount(${n});"
+								>
+							</span>
+						</div>
+
+						<div class="full flexrow row ltyellow semibold centeralign">
+							<span class="twentieth leftalign padleftmore">
+								#
+							</span>
+							<span class="quarter">
+								Label
+							</span>
+							<span class="tenth">
+								Points
+							</span>
+							<span class="threeeighths">
+								Description
+							</span>
+						</div>
+					</div>
+				`;
+
+				$('#scorebox').append(scoreBox);
+			}
+
+			const scoreCount = $(`#num_levels_${n}`).val() || scoreDefault;
+			const levels  = Array.from({ length: scoreCount }, (_, index) => index + 1);
+
+			for (const l of levels) {
+
+				const existing = $(`#row_${n}_${l}`).length;
+
+				if (!existing) {
+					const scoreElement = `
+						<div class="full flexrow row" id="row_${n}_${l}">
+							<span class="twentieth leftalign padleftmore semibold">
+								${l}
+							</span>
+							<span class="quarter padleft">
+								<input
+									type     = "text"
+									id       = "name_${n}_${l}"
+									onChange = "collateRubric();"
+								>
+							</span>
+							<span class="tenth padleft centeralign">
+								<input
+									type     = "number"
+									step     = 1
+									min      = -99999
+									max      = -99999
+									id       = "points_${n}_${l}"
+									onChange = "collateRubric();"
+								>
+							</span>
+							<span class="threeeighths padleft padrightmore">
+								<input
+									type     = "text"
+									id       = "description_${n}_${l}"
+									onChange = "collateRubric();"
+								>
+							</span>
+						</div>`;
+
+					$(`#scorebox_${n}`).append(scoreElement);
+				}
+			}
+
+			fixVisual();
+
+		}
+
+	</script>
+
+	<div class="main">
+
+		<h4>Debate Rubric Ballot</h4>
+
+		<p>
+			This ballot style creates categories of scores ("Analysis",
+			"Presentation", etc) and then specifies point values with
+			descriptions for each score given by the judge.
+		</p>
+
+		<div class="full flexrow bluebordertop martopmore">
+			<span class="half">
+				<h5>Add Category Labels</h5>
+			</span>
+			<span class="half rightalign padright">
+				Number of Categories:
+				<input
+					name     = "num_categories"
+					id       = "num_categories"
+					type     = "number"
+					value    = "<% $categories %>"
+					onChange = "changeCategoryCount();"
+				>
+			</span>
+		</div>
+
+		<div class="border" id="categories">
+		</div>
+
+		<div class="full flexrow oddrow bluebordertop martopmore">
+			<span class="third semibold padleft">
+				Show Category Scores for
+			</span>
+			<span class="twothirds rightalign padright">
+				<select
+					name     = "category_id"
+					id       = "category_id"
+					onChange = "showCategory();"
+				></select>
+			</span>
+		</div>
+
+		<div id="scorebox" class="martopmore">
+		</div>
+
+		<div class="full ltblue rightalign">
+			<span class="third centeralign">
+				<button
+					class   = "bluetext buttonwhite invert"
+					onClick = "collateRubric(true);"
+				>Save Rubric</button>
+			</span>
+		</div>
+
+	</div>
+
+	<div class="menu">
+		<& "menu.mas",
+			tourn           => $tourn,
+			perms           => $perms,
+			tourn_settings  => $tourn_settings,
+			person          => $person,
+			person_settings => $person_settings,
+			whoami          => "rubric_ballot",
+			event_id        => ($event) ? $event->id : ""
+		&>
+	</div>

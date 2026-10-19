@@ -1,0 +1,53 @@
+<%args>
+	$dbh
+	$now
+	$person
+	$tourn
+	$event_id => undef
+	$rubric   => undef
+</%args>
+<%init>
+
+	$m->clear_buffer();
+	$r->content_type('application/json');
+
+	unless ($event_id) {
+		$m->print('{ "error": true, "message": "No event ID sent"}');
+		$m->abort();
+	}
+
+	my $event = Tab::Event->retrieve($event_id);
+
+	my $obj =  eval {
+		return JSON::encode_json($rubric);
+	};
+
+	my $json = eval {
+		return JSON::decode_json($rubric);
+	};
+
+	my $message = "Rubric Saved for ".$event->abbr;
+
+	if ($json) {
+		$event->setting('debate_rubric', 'json', $json);
+	} else {
+		$event->setting('debate_rubric', 0);
+	}
+
+	$m->comp("/funclib/log.mas",
+		type        => 'tabbing',
+		event       => $event->id,
+		tourn       => $tourn->id,
+		person      => $person->id,
+		description => $message
+	);
+
+    my %response = (
+		error   => 0,
+		message => $message
+    );
+
+    $m->print(JSON::encode_json(\%response));
+	$m->abort();
+
+</%init>

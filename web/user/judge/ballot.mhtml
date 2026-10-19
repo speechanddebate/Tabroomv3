@@ -578,7 +578,6 @@
 			};
 %		}
 
-
 		function changeSides(sideChoice) {
 			const side = $(sideChoice).val();
 			const ballot = $(sideChoice).attr('ballot');
@@ -1467,33 +1466,38 @@
 
 		<div class="padvert centeralign ltbordertop">
 			<span class="ninetenths leftalign">
+
 %				if ($tb_types{"point"} && (not defined $event_settings{"ballot_rubric"}) ) {
-					<div class="full nospace italic semibold centeralign">
-							<span class="semibold redtext inline biggish">
-								Points Rules:
-							</span>
-							<span class="halfspacer"></span>
+					<div class="full flexrow italic semibold centeralign">
+						<span class="semibold redtext inline biggish">
+							Points Rules:
+						</span>
 
-							<span class="inline nospace bluetext semibold">
-								Range:
-							</span>
+						<span class="inline bluetext semibold padleft">
+							Range:
+						</span>
 
+						<span class="inline padleft">
 							<% $min_points."-".$max_points %>.
+						</span>
 
-							<span class="halfspacer"></span>
+						<span class="inline padleft">
 							<% $step eq "1" ? " Whole points only. " : "" %>
 							<% $event_settings{"point_ties"} ? "Ties are OK. " : "No ties. " %>
+						</span>
 
-							<span class="halfspacer"></span>
-%							if ($event_type eq "speech" || $event_type eq "congress") {
-								<% $event_settings{"allow_lowpoints"}
-									? ""
-									: "Ranks and points must agree. "
-								%>
-%							}
-
+						<span class="inline padleft">
+%						if ($event_type eq "speech" || $event_type eq "congress") {
+							<% $event_settings{"allow_lowpoints"}
+								? ""
+								: "Ranks and points must agree. "
+							%>
+%						}
 							<% ($event_type ne "speech" && $event_type ne "congress" )
 								&& $no_lpw ? "Winner must have higher points. " : "" %>
+						</span>
+
+						<span class="inline padleft padright">
 
 							<% $step eq "0.5" ? "Steps of 0.5. " : "" %>
 							<% $step eq "0.25" ? "Steps of 0.25. " : "" %>
@@ -1612,6 +1616,22 @@
 			}
 
 			if (
+				$event_settings{"debate_rubric"}
+				&& $tb_types{"point"}
+			) {
+
+</%perl>
+				<& "debate_rubric.mas",
+					event          => $event,
+					event_settings => \%event_settings,
+					ballots        => \@ballots,
+					pronouns       => \%pronoun_by_id,
+					panel          => $panel,
+					judge          => $judge
+				&>
+
+<%perl>
+			} elsif (
 				$event_type eq "mock_trial"
 				&& $event_settings{"ballot_rubric"}
 				&& $event_settings{"ballot_rubric_single"}
@@ -1646,7 +1666,6 @@
 					panel          => $panel,
 					judge          => $judge
 				&>
-
 
 %				undef $tb_types{'winloss'};
 

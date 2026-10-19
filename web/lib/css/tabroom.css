@@ -7582,7 +7582,6 @@ p.reason {
 	padding-right : 2px;
 }
 
-
 .selection_text {
 	font-family : open_sans, Tahoma, Arial, sans-serif;
 	font-size   : 13px;
@@ -7657,6 +7656,29 @@ span.dropdown-wrapper {
 .select2-results {
 	font-family : "Inconsolata";
 	font-size   : 15px !important;
+}
+
+.nonmono {
+	padding-top    : 4px;
+	padding-bottom : 4px;
+	border         : 2px solid var(--dark-blue);
+}
+
+.nonmono .select2-results {
+	background-color : var(--lightest-gray);
+	font-family      : -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	font-size        : 16px !important;
+	line-height      : 20px;
+}
+
+.nonmono .select2-search--dropdown {
+	display : none;
+}
+
+.nonmono .select2-results li {
+	border-bottom  : 1px solid black;
+	padding-top    : 8px;
+	padding-bottom : 8px;
 }
 
 .select2-results__option--group {

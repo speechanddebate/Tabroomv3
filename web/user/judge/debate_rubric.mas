@@ -1,0 +1,183 @@
+<%args>
+	$panel
+	$judge
+	$ballots
+	$event
+	$event_settings
+	$pronouns => undef
+</%args>
+<%perl>
+
+	my $rubric = eval {
+		return JSON::encode_json($event_settings->{"debate_rubric"});
+	};
+
+	my $increments = $event_settings->{"point_increments"};
+
+	my $step = "1" if $increments eq "whole";
+	$step = "0.5"  if $increments eq "half";
+	$step = "0.25" if $increments eq "fourths";
+	$step = "0.1"  if $increments eq "tenths";
+
+	my $autosave_url = "$Tab::indexcards_url/user/judge/".$judge->id."/ballot/rubric";
+
+	foreach my $ballot (sort {$a->side <=> $b->side} @{$ballots}) {
+
+		my $rubric_score = $ballot->scores(tag => "rubric")->first;
+		my $rubric_ref;
+
+		if ($rubric_score) {
+			$rubric_ref = eval {
+				return JSON::decode_json($rubric_score->content);
+			}
+		}
+
+		my $side_label = $event_settings->{aff_label} || "Aff";
+		$side_label = $event_settings->{neg_label} || "Neg" if $ballot->side == 2;
+
+		my $entry = $ballot->entry;
+		my @students = $entry->students;
+
+</%perl>
+
+		<script>
+
+			function addEmUp() {
+
+				const rubric = JSON.parse(`<% $rubric %>`);
+
+				const scores = {};
+				const totals = {};
+
+				$('.points').forEach( (point) => {
+
+					const key       = $(point).prop('key');
+					const entryId   = $(point).prop('entry_id');
+					const studentId = $(point).prop('student_id');
+
+					if (!scores[entryId]) {
+						scores[entryId] = {}
+					}
+
+					if (studentId) {
+
+						const level = $(`#${studentId}_${key}`).val();
+						const points = 
+
+						const level $(`#
+
+						scores[entryId][key][studentId] = points.val();
+
+				});
+							id                      = "<% $entry->id %>_<% $key %>"
+							name                    = "<% $entry->id %>_<% $key %>"
+							entry_id                = "<% $entry->id %>"
+							key                     = "<% $key %>"
+							class                   = "points"
+
+
+			}
+
+
+		</script>
+
+		<div
+			class      ="full flexrow bluebordertop"
+			id          ="<% $ballot->id %>_side"
+			side        ="<% $ballot->side %>"
+		>
+			<span class ="threequarters padleft">
+				<h5><% $ballot->entry->code %></h5>
+			</span>
+
+			<span class="quarter rightalign padrightmore bigger semibold bluetext">
+				Side: <% $side_label %>
+			</span>
+		</div>
+
+		<div class="categories full flexrow ltyellow semibold smallish padvert">
+			<span class="quarter">
+				Category
+			</span>
+%			if ($event_settings->{team_points}) {
+				<span class="threeequarters padright">
+					Your Rating
+				</span>
+%			} else {
+%				foreach my $student (@students) {
+					<span class="threeeighths padright padleft">
+						Speaker
+						<% $student->first %>
+						<% $student->last %>
+					</span>
+%				}
+%			}
+		</div>
+
+%		foreach my $key (sort {$a <=> $b} keys %{$rubric}) {
+
+			<div class="categories full flexrow row">
+
+				<span class="quarter semibold padleft">
+					<% $key %> <% $rubric->{$key}{'name'} || "Category $key" %>
+				</span>
+
+%				if ($event_settings->{team_points}) {
+					<span class="threeequarters semibold">
+						<select
+							id                      = "<% $entry->id %>_<% $key %>"
+							name                    = "<% $entry->id %>_<% $key %>"
+							entry_id                = "<% $entry->id %>"
+							key                     = "<% $key %>"
+							class                   = "points"
+							data-placeholder        = "Please select a score level"
+							data-dropdown-css-class = "nonmono"
+							onChange                = "addEmUp();"
+						>
+							<option value=""></option>
+%							foreach my $level (sort {$a <=> $b} keys %{$rubric->{$key}{scores}})	{
+								<option value=""></option>
+								<option
+									id       = "<% $entry->id %>_value_<% $key %>_<% $level %>"
+									value    = "<% $level %>"
+								>
+									<% $rubric->{$key}{scores}{$level}{"name"} %>:
+									<% $rubric->{$key}{scores}{$level}{"description"} %>
+								</option>
+%							}
+						</select>
+					</span>
+%				} else {
+%					foreach my $student (@students) {
+						<span class="threeeighths padright">
+							<select
+								name                    = "<% $student->id %>_<% $key %>"
+								id                      = "<% $student->id %>_<% $key %>"
+								key                     = "<% $key %>"
+								student_id              = "<% $student->id %>"
+								entry_id                = "<% $entry->id %>"
+								class                   = "points"
+								data-placeholder        = "Select a level for <% $rubric->{$key}{name} %>"
+								data-dropdown-css-class = "nonmono"
+								onChange                = "addEmUp();"
+							>
+								<option value=""></option>
+%								foreach my $level (sort {$a <=> $b} keys %{$rubric->{$key}{scores}})	{
+									<option
+										value ="<% $level %>"
+										id    ="<% $student->id %>_value_<% $key %>_<% $level %>"
+									>
+										<% $rubric->{$key}{scores}{$level}{"name"} %>:&nbsp;
+										<% $rubric->{$key}{scores}{$level}{"description"} %>
+									</option>
+%								}
+							</select>
+						</span>
+%					}
+%				}
+			</div>
+%		}
+
+%	}
+
+
