@@ -12,6 +12,7 @@
 <%init>
 
 	my $log;
+	my $err;
 	my $sha_user;
 	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
 
