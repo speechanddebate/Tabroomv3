@@ -52,6 +52,13 @@
 				Search by IP
 			</a>
 
+			<a
+				class="<% $whoami eq "bans" ? "dk" : "" %>blue half"
+				href="/user/admin/bans.mhtml"
+			>
+				Failed Login Bans
+			</a>
+
 %			if ($person_settings->{"system_administrator"} || $person->id < 5) {
 				<a
 					class = "<% $whoami eq "servers" ? "dk" : "" %>blue half"

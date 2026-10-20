@@ -32,17 +32,13 @@
 	<div class="main">
 
 		<div class="flexrow full">
-
 			<span class='threequarters'>
 				<h4>Username and IP Login Bans</h4>
 			</span>
-
 			<span
 				class ='quarter rightalign padright'
 				id    ="bans_buttonarea"
-			>
-			</span>
-
+			></span>
 		</div>
 
 		<& "/funclib/tablesorter.mas", table => "bans" &>
