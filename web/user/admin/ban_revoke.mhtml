@@ -1,0 +1,55 @@
+<%args>
+	$dbh
+	$now
+	$person
+	$session
+	$ban_id => undef
+</%args>
+<%init>
+
+	$m->clear_buffer();
+	$r->content_type('application/json');
+
+	unless ($person && $person->site_admin) {
+		$m->print('{ "error": true, "message": "No valid admin was logged in"}');
+		$m->abort();
+	}
+
+	if ($session->su > 0) {
+		$m->print('{ "error": true, "message": "You may not perform this operation while logged in as another user"}');
+		$m->abort();
+	}
+
+	if ($ban_id ne int($ban_id)) {
+		$m->print('{ "error": true, "message": "Malformed request"}');
+		$m->abort();
+	}
+
+	my $revoke_sth = $dbh->prepare("update login_log set revoked = 1 where id = ?");
+	$revoke_sth->execute($ban_id);
+
+	my $log_revocation_sth = $dbh->prepare("insert into login_log (person, description) values (?, ?)");
+	$log_revocation_sth->execute($person->id, "Ban ID $ban_id revoked by site admin");
+
+	my $log_revocation_update_sth = $dbh->prepare("
+		update login_log, login_log ban
+		set login_log.username = ban.username, login_log.ip = ban.ip
+		where ban.id = ?
+		and login_log.person = ?
+		and login_log.description LIKE ?
+	");
+
+	$log_revocation_update_sth->execute($ban_id, $person->id, '%'.$ban_id.'%');
+
+	my $message = "Ban ID $ban_id revoked by site admin ".$person->email;
+
+    my %response = (
+		error   => 0,
+		destroy => $ban_id,
+		message => $message
+    );
+
+    $m->print(JSON::encode_json(\%response));
+	$m->abort();
+
+</%init>

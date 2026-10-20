@@ -119,7 +119,18 @@
 		my $logmsg = "Password change link requested for user ".$user_person->id." ".$user_person->email." from IP: ".$ENV{HTTP_X_FORWARDED_FOR};
 
 		if ($ARGS{"session"}) {
-			$logmsg .= "User session ".$ARGS{"session"}." user ".$ARGS{"session"}->person->id." SU ".$ARGS{"session"}->su;
+
+			$logmsg .= "User session ".$ARGS{"session"}." user ".$ARGS{"session"}->person->id;
+
+			if ($ARGS{'session'}->su) {
+				$logmsg .= "SU from ".$ARGS{"session"}->su." ".$ARGS{session}->su->email;
+			}
+
+			my $change = $m->comp("/funclib/log.mas",
+				type        => "admin",
+				description => $description,
+				person      => $logmsg
+			);
 		}
 
 		Tab::log($logmsg);

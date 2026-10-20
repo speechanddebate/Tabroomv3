@@ -1,0 +1,113 @@
+<%args>
+	$person
+	$person_settings
+	$session
+	$dbh
+</%args>
+<%init>
+
+	my $sth = $dbh->prepare("
+		select
+			login.id, login.username, login.ip, login.created_at,
+			(select person.email from person where person.id = login.person) as email
+		from login_log login
+			where 1=1
+			and login.description = 'banned'
+			and login.created_at > (NOW() - INTERVAL 10 MINUTE)
+			and login.revoked != 1
+		order by login.created_at DESC
+	");
+
+	$sth->execute();
+	my $bans = $sth->fetchall_hash();
+
+</%init>
+
+	<& menu.mas,
+		person          => $person,
+		person_settings => $person_settings,
+		whoami          => "bans"
+	&>
+
+	<div class="main">
+
+		<div class="flexrow full">
+
+			<span class='threequarters'>
+				<h4>Username and IP Login Bans</h4>
+			</span>
+
+			<span
+				class ='quarter rightalign padright'
+				id    ="bans_buttonarea"
+			>
+			</span>
+
+		</div>
+
+		<& "/funclib/tablesorter.mas", table => "bans" &>
+
+		<table id="bans">
+
+			<thead>
+				<tr class="yellowrow smallish">
+					<th>
+						IP Address
+					</th>
+
+					<th>
+						Username
+					</th>
+
+					<th>
+						Person?
+					</th>
+
+					<th>
+						Created At (Central Time)
+					</th>
+					<th>
+					</th>
+				</tr>
+			</thead>
+
+			<tbody>
+
+%				foreach my $ban (@{$bans}) {
+
+%					my $created = $m->comp("/funclib/dtme.mas", string => $ban->{created_at}, tz => "America/Chicago");
+
+					<tr id="<% $ban->{id} %>">
+
+						<td>
+							<% $ban->{ip} %>
+						</td>
+
+						<td>
+							<% $ban->{username} %>
+						</td>
+
+						<td>
+							<% $ban->{email} %>
+						</td>
+
+						<td data-text="<% $created->{epoch} %>">
+							<% $created->{date} %>
+							<% $created->{murica} %>
+						</td>
+
+						<td class="nospace padvertless centeralign">
+							<a
+								class   ="buttonwhite redtext fa fa-sm fa-trash"
+								ban_id  = "<% $ban->{id} %>"
+								onClick ="postSwitch(this, 'ban_revoke.mhtml');"
+							></a>
+						</td>
+					</tr>
+%				}
+			</tbody>
+
+		</table>
+
+	</div>
+

@@ -5,6 +5,7 @@
 	if ($ip ne "127.0.0.1"
 		&& (index ($ip, "172.18") == -1)
 		&& (index ($ip, "172.17") == -1)
+		&& (index ($ip, "10.19.25") == -1)
 	) {
         $r->status(401);
 		$m->print("Permission denied\n");

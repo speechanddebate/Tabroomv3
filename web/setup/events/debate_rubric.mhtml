@@ -97,7 +97,7 @@
 			fixVisual();
 		};
 
-		function populateDefaults() { 
+		function populateDefaults() {
 
 			const categories = JSON.parse(`<% $existing_json %>`);
 
