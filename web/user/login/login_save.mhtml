@@ -73,7 +73,7 @@
 				and login.revoked != 1
 		");
 
-		$check_ip_bans->execute($ip, $username);
+		$check_ip_bans->execute($ip);
 		my ($bans) = $check_ip_bans->fetch();
 
 		if ($bans) {
