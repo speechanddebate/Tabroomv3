@@ -516,6 +516,7 @@
 				if ($njpool && $njpool->id) {
 
 					foreach my $round ($jpool->rounds) {
+						next unless $round > 0;
 						next unless $translator{"round"}{$round->id};
 
 						Tab::JPoolRound->create({
