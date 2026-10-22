@@ -120,16 +120,18 @@
 
 		if ($ARGS{"session"}) {
 
-			$logmsg .= "User session ".$ARGS{"session"}." user ".$ARGS{"session"}->person->id;
+			my $req_person = $ARGS{session}->su || $ARGS{session}->person;
+
+			$logmsg .= "User session ".$ARGS{"session"}." user ".$req_person;
 
 			if ($ARGS{'session'}->su) {
-				$logmsg .= "SU from ".$ARGS{"session"}->su." ".$ARGS{session}->su->email;
+				$logmsg .= "SU from ".$ARGS{"session"}->su." ".$req_person->email;
 			}
 
 			my $change = $m->comp("/funclib/log.mas",
 				type        => "admin",
-				description => $description,
-				person      => $logmsg
+				description => $logmsg,
+				person      => $req_person
 			);
 		}
 
