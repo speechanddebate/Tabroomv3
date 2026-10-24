@@ -1,11 +1,12 @@
 <%args>
+	$dbh
+	$now
 	$person
 	$school
+	$perms
 	$student_id => undef
 </%args>
 <%init>
-
-	my $now = DateTime->now();
 
 	my $student = Tab::Student->retrieve($student_id) if $student_id;
 
@@ -29,18 +30,13 @@
 		tourn => $tourn
 	);
 
-	my $dbh = Tab::DBI->db_Main();
-
 	my $sth = $dbh->prepare("
 		select
 			event.id, event.abbr, event.name,
 			pattern.id, pattern.name, pattern.type, pattern.max, pattern.exclude,
-			supp.value, conn.value, stefan.value
+			(select supp.value from event_setting supp where supp.event = event.id and supp.tag = 'supp') as supp
 		from event
 			left join pattern on event.pattern = pattern.id
-			left join event_setting supp on supp.event = event.id and supp.tag = 'supp'
-			left join event_setting conn on conn.event = event.id and conn.tag = 'conn'
-			left join event_setting stefan on stefan.event = event.id and stefan.tag = 'stefan'
 		where event.tourn = ?
 	");
 
@@ -54,19 +50,11 @@
 		my (
 			$event_id, $event_abbr, $event_name,
 			$pattern_id, $pattern_name, $pattern_type, $pattern_max, $pattern_exclude,
-			$supp_value, $conn_value, $stefan_value
+			$supp_value
 		) = $sth->fetchrow_array()
 	) {
 
-		if ($stefan_value) {
-			$events{$event_id}{"type"} = "stefan";
-			$events{"by_pattern"}{"stefan"}{$event_id}++;
-			$types{"stefan"}++;
-		} elsif ($conn_value) {
-			$events{$event_id}{"type"} = "conn";
-			$events{"by_pattern"}{"conn"}{$event_id}++;
-			$types{"conn"}++;
-		} elsif ($supp_value) {
+		if ($supp_value) {
 			$events{$event_id}{"type"} = "supp";
 			$events{"by_pattern"}{"supp"}{$event_id}++;
 			$types{"supp"}++;
