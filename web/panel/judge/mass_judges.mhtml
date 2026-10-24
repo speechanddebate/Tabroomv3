@@ -73,7 +73,7 @@
 		$limit_string .= " Site ".$site->name;
 	}
 
-	if ($ARGS{round_type}) {
+	if ($ARGS{round_type} && $ARGS{round_type} ne "all") {
 		my $round_type = $ARGS{round_type};
 		$round_type =~ s/[\W_]//g;
 		$limit .= "\n and round.type = '$round_type' ";
@@ -81,7 +81,7 @@
 		$limit_string .= " ".ucfirst($round_type)." rounds";
 	}
 
-	if ($ARGS{event_type}) {
+	if ($ARGS{event_type} && $ARGS{event_type} ne "all") {
 		my $event_type = $ARGS{event_type};
 		$event_type =~ s/[\W_]//g;
 		$limit .= "\n and event.type = '$event_type' ";
@@ -197,7 +197,7 @@
 	}
 
     my $description = $person->first." ".$person->last." (".$person->email.")";
-	$description .= " has repaneled the judges in category ".$category->abbr;
+	$description .= " has repaneled the judges in category ".$category->abbr." $limit_string";
 
 	$m->comp("/funclib/log.mas",
         type        => 'tabbing',
