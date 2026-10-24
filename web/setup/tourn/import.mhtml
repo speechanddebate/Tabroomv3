@@ -322,15 +322,19 @@
 		my $abbr = $category->abbr;
 
 		if ($taken_abbr{$abbr}++) {
-			$abbr .= '-'.scalar(keys %taken_abbr);
+			$abbr .= '-'.scalar(keys %taken_abbr) + 1;
 		}
 
-		my $ncategory = $category->copy({
-			tourn => $tourn->id,
-			abbr  => $abbr
-		});
+		my $ncategory = eval {
+			return $category->copy({
+				tourn => $tourn->id,
+				abbr  => $abbr
+			});
+		};
 
-		$translator{"category"}{$category->id} = $ncategory->id;
+		if ($ncategory) {
+			$translator{"category"}{$category->id} = $ncategory->id;
+		}
 
 		#Settings
 

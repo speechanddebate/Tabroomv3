@@ -56,7 +56,9 @@
 		my $not_first = $round->setting("first_ballot");
 
 		unless ($not_first) {
-			$round->setting("first_ballot", "date", $now);
+			$not_first = eval {
+				return $round->setting("first_ballot", "date", $now);
+			};
 		}
 
 		unless ($not_first || (not defined $follower_ids)) {

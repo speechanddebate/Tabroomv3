@@ -45,7 +45,7 @@
 			if ($category_settings->{"hired_deadline"} < $now) {
 
 				my $deadline_was = $m->comp("/funclib/showdt.mas",
-					dt      => $category_settings->{"hired_deadline"}
+					dt      => $category_settings->{"hired_deadline"},
 					tz      => $tourn->tz,
 					show_tz => 'y',
 					format  => 'murica',
