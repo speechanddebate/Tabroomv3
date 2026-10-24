@@ -1,14 +1,13 @@
 <%args>
 	$person
 	$entry_id
+	$school
+	$now
 </%args>
 <%init>
 
-	my $now = DateTime->now;
-
 	my $entry = Tab::Entry->retrieve($entry_id);
 
-	my $school = $entry->school;
 	my $event = $entry->event;
 	my $tourn = $event->tourn;
 
