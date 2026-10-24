@@ -4,12 +4,26 @@
 	$judge_id
 	$rounds => undef
 	$person
+	$now
 </%args>
 <%init>
 
 	my $judge = Tab::Judge->retrieve($judge_id);
 	my $category = $judge->category;
 	$tourn = $category->tourn;
+
+	my %category_settings = $category->all_settings;
+	my %tourn_settings    = $tourn->all_settings;
+
+	$m->comp('judge_deadlines.mas',
+		category          => $category,
+		category_settings => \%category_settings,
+		tourn             => $tourn,
+		tourn_settings    => \%tourn_settings,
+		now               => $now,
+		type              => "hires"
+	);
+
 
 	my $hire_offer = $judge->setting("hire_offer");
 
@@ -39,9 +53,7 @@
 
 	my $hired = $judge->hired + $rounds;
 	$judge->hired($hired);
-	$judge->update;
-
-	my $now = DateTime->now;
+	$judge->update();
 
 	Tab::JudgeHire->create({
 		tourn            => $tourn,

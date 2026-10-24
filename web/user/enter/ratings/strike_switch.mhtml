@@ -133,6 +133,14 @@
 		$message = "No changes made";
 	}
 
+	$m->comp("/funclib/log.mas",
+		tag         => 'prefs',
+		person      => $person,
+		entry       => $entry,
+		school      => $entry->school,
+		description => $message,
+	);
+
 	$m->print('{ "error": false, "message": "'.$message.'"}');
 	$m->abort();
 

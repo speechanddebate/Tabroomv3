@@ -1,10 +1,10 @@
 <%args>
-	$entry_id
-	$category_id
+	$dbh
 	$person
 	$school
+	$entry_id
+	$category_id
 	$fill => undef
-	$dbh
 </%args>
 <%init>
 
@@ -14,8 +14,25 @@
 	my $entry = Tab::Entry->retrieve($entry_id);
 	$m->abort unless $entry;
 
-	my $category = Tab::Category->retrieve($category_id);
+	my $category          = Tab::Category->retrieve($category_id);
 	my %category_settings = $category->all_settings();
+	my $tourn             = $category->tourn;
+
+	if ($category_settings{"strike_end"}
+		&& $category_settings{"strike_end"} < $now
+	) {
+		my $deadline_was = $m->comp("/funclib/showdt.mas",
+			dt      => $category_settings{"strike_end"},
+			tz      => $tourn->tz,
+			show_tz => 'y',
+			format  => 'murica',
+			return  => 'y',
+		);
+
+		$m->comp("/funclib/abort.mas",
+			message => "The prefs deadline for ".$category->abbr." was $deadline_was, and has passed."
+		);
+	}
 
 	my $limit;
 
@@ -315,6 +332,15 @@
 	}
 
 	my $msg = $entry->code." prefs saved in ".$category->abbr." to $total_rounds rounds";
+
+	$m->comp("/funclib/log.mas",
+		tag         => 'prefs',
+		person      => $person,
+		entry       => $entry,
+		school      => $school,
+		description => $msg,
+	);
+
 	$m->redirect("ordinals_prefs.mhtml?entry_id=".$entry_id."&style=entry_ratings&msg=".$msg."&err=".$err."#yo");
 
 </%init>

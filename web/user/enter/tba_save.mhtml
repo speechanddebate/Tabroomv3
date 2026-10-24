@@ -15,8 +15,16 @@
 		$m->redirect("students.mhtml?school_id=".$school->id."&event_id=$event_id&err=Something odd happened. Try again.");
 	}
 
-	my $tz = $school->tourn->tz;
-	$tz = "UTC" unless $tz;
+	my %tourn_settings = $tourn->all_settings;
+
+	$m->comp("entry_deadlines.mas",
+		tourn          => $tourn,
+		event          => $event,
+		tourn_settings => \%tourn_settings,
+		event_settings => \%event_settings,
+		now            => $now,
+		type           => "add"
+	);
 
 	my @alreadys = $school->entries( event => $event_id,  );
 	my @all_event = $event->entries( event => $event_id,  waitlist => 0);

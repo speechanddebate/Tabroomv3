@@ -1,4 +1,5 @@
 <%args>
+	$now
 	$person
 	$session
 	$event_id
@@ -12,8 +13,6 @@
 	$hybrid     => undef
 </%args>
 <%init>
-
-	my $now = DateTime->now;
 
 	my $event = Tab::Event->retrieve($event_id);
 	my $school = Tab::School->retrieve($school_id);
@@ -34,9 +33,17 @@
 	}
 
 	my $tourn = $event->tourn;
-
 	my %event_settings = $event->all_settings;
 	my %tourn_settings = $tourn->all_settings;
+
+	$m->comp("entry_deadlines.mas",
+		tourn          => $tourn,
+		event          => $event,
+		tourn_settings => \%tourn_settings,
+		event_settings => \%event_settings,
+		now            => $now,
+		type           => "add"
+	);
 
 	my $enter_me_twice = $event_settings{"enter_me_twice"};
 

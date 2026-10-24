@@ -1,4 +1,6 @@
 <%args>
+	$dbh
+	$now
 	$person
 	$school
 	$category_id => undef
@@ -37,15 +39,13 @@
 		) unless $school->id == $clone->school->id;
 
 		push @clones, $clone;
-		$msg = "Strikes copied to ".$clone->id;
+		$msg = "Strikes copied to ".$clone->code;
 		$dest_id = $clone->id;
 	}
 
 	use POSIX;
 
 	my $tourn = $school->tourn();
-
-	my $now = DateTime->now();
 	my $strike_end = $category->setting("strike_end");
 	my $strike_start = $category->setting("strike_start");
 
@@ -55,7 +55,6 @@
 		);
 	}
 
-	my $dbh = Tab::DBI->db_Main();
 	my $wipe_strikes_sth = $dbh->prepare("delete from strike where strike.entry = ? and type != 'conflict'");
 
 	my @strikes = $entry->strikes;
@@ -73,6 +72,14 @@
 		}
 	}
 
-	$m->redirect("entry_strikes.mhtml?entry_id=$dest_id&school_id=".$school->id."&category_id=$category_id&msg=$msg");
+	$m->comp("/funclib/log.mas",
+		tag         => 'prefs',
+		person      => $person,
+		entry       => $entry,
+		school      => $school,
+		description => $msg,
+	);
+
+	$m->redirect("entry_strikes.mhtml?entry_id=$dest_id&msg=$msg");
 
 </%init>

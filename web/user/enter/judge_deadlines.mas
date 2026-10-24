@@ -1,0 +1,110 @@
+<%args>
+	$now
+	$type => "judges"
+	$category
+	$category_settings
+	$tourn
+	$tourn_settings
+</%args>
+<%init>
+
+	my $reg_end = $tourn->reg_end;
+
+	my $judge_deadline = $category_settings->{deadline}
+		|| $tourn_settings->{"judge_deadline"}
+		|| $reg_end;
+
+	if ($tourn_settings->{"nsda_district"} && (not defined $category_settings->{deadline})) {
+		my $weekend_id = $category_settings->{"weekend"};
+		if ($weekend_id && $weekend_id ne "nope") {
+			my $weekend = Tab::Weekend->retrieve($weekend_id);
+			$judge_deadline = $weekend->judge_deadline || $weekend->reg_end || $judge_deadline;
+		}
+	}
+
+	if ($type eq "judges") {
+		if ($judge_deadline < $now) {
+
+			my $deadline_was = $m->comp("/funclib/showdt.mas",
+				dt      => $judge_deadline,
+				tz      => $tourn->tz,
+				show_tz => 'y',
+				format  => 'murica',
+				return  => 'y',
+			);
+
+			$m->comp("/funclib/abort.mas",
+				message => "The judge registration deadline for ".$category->abbr." was $deadline_was, and has passed."
+			);
+		}
+	}
+
+	if ($type eq "hire") {
+
+		if ($category_settings->{"hired_deadline"}) {
+			if ($category_settings->{"hired_deadline"} < $now) {
+
+				my $deadline_was = $m->comp("/funclib/showdt.mas",
+					dt      => $category_settings->{"hired_deadline"}
+					tz      => $tourn->tz,
+					show_tz => 'y',
+					format  => 'murica',
+					return  => 'y',
+				);
+
+
+				$m->comp("/funclib/abort.mas",
+					message => "The judge hiring deadline for ".$category->abbr." has passed"
+				);
+			}
+		} else {
+			if ($judge_deadline < $now) {
+
+				my $deadline_was = $m->comp("/funclib/showdt.mas",
+					dt      => $judge_deadline,
+					tz      => $tourn->tz,
+					show_tz => 'y',
+					format  => 'murica',
+					return  => 'y',
+				);
+
+				$m->comp("/funclib/abort.mas",
+					message => "The judge hiring deadline for ".$category->abbr." was $deadline_was, and has passed.");
+			}
+		}
+	}
+
+	if ($type eq "details") {
+		if ($category_settings->{"details_deadline"}) {
+			if ($category_settings->{"details_deadline"} < $now) {
+
+				my $deadline_was = $m->comp("/funclib/showdt.mas",
+					dt      => $category_settings->{"details_deadline"},
+					tz      => $tourn->tz,
+					show_tz => 'y',
+					format  => 'murica',
+					return  => 'y',
+				);
+
+				$m->comp("/funclib/abort.mas",
+					message => "The judge information deadline for ".$category->abbr." has passed"
+				);
+			}
+		} else {
+			if ($judge_deadline < $now) {
+
+				my $deadline_was = $m->comp("/funclib/showdt.mas",
+					dt      => $judge_deadline,
+					tz      => $tourn->tz,
+					show_tz => 'y',
+					format  => 'murica',
+					return  => 'y',
+				);
+				$m->comp("/funclib/abort.mas",
+					message => "The judge information deadline for ".$category->abbr." was $deadline_was, and has passed.");
+			}
+		}
+	}
+
+	return;
+</%init>

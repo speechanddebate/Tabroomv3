@@ -1,6 +1,8 @@
 <%args>
 	$dbh
+	$now
 	$person
+	$perms
 	$category_id
 	$chapter_judge_id => undef
 	$school_id        => undef
@@ -8,7 +10,12 @@
 <%init>
 
 	my $category = Tab::Category->retrieve($category_id);
-	my %category_settings = $category->all_settings();
+
+	unless ($category) {
+		my $err = "You did not select an active judge category.  Please choose ";
+		$err .= " a chapter and then your tournament at left";
+		$m->redirect("/user/home.mhtml?school_id=$school_id&category_id=".$category_id."&err=".$err);
+	}
 
 	unless ($school_id) {
 		my $err = "You do not have an active school entry.  Please choose ";
@@ -30,6 +37,20 @@
 			message => "No judge found on your roster with ID $chapter_judge_id"
 		);
 	}
+
+	my %category_settings = $category->all_settings();
+
+	my $tourn = $school->tourn;
+	my %tourn_settings = $tourn->all_settings();
+
+	$m->comp('judge_deadlines.mas',
+		category          => $category,
+		category_settings => \%category_settings,
+		tourn             => $tourn,
+		tourn_settings    => \%tourn_settings,
+		now               => $now
+	);
+
 
 	if ($category_settings{"linked_only"}) {
 
@@ -76,19 +97,8 @@
 		}
 	}
 
-	my $tourn = $school->tourn;
-	$m->print($tourn->id);
-
-	my $tz = $person->tz;
-	$tz = $tourn->tz unless $tz;
-	$tz = "UTC" unless $tz;
-	my $now = DateTime->now(time_zone => $tz);
-
-	my $person_id = $chapter_judge->person->id if $chapter_judge && $chapter_judge->person;
-
 	my $code;
-	$code = $m->comp(
-		"/funclib/category_code.mas",
+	$code = $m->comp("/funclib/category_code.mas",
 		category => $category
 	) unless $category_settings{"no_codes"};
 

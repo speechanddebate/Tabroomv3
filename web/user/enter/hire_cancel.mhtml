@@ -2,8 +2,9 @@
 	$person
 	$hire_id
 	$school_id
+	$now
 	$rounds => undef
-	$back => undef
+	$back   => undef
 </%args>
 <%init>
 
@@ -15,21 +16,35 @@
 
 	my $judge = $hire->judge;
 
-	unless ($judge) { 
+	my $category          = $judge->category;
+	my %category_settings = $category->all_settings;
+	my $tourn             = $category->tourn;
+	my %tourn_settings    = $tourn->all_settings;
+
+	$m->comp('judge_deadlines.mas',
+		category          => $category,
+		category_settings => \%category_settings,
+		tourn             => $tourn,
+		tourn_settings    => \%tourn_settings,
+		now               => $now,
+		type              => "hires"
+	);
+
+	unless ($judge) {
 		$m->redirect("/user/home.mhtml?err=Either something odd has occurred, or you were doing something you should not have.  Contact us if it is the former");
 	}
 
-	unless ($person->site_admin 
-				|| Tab::Permission->search( 
+	unless ($person->site_admin
+				|| Tab::Permission->search(
 					tag     => 'chapter',
 					person  => $person->id,
 					chapter => $school->chapter->id)
-		) { 
+		) {
 
 			$m->redirect("/user/home.mhtml?err=You are not authorized to edit that judge hire");
 	}
 
-	unless ($school->id == $hire->school->id) { 
+	unless ($school->id == $hire->school->id) {
 		$m->redirect("/user/home.mhtml?err=You are not authorized to edit that school");
 	}
 
@@ -41,7 +56,7 @@
 
 	my $hire_school = $hire->school->id if $hire->school;
 
-	$m->comp("/funclib/log.mas", 
+	$m->comp("/funclib/log.mas",
 		type        => "exchange",
 		tourn       => $judge->category->tourn->id,
 		judge       => $judge->id,
@@ -66,7 +81,7 @@
 	http://www.tabroom.com\n\n
 ";
 
-	$m->comp( "/funclib/send_email.mas", 
+	$m->comp( "/funclib/send_email.mas",
 		from    => $person,
 		to      => $judge->person,
 		subject => $subject,

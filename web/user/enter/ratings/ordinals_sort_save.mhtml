@@ -1,7 +1,10 @@
 <%args>
+	$dbh
+	$now
+	$person
+	$school
 	$entry_id => undef
 	$sortorder => undef
-	$dbh
 </%args>
 <%init>
 
@@ -17,11 +20,30 @@
 		$ord++;
 	}
 
-	my $now = DateTime->now();
 	my $err;
 
 	my $entry = Tab::Entry->retrieve($entry_id);
 	my $category = $entry->event->category;
+	my $tourn = $category->tourn;
+
+	my $category_settings  = $category->all_settings();
+	my $tourn_settings  = $tourn->all_settings();
+
+	if ($category_settings{"strike_end"}
+		&& $category_settings{"strike_end"} < $now
+	) {
+		my $deadline_was = $m->comp("/funclib/showdt.mas",
+			dt      => $category_settings{"strike_end"},
+			tz      => $tourn->tz,
+			show_tz => 'y',
+			format  => 'murica',
+			return  => 'y',
+		);
+
+		$m->comp("/funclib/abort.mas",
+			message => "The prefs deadline for ".$category->abbr." was $deadline_was, and has passed."
+		);
+	}
 
 	my %freebie = $m->comp("/funclib/free_strikes.mas", category => $category);
 
@@ -143,7 +165,15 @@
 
 	my $msg = $entry->code." prefs saved in ".$category->abbr." to $rounds_before rounds";
 
-	$m->redirect("ordinals_prefs_sortable.mhtml?school_id=".$entry->school->id."&entry_id=".$entry_id."&category_id=".$category->id."&style=entry_ratings&msg=".$msg."&err=".$err."#yo");
+	$m->comp("/funclib/log.mas",
+		tag         => 'prefs',
+		person      => $person,
+		entry       => $entry,
+		school      => $school,
+		description => $msg,
+	);
+
+	$m->redirect("ordinals_prefs_sortable.mhtml?entry_id=".$entry->id."&msg=".$msg."&err=".$err."#yo");
 
 </%init>
 

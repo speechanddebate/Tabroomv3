@@ -1,4 +1,5 @@
 <%args>
+	$now
 	$person
 	$hire_id
 </%args>
@@ -6,23 +7,37 @@
 
 	my $hire = Tab::JudgeHire->retrieve($hire_id);
 
-	unless ($hire) { 
+	unless ($hire) {
 		$m->print("<p>Hire request no longer exists, could not delete it</p>");
 		$m->print("<p>Hit back and try again </p>");
 		$m->abort;
 	}
 
 	my $category = $hire->category;
+	my $tourn = $category->tourn;
+
+	my %category_settings = $category->all_settings;
+	my %tourn_settings    = $tourn->all_settings;
+
+	$m->comp('judge_deadlines.mas',
+		category          => $category,
+		category_settings => \%category_settings,
+		tourn             => $tourn,
+		tourn_settings    => \%tourn_settings,
+		now               => $now,
+		type              => "hires"
+	);
+
 	my $school = $hire->school;
 
-	my $reduction = $category->setting("judge_per") 
+	my $reduction = $category->setting("judge_per")
 		if $category->setting("hired_fee") && $category->setting("judge_per");
 
 	$reduction = 1 unless $reduction;
 
 	my $message = "Judge hires reduced by $reduction";
 
-	$m->comp("/funclib/log.mas", 
+	$m->comp("/funclib/log.mas",
 		tourn       => $category->tourn->id,
 		school      => $school->id,
 		type        => "registration",
@@ -30,25 +45,25 @@
 		person      => $person->id
 	);
 
-	if ($hire->entries_requested) { 
+	if ($hire->entries_requested) {
 
 		$hire->entries_requested($hire->entries_requested - $reduction);
 
-		$hire->entries_accepted($hire->entries_requested) 
+		$hire->entries_accepted($hire->entries_requested)
 			if $hire->entries_accepted > $hire->entries_requested;
 	}
 
-	if ($hire->rounds_requested) { 
+	if ($hire->rounds_requested) {
 
 		$hire->rounds_requested($hire->rounds_requested - $reduction);
 
-		$hire->rounds_accepted($hire->rounds_requested) 
+		$hire->rounds_accepted($hire->rounds_requested)
 			if $hire->rounds_accepted > $hire->rounds_requested;
 	}
 
 	$hire->update;
 
-	$hire->delete if $hire->entries_requested < 1 && $hire->rounds_requested < 1; 
+	$hire->delete if $hire->entries_requested < 1 && $hire->rounds_requested < 1;
 
 	my $msg = "Hired judging reduced by 1";
 

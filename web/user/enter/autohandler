@@ -183,6 +183,7 @@
 
 	# Coach contacts get dashboard permissions
 	if ($school_id && $r->uri eq "/user/enter/dashboard.mhtml") {
+
 		my $sth = $dbh->prepare("
 			select
 				contact.id

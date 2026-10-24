@@ -1,18 +1,38 @@
 <%args>
+	$now
+	$dbh
+	$person
+	$school
 	$entry_id
 	$category_id
-	$dbh
 </%args>
 <%init>
 
 	use POSIX;
 
 	my $err;
-
-	my $now = DateTime->now();
 	my $entry = Tab::Entry->retrieve($entry_id);
 	my $category = Tab::Category->retrieve($category_id);
 	my %category_settings = $category->all_settings();
+
+	my $tourn = $category->tourn;
+	my $tourn_settings  = $tourn->all_settings();
+
+	if ($category_settings{"strike_end"}
+		&& $category_settings{"strike_end"} < $now
+	) {
+		my $deadline_was = $m->comp("/funclib/showdt.mas",
+			dt      => $category_settings{"strike_end"},
+			tz      => $tourn->tz,
+			show_tz => 'y',
+			format  => 'murica',
+			return  => 'y',
+		);
+
+		$m->comp("/funclib/abort.mas",
+			message => "The prefs deadline for ".$category->abbr." was $deadline_was, and has passed."
+		);
+	}
 
 	unless ($entry) {
 		$m->comp("/funclib/abort.mas",
@@ -254,8 +274,16 @@
 		$min_spares_available -= $diff;
 	}
 
-	my $msg = $entry->name."'s prefs saved in ".$category->abbr;
+	my $msg = $entry->code."'s prefs saved in ".$category->abbr;
 	$msg =~ s/\&/and/g;
+
+	$m->comp("/funclib/log.mas",
+		tag         => 'prefs',
+		person      => $person,
+		entry       => $entry,
+		school      => $school,
+		description => $msg,
+	);
 
 	$m->redirect("tiered_prefs.mhtml?entry_id=".$entry_id."&style=entry_ratings&msg=".$msg."&err=".$err."#yo");
 

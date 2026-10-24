@@ -1,4 +1,5 @@
 <%args>
+	$now
 	$person
 	$school
 	$student_id => undef
@@ -9,7 +10,6 @@
 <%init>
 
 	my $tourn = $school->tourn;
-
 	my $student = Tab::Student->retrieve($student_id);
 	my $event = Tab::Event->retrieve($event_id);
 
@@ -30,6 +30,17 @@
 		$m->redirect("by_person.mhtml?student_id=".$student->id."&school_id=".$school->id."&msg=$msg");
 	}
 
+	my $event_settings = $event->all_settings();
+	my $tourn_settings = $tourn->all_settings();
+
+	$m->comp("entry_deadlines.mas",
+		tourn          => $tourn,
+		event          => $event,
+		tourn_settings => \%tourn_settings,
+		event_settings => \%event_settings,
+		now            => $now,
+		type           => "add"
+	);
 
 	if ($event_settings{"no_waitlist"}) {
 		my @already = Tab::Entry->search(
@@ -47,20 +58,6 @@
 	my $edit_needed;
 	my %students;
 	my $hybrid_yes;
-
-	my $now = DateTime->now();
-
-	if ($now > $tourn->reg_end) {
-		my $err = "Tournament registration deadline has passed.  Please contact the tournament if you need further help";
-		$m->redirect("/user/enter/by_person_edit.mhtml?school_id=".$school->id."&student_id=".$student->id."&err=$err");
-	}
-
-	if ($event_settings{"deadline"}) {
-		if ($now > $event_settings{"deadline"}) {
-			my $err = "Event registration deadline has passed in ".$event->abbr.". Please contact the tournament if you need further help";
-			$m->redirect("/user/enter/by_person_edit.mhtml?school_id=".$school->id."&student_id=".$student->id."&err=$err");
-		}
-	}
 
 	my $min = $event_settings{"min_entry"} || 1;
 
@@ -340,21 +337,24 @@
 			<h5>Additional info required:</h5>
 <%perl>
 
-			unless ($event_settings{"fine_deadline"}) {
-				$event_settings{"fine_deadline"} = $tourn->setting("fine_deadline");
-			}
+			if ($event_settings{"fine_deadline"} || $tourn_settings{"fine_deadline"}) {
 
-			if ($event_settings{"fine_deadline"}) {
-				my $drop_fine = $tourn->setting("drop_fine");
-				$drop_fine = $event_settings{'drop_fine'} if $event_settings{'drop_fine'};
+				my $drop_fine = $event_settings{'drop_fine'} || $tourn_settings{'drop_fine'};
+
 				if ($drop_fine) {
 </%perl>
 					<div class="centeralign redtext semibold padvertmore">
-						A fee of <% $tourn->setting("currency") %><% $drop_fine %>
+						A fee of <% $tourn_settings{"currency"} || '$' %><% $drop_fine %>
 						is applied to any entry admitted off the waitlist which is
 						then dropped
+
 %						if ($event_settings{"fine_deadine"} > $now) {
-							after <& "/funclib/showdt.mas", dt => $event_settings{'fine_deadline'}, tz => $tourn->tz, length => "long" &>
+							after <& "/funclib/showdt.mas",
+								dt     => $event_settings{'fine_deadline'},
+								tz     => $tourn->tz,
+								length => "long",
+								tzname => 1
+							&>
 %						}
 					</div>
 %				}

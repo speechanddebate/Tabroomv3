@@ -1,4 +1,5 @@
 <%args>
+	$now
 	$school
 	$person
 	$category_id
@@ -8,21 +9,32 @@
 <%init>
 
 	my $category = Tab::Category->retrieve($category_id);
+	my $tourn    = $category->tourn;
 
-	my $now = DateTime->now();
+	my %category_settings = $category->all_settings;
+	my %tourn_settings    = $tourn->all_settings;
+
+	$m->comp('judge_deadlines.mas',
+		category          => $category,
+		category_settings => \%category_settings,
+		tourn             => $tourn,
+		tourn_settings    => \%tourn_settings,
+		now               => $now,
+		type              => "hires"
+	);
 
 	my $err;
 	my $warn;
 	my $request;
 	my $judge_per = $category->setting("judge_per");
 
-	if ($hired_number) { 
+	if ($hired_number) {
 
 		my $entries_requested = $hired_number * $judge_per if $category->setting("hired_fee") && $judge_per;
 		$entries_requested = $hired_number unless $entries_requested;
 
 		next unless $entries_requested > 0;
-		
+
 		$request = Tab::JudgeHire->create({
 			tourn             => $school->tourn,
 			school            => $school->id,
@@ -33,32 +45,32 @@
 
 		my $available_slots = $category->setting("hired_jpool") * $judge_per;
 
-		if ($available_slots) { 
-	
-			foreach my $acc (Tab::JudgeHire->search( category => $category->id )) { 
+		if ($available_slots) {
+
+			foreach my $acc (Tab::JudgeHire->search( category => $category->id )) {
 				$available_slots -= $acc->entries_accepted;
 			}
-			
-			if ($request && $available_slots < $request->entries_requested && $request->entries_accepted < $request->entries_requested) { 
+
+			if ($request && $available_slots < $request->entries_requested && $request->entries_accepted < $request->entries_requested) {
 
 				$request->entries_accepted($available_slots) if $available_slots > 0;
-	
+
 				$err = "There were not sufficient hired judges in the tournament pool to meet your request.<br /><br />You will be notified by email if the tournament adds hired judges and accepts your hire request.<br /><br />";
 
-			} else { 
+			} else {
 
 				$request->entries_accepted( $request->entries_requested ) if $request && $available_slots >= $request->entries_requested;
 			}
 
 			$request->update;
 
-		} else { 
+		} else {
 
 			$warn = "This tournament is manually manging hiring.  Your request for hired judging has been submitted.  You will be notified by email if and when the tournament accepts your request.<br /><br /";
 
 		}
 
-	} elsif ($rounds) { 
+	} elsif ($rounds) {
 
 		$request = Tab::JudgeHire->create({
 			tourn            => $school->tourn,
@@ -71,28 +83,28 @@
 
 		my $available_rounds = $category->setting("hired_rounds");
 
-		if ($available_rounds) { 
-	
-			foreach my $acc (Tab::JudgeHire->search( category => $category->id )) { 
+		if ($available_rounds) {
+
+			foreach my $acc (Tab::JudgeHire->search( category => $category->id )) {
 				$available_rounds -= $acc->rounds_accepted;
 			}
-			
-			if ($request && $available_rounds < $request->rounds_requested 
-				&& $request->rounds_accepted < $request->rounds_requested) { 
+
+			if ($request && $available_rounds < $request->rounds_requested
+				&& $request->rounds_accepted < $request->rounds_requested) {
 
 				$request->rounds_accepted($available_rounds) if $available_rounds > 0;
-	
+
 				$err = "There were not sufficient hired rounds in the tournament pool to meet your request.<br /><br />You will be notified by email if the tournament adds hired rounds and accepts your hire request.<br /><br />";
 
-			} else { 
+			} else {
 
-				$request->rounds_accepted( $request->rounds_requested ) 
+				$request->rounds_accepted( $request->rounds_requested )
 					if $request && $available_rounds >= $request->rounds_requested;
 			}
 
 			$request->update;
 
-		} else { 
+		} else {
 
 			$warn = "This tournament is manually manging hiring.  Your request for hired rounds has been submitted.  You will be notified by email if and when the tournament accepts your request.<br /><br /";
 

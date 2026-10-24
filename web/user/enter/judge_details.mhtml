@@ -85,6 +85,7 @@
 
 	my $max_rounds = $category_settings{"max_rounds"};
 	my $max = $m->comp("/funclib/judge_max_prelims.mas", judge => $judge);
+
 	if ($max && $max < $max_rounds) {
 		$max_rounds = $max;
 	}
@@ -133,7 +134,7 @@
 			<div class="flexrow ltbordervert row">
 				<span class="third semibold padleft">
 					<p class="nospace padbottomless">
-					Judge notes just for
+					Judge notes for
 					</p>
 					<p class="nospace smaller">
 						<% $tourn->name %>
@@ -149,6 +150,10 @@
 						value       = "<% $judge_settings{"notes"} %>"
 					>
 				</span>
+%				if ($chapter_judge->notes) {
+					<span class="twenty centeralign">
+					</span>
+%				}
 			</div>
 
 			<script>
@@ -395,7 +400,14 @@
 
 </%perl>
 
-		<h5 class="martopmore">Other Info</h5>
+		<div class="flexrow martopmore">
+			<span class="half">
+				<h5>Other Info</h5>
+			</span>
+			<span class="half rightalign padtop italic">
+				<span class="redtext semibold">*</span> indicates required fields
+			</span>
+		</div>
 
 %		if ($category_settings{"ask_alts"}) {
 
@@ -407,7 +419,7 @@
 
 				<span class="threefifths">
 
-					<select name="alt_id" class="fixedmost">
+					<select name="alt_id">
 
 						<option value="">
 							None Selected
@@ -517,47 +529,58 @@
 
 %		if ($rounds_per) {
 			<div class="row flexrow">
-				<span class="half flexrow hover">
-					<span class="fourfifths padleft">
-						Prelim round judging obligation
-						<span class="inline redtext semibold nospace">*</span>
-					</span>
-
-					<span class="fifth">
-%						if ($details_deadline) {
-							<div class="full nospace semibold">
-								<% $judge->obligation %>
-							</div>
-%						} else {
-							<input
-								type  = "number"
-								name  = "rounds"
-								size  = "5"
-								min   = "0"
-								max   = "<% $max_rounds %>"
-								value = "<% $judge->obligation %>"
-							>
-%						}
-					</span>
+				<span class="third padleft">
+					Prelim round judging obligation
+					<span class="inline redtext semibold nospace">*</span>
 				</span>
 
-				<span class="half flexrow">
+				<span class="fifth">
 %					if ($details_deadline) {
-						<span class="bluetext semibold padvertmore sixth">
+						<div class="full nospace semibold">
 							<% $judge->obligation %>
-						</span>
+						</div>
+%					} else {
+						<input
+							type  = "number"
+							name  = "rounds"
+							size  = "5"
+							min   = "0"
+							max   = "<% $max_rounds %>"
+							value = "<% $judge->obligation %>"
+						>
+%					}
+				</span>
 
-						<span class="redtext semibold padvertmore fivesixths italic smallish">
-							Obligations cannot be edited after the registration deadline
-						</span>
+				<span class="grow">
+
+%					if ($details_deadline) {
+						<div class="flexrow padvertless marno">
+							<span class="bluetext semibold sixth">
+								<% $judge->obligation %>
+							</span>
+
+							<span class="redtext semibold fivesixths italic smallish">
+								Obligations cannot be edited after the registration deadline
+							</span>
+						</div>
+%					}
+
+%					if ($category_settings{"rounds_per"}) {
+						<div class="full explain nospace padtopless">
+							This quota covers preliminary rounds only; elim obligations may also be required.
+						</div>
+
+%					}
+%					if ($category_settings{"sections_per"}) {
+						<div class="full explain nospace padtopless">
+							This obligation is quota is for individual flights of debate, not full rounds.
+						</div>
 %					}
 
 %					if ($max_rounds) {
-						<div
-							class="semibold padleft padright italic <% $max_rounds < ($judge->obligation) ? "redtext" : "graytext" %> yellowhover padvert"
-						>
-							This judge can cover a max of <% $max_rounds %> rounds (time constraints<% $judge->hired > 0 ? " and ".$judge->hired." hired rounds" : "" %>)
-						</div>
+						<p class="full explain nospace padtopless <% $max_rounds < ($judge->obligation) ? "redtext" : "" %>">
+							This judge can cover a max of <% $max_rounds %> rounds (deducting time constraints<% $judge->hired > 0 ? " and ".$judge->hired." hired rounds" : "" %>)
+						</p>
 %					}
 				</span>
 			</div>
@@ -574,16 +597,16 @@
 				</div>
 %			}
 
-			<span class="half flexrow hover odd">
+			<span class="half flexrow hover row">
 				<label for="diversity">
-					<span class="fourfifths padleft">
+					<span class="third padleft">
 						Diversity-enhancing judge
 					</span>
 
 					<span class="fifth">
 						<input
 							type  = "checkbox"
-							id	= "diversity"
+							id    = "diversity"
 							name  = "diverse"
 							value = "1"
 							<% $judge_settings{"diverse"} ? 'checked="checked"' : "" %>
@@ -594,9 +617,9 @@
 %		}
 
 %		unless ($event_settings{"online_method"}) {
-			<span class="half flexrow hover odd grow">
+			<span class="half flexrow hover row grow">
 				<label for="ada">
-					<span class="fourfifths padleft">
+					<span class="third padleft">
 						ADA/Accessible Rooms needed
 					</span>
 
@@ -614,7 +637,7 @@
 %		}
 
 %		if ($event_settings{"online_hybrid"}) {
-			<span class="half flexrow hover odd">
+			<span class="half flexrow hover row">
 				<label for="online_hybrid">
 					<span class="fourfifths padleft">
 						Judge will judge online
@@ -635,7 +658,7 @@
 
 %		if ($category_settings{"ask_parli"}) {
 
-			<span class="half flexrow hover odd">
+			<span class="half flexrow hover row">
 				<label for="parli">
 					<span class="fourfifths padleft">
 						Qualified Parliamentarian?
@@ -654,7 +677,7 @@
 %		}
 
 %		if ($category_settings{"neutrals"}) {
-			<span class="half flexrow hover odd">
+			<span class="half flexrow hover row">
 				<label for="neutral">
 					<span class="fourfifths padleft">
 						Judge is neutral (can judge your students)
@@ -674,7 +697,7 @@
 
 %		if ($category_settings{"first_year_outs"}) {
 %			my $fyo_label = $category_settings{"fyo_label"};
-			<span class="half flexrow hover odd">
+			<span class="half flexrow hover row">
 				<label for="first_year">
 					<span class="fourfifths padleft">
 						<% $fyo_label
@@ -723,7 +746,7 @@
 
 %		if ($judge->person > 0) {
 
-			<div class="odd flexrow">
+			<div class="row flexrow">
 				<span class="half padleft">
 					Tabroom account email
 %					if ($category_settings{"linked_only"}) {
@@ -749,7 +772,7 @@
 				</span>
 			</div>
 
-			<div class="odd flexrow">
+			<div class="row flexrow">
 				<span class="half padleft">
 					Tabroom account phone number
 %					if ($category_settings{"link_phone_required"}) {
@@ -797,7 +820,7 @@
 			</div>
 
 %			if ($category_settings{"judge_cells"}) {
-				<div class="flexrow odd">
+				<div class="flexrow row">
 					<span class="half padleft">
 						Phone Number
 %						if ($category_settings{"judge_cells"}) {
@@ -999,7 +1022,6 @@
 
 		<div class="libl rightalign padvert">
 			<span class="twothirds leftalign">
-				<span class="inline redtext semibold nospace">*</span> indicates required fields
 			</span>
 
 			<span class="third centeralign">

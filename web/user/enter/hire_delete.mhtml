@@ -1,4 +1,5 @@
 <%args>
+	$now
 	$person
 	$hire_id
 	$school
@@ -6,18 +7,32 @@
 <%init>
 
 	my $hire = Tab::JudgeHire->retrieve($hire_id);
-
 	$m->abort unless $hire;
+
 	my $category = $hire->category;
+	my $tourn = $category->tourn;
+
+	my %category_settings = $category->all_settings;
+	my %tourn_settings    = $tourn->all_settings;
+
+	$m->comp('judge_deadlines.mas',
+		category          => $category,
+		category_settings => \%category_settings,
+		tourn             => $tourn,
+		tourn_settings    => \%tourn_settings,
+		now               => $now,
+		type              => "hires"
+	);
+
 	my $msg;
 
-	if ($hire->school->id == $school->id) { 
+	if ($hire->school->id == $school->id) {
 
 		$hire->delete();
 
 		$msg = "Hired judging request deleted";
 
-		$m->comp("/funclib/log.mas", 
+		$m->comp("/funclib/log.mas",
 			tourn       => $category->tourn->id,
 			school      => $school->id,
 			type        => "registration",

@@ -1,4 +1,5 @@
 <%args>
+	$now
 	$person
 	$school
 	$basis       => undef
@@ -9,19 +10,13 @@
 <%init>
 
 	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
-
 	my $tourn = $school->tourn;
-	my $tz = $tourn->tz;
-	$tz = "UTC" unless $tz;
-
-	my $now = DateTime->now->set_time_zone($tz);
 
 	my $category = Tab::Category->retrieve($category_id) if $category_id;
 	$category = $entry->event->category unless $category;
 	my $strike_end = $category->setting("strike_end");
 
 	if ($strike_end < $now && (not defined $entry->setting("open_prefs")) ) {
-
 		my $err = "Prefs deadline has passed";
 		$m->redirect("ordinals_prefs.mhtml?school_id=".$school->id."&category_id=$category&err=$err");
 	}
@@ -242,6 +237,15 @@
 	}
 
 	my $msg = "$count judges preffed from previous scores.  Remaining judges unrated.";
+
+	$m->comp("/funclib/log.mas",
+		tag         => 'prefs',
+		person      => $person,
+		entry       => $entry,
+		school      => $school,
+		description => $msg,
+	);
+
 	$m->redirect("ordinals_prefs.mhtml?entry_id=".$entry->id."&msg=$msg");
 
 </%init>

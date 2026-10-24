@@ -1,7 +1,8 @@
 <%args>
+	$now
+	$person
 	$entry_id
 	$school_id
-	$person
 	$student_id => undef
 	$from       => undef
 </%args>
@@ -22,61 +23,44 @@
 
 	my $event = $entry->event;
 	my $tourn = $event->tourn;
-	my $now = DateTime->now;
 
-	my $drop_deadline = $tourn->setting("drop_deadline");
+	my %event_settings = $event->all_settings();
+	my %tourn_settings = $tourn->all_settings();
 
-	my $freeze_deadline;
-
-	$freeze_deadline = $event->setting("freeze_deadline");
-	$freeze_deadline = $tourn->setting("freeze_deadline") unless $freeze_deadline;
-
-	$drop_deadline = $tourn->reg_end unless $drop_deadline;
-	$freeze_deadline = $tourn->reg_end unless $freeze_deadline;
-
-	if ($tourn->setting("nsda_district")) {
-		my $weekend = Tab::Weekend->retrieve($event->setting('weekend'));
-		$drop_deadline = $weekend->drop_deadline;
-		$freeze_deadline = $weekend->freeze_deadline;
-	}
-
-	if ($drop_deadline < $now) {
-
-		my $err = "The online drop deadline for this tournament has passed.  Please contact the tournament directly";
-
-		$m->redirect("by_person_edit.mhtml?student_id=$student_id&school_id=$school_id&err=$err")
-			if $from eq "by_person";
-
-		$m->redirect("onsite.mhtml?entry_id=$entry_id&school_id=$school_id&err=$err")
-			if $from eq "onsite";
-
-		$m->redirect("students.mhtml?entry_id=$entry_id&school_id=$school_id&err=$err");
-
-	}
-
-	my $fine_deadline = $tourn->setting("fine_deadline");
-	my $event_fine_deadline = $event->setting('fine_deadline');
-
-	if ($event_fine_deadline) {
-		if (not defined $fine_deadline) {
-			$fine_deadline = $event_fine_deadline;
-		} elsif ($event_fine_deadline->epoch < $fine_deadline->epoch) {
-			$fine_deadline = $event_fine_deadline;
-		}
-	}
+	$m->comp("entry_deadlines.mas",
+		tourn          => $tourn,
+		event          => $event,
+		tourn_settings => \%tourn_settings,
+		event_settings => \%event_settings,
+		now            => $now,
+		type           => "drop"
+	);
 
 	my $drop_fine;
 
-	if ($fine_deadline < $now) {
-		if ($event->setting("drop_fine")) {
-			$drop_fine = $event->setting('drop_fine');
-		} else {
-			$drop_fine = $tourn->setting("drop_fine");
-		}
+	my $fine_start = $m->comp("entry_deadlines.mas",
+		tourn          => $tourn,
+		event          => $event,
+		tourn_settings => \%tourn_settings,
+		event_settings => \%event_settings,
+		now            => $now,
+		type           => "fine"
+	);
+
+	if ($fine_start) {
+		$drop_fine = $event_settings{drop_fine} || $tourn_settings{drop_fine};
 	}
 
+	my $freeze_start = $m->comp("entry_deadlines.mas",
+		tourn          => $tourn,
+		event          => $event,
+		tourn_settings => \%tourn_settings,
+		event_settings => \%event_settings,
+		now            => $now,
+		type           => "freeze"
+	);
 
-	if ($tourn->setting("track_reg_changes")) {
+	if ($tourn_settings{"track_reg_changes"}) {
 
 		my $description = $person->first." ".$person->last." dropped ".$entry->event->abbr." entry ".$entry->code." ".$entry->name;
 
@@ -156,7 +140,7 @@
 			}
 		}
 
-		if ($freeze_deadline > $now) {
+		if ($entry->waitlist || (not defined $freeze_start)) {
 
 			$entry->delete();
 

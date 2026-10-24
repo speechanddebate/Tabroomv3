@@ -78,11 +78,11 @@
 		}
 
 		$m->comp("/funclib/log.mas",
-			tourn       => $school->tourn->id,
-			school      => $school->id,
+			tourn       => $school->tourn,
+			school      => $school,
 			type        => "registration",
 			description => $message,
-			person      => $person->id
+			person      => $person
 		);
 
 	} elsif ($school) {
@@ -125,14 +125,22 @@
 		}
 
 		$m->comp("/funclib/log.mas",
-			tourn       => $school->tourn->id,
-			school      => $school->id,
+			tourn       => $school->tourn,
+			school      => $school,
 			type        => "registration",
 			description => $message,
 			person      => $person->id
 		);
 
 	}
+
+	$m->comp("/funclib/log.mas",
+		tag         => 'prefs',
+		person      => $person,
+		entry       => $entry,
+		school      => $school,
+		description => $message,
+	);
 
 	$m->print('{ "error": false, "message": "'.$message.'"}');
 	$m->abort();
