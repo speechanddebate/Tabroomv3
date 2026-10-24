@@ -10,14 +10,14 @@
 <%init>
 
 	my $tourn = $school->tourn;
+
+
 	my $student = Tab::Student->retrieve($student_id);
 	my $event = Tab::Event->retrieve($event_id);
 
 	$m->abort unless $student;
 	$m->abort unless $event;
 	$m->abort unless $event->tourn->id == $tourn->id;
-
-	my %event_settings = $event->all_settings();
 
 	my %ok_events = $m->comp(
 		"/funclib/student_clear_events.mas",
@@ -30,8 +30,8 @@
 		$m->redirect("by_person.mhtml?student_id=".$student->id."&school_id=".$school->id."&msg=$msg");
 	}
 
-	my $event_settings = $event->all_settings();
-	my $tourn_settings = $tourn->all_settings();
+	my %event_settings = $event->all_settings();
+	my %tourn_settings = $tourn->all_settings();
 
 	$m->comp("entry_deadlines.mas",
 		tourn          => $tourn,
