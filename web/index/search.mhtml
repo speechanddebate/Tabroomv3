@@ -15,15 +15,15 @@
 		$m->redirect("/index/index.mthml?err=$err");
 	}
 
-#	return if $m->cache_self( key => $search, expires_in => '1h' );
+	return if $m->cache_self( key => $search, expires_in => '1h' );
 
 	my $sth = $dbh->prepare("
 		select
 		tourn.id, tourn.name, tourn.city, tourn.state, tourn.country, tourn.webname,
-			GROUP_CONCAT(distinct circuit.abbr SEPARATOR '# '),
-			GROUP_CONCAT(distinct event.name SEPARATOR '# '),
-			CONVERT_TZ(tourn.start, '+00:00', tourn.tz),
-			CONVERT_TZ(tourn.end, '+00:00', tourn.tz)
+			GROUP_CONCAT(distinct circuit.abbr SEPARATOR '# ') circuits,
+			GROUP_CONCAT(distinct event.name SEPARATOR '# ') events,
+			CONVERT_TZ(tourn.start, '+00:00', tourn.tz) start,
+			CONVERT_TZ(tourn.end, '+00:00', tourn.tz) end
 
 		from tourn
 			left join tourn_circuit tc on tc.tourn = tourn.id
@@ -38,7 +38,10 @@
 		limit 150
 	");
 
-	$sth->execute("%".$search."%");
+	my $results = eval {
+		$sth->execute("%".$search."%");
+		return $sth->fetchall_hash();
+	};
 
 </%init>
 
@@ -98,14 +101,11 @@
 			</thead>
 			<tbody>
 <%perl>
-			while (
-				my (
-					$id, $name, $city, $state, $country, $web, $circuits, $events, $start, $end
-				) = $sth->fetchrow_array()
-			) {
 
-				my @circuits = split(/\#/, $circuits);
-				my @events = split(/\#/, $events);
+			foreach my $ref (@{$results}) {
+
+				my @circuits = split(/\#/, $ref->{circuits});
+				my @events = split(/\#/, $ref->{events});
 
 				my $circ_string;
 				my $event_string;
@@ -117,38 +117,38 @@
 					$event_string .= "<span title=".$event." class='padleft padright half smaller nospace padvertless nowrap'>$event</span>";
 				}
 
-				$state = substr($state, 0, 2);
+				$ref->{state} = substr($ref->{state}, 0, 2);
 </%perl>
 				<tr class="small">
 
 					<td class="nospace">
 						<a
 							class = "bluetext semibold full padvertless link-underline hover padleft"
-							href  = "/index/tourn/main.mhtml?tourn_id=<% $id %>"
+							href  = "/index/tourn/main.mhtml?tourn_id=<% $ref->{id} %>"
 							target= "_blank"
 						>
-							<% $name %>
+							<% $ref->{name} %>
 						</a>
 					</td>
 
 					<td class="limitsmall">
-						<% $city ? $city : "" %><% $city eq "Online" ? "" : ", "%>
+						<% $ref->{city} ? $ref->{city} : "" %><% $ref->{city} eq "Online" ? "" : ", "%>
 
-%						unless ($city eq "Online") {
+%						unless ($ref->{city} eq "Online") {
 							<%
-								$state ? $state : ""
+								$ref->{state} ? $ref->{state} : ""
 							%><%
-								$country && $country ne "US" && $state ? "/" : ""
+								$ref->{country} && $ref->{country} ne "US" && $ref->{state} ? "/" : ""
 							%><%
-								$country && $country ne "US" ? $country : ""
+								$ref->{country} && $ref->{country} ne "US" ? $ref->{country} : ""
 							%>
 %						}
 					</td>
 
-					<td data-text="<% $start %>" class="nowrap limitsmall">
+					<td data-text="<% $ref->{start} %>" class="nowrap limitsmall">
 						<& "/funclib/showrange.mas",
-							start_string => $start,
-							end_string   => $end,
+							start_string => $ref->{start},
+							end_string   => $ref->{end},
 							format       => 'murica_fixed',
 							year         => 1,
 						&>
