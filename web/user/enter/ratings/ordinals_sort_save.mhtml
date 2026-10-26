@@ -26,8 +26,7 @@
 	my $category = $entry->event->category;
 	my $tourn = $category->tourn;
 
-	my $category_settings  = $category->all_settings();
-	my $tourn_settings  = $tourn->all_settings();
+	my %category_settings  = $category->all_settings();
 
 	if ($category_settings{"strike_end"}
 		&& $category_settings{"strike_end"} < $now

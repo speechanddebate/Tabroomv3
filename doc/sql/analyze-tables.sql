@@ -43,6 +43,7 @@ analyze table jpool_setting;
 analyze table judge;
 analyze table judge_hire;
 analyze table judge_setting;
+analyze table login_log;
 analyze table message;
 analyze table nsda_category;
 analyze table panel;
