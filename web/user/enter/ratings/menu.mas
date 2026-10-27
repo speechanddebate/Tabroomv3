@@ -1,4 +1,6 @@
 <%args>
+	$dbh
+	$now
 	$school
 	$person      => undef
 	$prefs       => undef
@@ -10,7 +12,6 @@
 	$style       => undef
 	$meta        => undef
 	$no_others   => undef
-	$dbh
 </%args>
 <%init>
 
@@ -18,12 +19,10 @@
 
 	my $tz = $tourn->tz;
 	$tz = "UTC" unless $tz;
-	my $now = DateTime->now(time_zone => $tz);
 
 	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
 
 	my @pref_categories;
-
 	my %pref_style;
 	my %conflicts;
 	my %entry_strikes;
@@ -40,8 +39,16 @@
 			select
 				entry.id,
 					entry.code, entry.name,
+					event.abbr,
 					count(conflict.id) conflict_count,
-					count(strike.id) strike_count
+					count(strike.id) strike_count,
+					(
+						select event_setting.id
+						from event_setting
+						where event_setting.event = event.id
+						and event_setting.tag = 'no_prefs'
+						and event_setting.value = 1
+					) no_prefs
 			from (entry, event)
 				left join strike
 					on strike.entry = entry.id
@@ -55,13 +62,6 @@
 				and event.id = entry.event
 				and entry.school = ?
 				and entry.active = 1
-				and not exists (
-					select event_setting.id
-					from event_setting
-					where event_setting.event = event.id
-					and event_setting.tag = 'no_prefs'
-					and event_setting.value = 1
-				)
 			group by entry.id
 		");
 
@@ -78,24 +78,29 @@
 			|| $pref_style{$other_category}
 			|| $entry_strikes{$other_category};
 
-
 		push @pref_categories, $other_category;
 	}
+
+	$category_id = eval {
+		unless ($category_id) {
+			return $entry->event->category->id;
+		}
+	};
 
 	my $category = $pref_categories[0] if @pref_categories;
 	$category_id = $category->id if $category && not defined $category_id;
 
     Tab::Round->set_sql( strike_cards => "
         select round.*, entry.school as schoolid
-        from round, round_setting, panel, ballot, entry
+			from round, round_setting, panel, ballot, entry
 		where entry.school = ?
-        and entry.id = ballot.entry
-        and ballot.panel = panel.id
-        and panel.bye != 1
-        and panel.round = round.id
-        and round.id = round_setting.round
-        and round_setting.tag = 'strikes_published'
-        and round_setting.value = 1
+			and entry.id = ballot.entry
+			and ballot.panel = panel.id
+			and panel.bye != 1
+			and panel.round = round.id
+			and round.id = round_setting.round
+			and round_setting.tag = 'strikes_published'
+			and round_setting.value = 1
         order by round.start_time
     ");
 
@@ -114,8 +119,10 @@
 		<div class="sidenote">
 			<h4>Judge Category</h4>
 
-
-			<form action="index.mhtml" method="post">
+			<form
+				action ="index.mhtml"
+				method ="post"
+			>
 
 			<input
 				type  = "hidden"
@@ -125,8 +132,8 @@
 
 			<div class="row flexrow padleft">
 				<select
-					name="category_id"
-					onchange='this.form.submit()'
+					name     ="category_id"
+					onchange ='this.form.submit()'
 				>
 
 %				foreach my $other_category (@pref_categories) {
@@ -276,14 +283,17 @@
 							? "dk"
 							: ""
 						%>blue full flexrow"
-						href="conflicts.mhtml?school_id=<% $school->id %>&entry_id=<% $entr->{id} %>&category_id=<% $category->id %>#yo"
+						href="conflicts.mhtml?entry_id=<% $entr->{id} %>"
 					>
 						<span class="third padleft">
 							<% $entr->{conflict_count}|| 0 %> conflicted
 						</span>
 
-						<span class="twothirds padleft">
+						<span class="third grow padleft">
 							<% $entr->{name} || $entr->{code} %>
+						</span>
+						<span class="padleft padright">
+							<% $entr->{abbr} %>
 						</span>
 					</a>
 %				}
@@ -296,7 +306,7 @@
 %  			   	foreach my $entr (@{$category_entries{$category}}) {
 %					next if $no_others && $entr->{id} != $entry_id;
     	    		<a class="<% ($whoami eq "entry_strikes" && $entry_id == $entr->{id}) ? "dk" : "" %>blue full flexrow"
-    	               	href="entry_strikes.mhtml?school_id=<% $school->id %>&entry_id=<% $entr->{id} %>&category_id=<% $category->id %>&style=entry_ratings#yo"
+    	               	href="entry_strikes.mhtml?entry_id=<% $entr->{id} %>&style=entry_ratings#yo"
 					>
 						<span class="third padleft">
 							<% $entr->{strike_count}|| 0 %> struck
@@ -314,7 +324,10 @@
 
 				<div class="even centeralign nospace">
 
-					<form action="clone_strikes.mhtml" method="post">
+					<form
+						action ="clone_strikes.mhtml"
+						method ="post"
+					>
 
 					<input
 						type  = "hidden"
@@ -460,7 +473,7 @@
 %						next if $no_others && $entry->id != $entry_id;
 
 						<a class=" <% ($whoami eq "tiered_ratings" && $entry_id == $entry->id) ? "dk" : "" %>blue full nowrap"
-							href="tiered_prefs.mhtml?school_id=<% $school->id %>&category_id=<% $category->id %>&entry_id=<% $entry->id %>#yo">
+							href="tiered_prefs.mhtml?entry_id=<% $entry->id %>">
 							Elim Prefs for <% $entry->name %>
 						</a>
 <%perl>
@@ -475,6 +488,7 @@
 					) {
 
 						next if $no_others && $entry->{id} != $entry_id;
+						next if $entry->{no_prefs};
 
 						my $class = "blue";
 						$class = "red" if $unrated{$entry->{id}};
@@ -485,7 +499,7 @@
 </%perl>
 						<a
 							class="<% $class %> > full nowrap flexrow"
-							href="<% $pref_style{$category} %>_prefs.mhtml?school_id=<% $school->id %>&category_id=<% $category->id %>&entry_id=<% $entry->{id} %>#yo"
+							href="<% $pref_style{$category} %>_prefs.mhtml?entry_id=<% $entry->{id} %>"
 						>
 							<span class="third padleft">
 								<% $unrated{$entry->{id}} ? $unrated{$entry->{id}}." unrated" : "" %>

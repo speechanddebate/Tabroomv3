@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$tourn
 	$tourn_settings
 	$person
@@ -6,8 +7,6 @@
 <%init>
 
 	my %sites;
-
-	my $dbh = Tab::DBI->db_Main();
 
 	my $sth = $dbh->prepare("
 		select site.id, site.name, count(distinct room.id)
@@ -28,8 +27,12 @@
 			$id, $name, $count
 		) = $sth->fetchrow_array()
 	) {
-		$sites{$id}{"name"} = $name;
+		$sites{$id}{"name"}  = $name;
 		$sites{$id}{"count"} = $count;
+
+		if ($count > 0) {
+			$sites{$id}{"has_rooms"} = 1;
+		}
 	}
 
 	$sth = $dbh->prepare("
@@ -53,6 +56,9 @@
 	) {
 		$sites{$id}{"name"} = $name;
 		$sites{$id}{"count"} = $count;
+		if ($count > 0) {
+			$sites{$id}{"has_rooms"} = 1;
+		}
 	}
 
 	$sth->finish;
@@ -133,9 +139,7 @@
 								<a
 									class="plain hover full padvertless marno smallish"
 									href="/setup/tourn/district_dates.mhtml?weekend_id=<% $weekend->id %>"
-								>
-									<% $weekend->name %>
-								</div>
+								><% $weekend->name %> </a>
 %							}
 						</td>
 
@@ -211,11 +215,15 @@
 		>
 
 			<span class="twothirds">
-				<select
-					name  = "site_id"
-					class = "fixedmost"
-				>
-%					foreach my $site_id ( sort {$sites{$a}{"name"} cmp $sites{$b}{"name"}} keys %sites ) {
+				<select name  = "site_id">
+<%perl>
+					foreach my $site_id (
+						sort {
+							$sites{$b}{"has_rooms"} cmp $sites{$a}{"has_rooms"}
+							|| $sites{$a}{"name"} cmp $sites{$b}{"name"}
+						} keys %sites
+					) {
+</%perl>
 						<option
 							value = "<% $site_id %>"
 						> <% $sites{$site_id}{'name'} %> (<% $sites{$site_id}{'count'} %> Rooms) </option>

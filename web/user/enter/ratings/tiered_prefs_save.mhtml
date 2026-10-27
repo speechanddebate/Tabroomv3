@@ -40,6 +40,12 @@
 		);
 	}
 
+	my $event = $entry->event;
+
+	if ($event->setting("no_prefs")) {
+		$m->comp("/funclib/abort.mas", message => "No prefs are offered in this division");
+	}
+
 	my $find_sth = $dbh->prepare("
 		select rating.id, rating.judge, rating.rating_tier
 		from rating

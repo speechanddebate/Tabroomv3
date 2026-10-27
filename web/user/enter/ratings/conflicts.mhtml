@@ -1,31 +1,40 @@
 <%args>
 	$dbh
+	$now
 	$person
 	$person_settings
 	$school
-	$category_id
-	$entry_id => undef
-	$prefs    => undef
+	$entry_id    => undef
+	$prefs       => undef
 </%args>
 <%init>
 
-	my $category = Tab::Category->retrieve($category_id);
 	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
 
 	use POSIX;
+
+	my $category = eval {
+		if ($entry) {
+			return $entry->event->category;
+		}
+
+		if ($ARGS{category_id}) {
+			return Tab::Category->retrieve($ARGS{category_id});
+		}
+	};
 
 	my $tourn = $category->tourn;
 
 	my $tz = $tourn->tz;
 	$tz = "UTC" unless $tz;
+
 	my $strike_end = $category->setting("strike_end");
-	my $now = DateTime->now;
 	my $read_only++ if $strike_end < $now;
 
 	my $strike_start = $category->setting("strike_start");
-	$strike_start->set_time_zone($tz) if $strike_start;
-
 	$read_only++ if $strike_start > $now;
+
+	$strike_start->set_time_zone($tz) if $strike_start;
 	$strike_end->set_time_zone($tz) if $strike_end;
 
 	my %conflicts_by_id = ();
@@ -127,7 +136,7 @@
 		<&  "menu.mas",
 			person          => $person,
 			person_settings => $person_settings,
-			category_id     => $category_id,
+			category_id     => $category->id,
 			school          => $school,
 			whoami          => $whoami,
 			nodiv           => 1,
@@ -135,6 +144,7 @@
 			entry_id        => $entry_id,
 			no_others       => $ARGS{no_others},
 			dbh             => $dbh,
+			now             => $ARGS{now},
 		&>
 
 	</div>
@@ -151,18 +161,20 @@
 
 		<& /funclib/tablesorter.mas, table => "conflicts" &>
 
-		<span class="threequarters">
-			<h4>
-				Judge Conflicts for
-				<% $entry ? $entry->name : $school->short_name %>
-			</h4>
-		</span>
+		<div class="full flexrow">
+			<span class="threequarters nospace">
+				<h4>
+					Judge Conflicts for
+					<% $entry ? $entry->name : $school->short_name %>
+				</h4>
+			</span>
 
-		<span
-			class="quarter rightalign"
-			id="conflicts_buttonarea"
-		>
-		</span>
+			<span
+				id    ="conflicts_buttonarea"
+				class ="quarter rightalign"
+			>
+			</span>
+		</div>
 
 %		if ($read_only && $now < $strike_start) {
 			<p class="explain">
@@ -228,7 +240,7 @@
 %						if ($judge->school > 0 ) {
 							<% $judge->school->short_name %>
 %						} else {
-							Tournament Hire
+							Unaffiliated
 %						}
 
 					</td>

@@ -1,12 +1,11 @@
 <%args>
+	$dbh
 	$tourn
 	$person
 	$tourn_settings
 	$sort_by => "name"
 </%args>
 <%init>
-
-	my $dbh = Tab::DBI->db_Main();
 
 	my $sth = $dbh->prepare("
 		select
@@ -37,20 +36,22 @@
 
 	<div class="main">
 
-		<span class="twothirds nospace">
-			<h4>Schools</h4>
-		</span>
+		<div class="full flexrow">
+			<span class="twothirds">
+				<h4>Schools</h4>
+			</span>
 
-		<span
-			class = "third rightalign nospace"
-			id    = "schools_buttonarea"
-		>
-			<a
-				href  = "school_list_csv.mhtml"
-				title = "Hi Rich!"
-				class = 'fa fa-file-excel-o buttonwhite bluetext fa-sm'
-			></a>
-		</span>
+			<span
+				class = "third rightalign"
+				id    = "schools_buttonarea"
+			>
+				<a
+					href  = "school_list_csv.mhtml"
+					title = "Hi Rich!"
+					class = 'fa fa-file-excel-o buttonwhite bluetext fa-sm'
+				></a>
+			</span>
+		</div>
 
 		<& "/funclib/tablesorter.mas", table => "schools" &>
 
@@ -90,8 +91,15 @@
 					</th>
 
 %				} elsif ($tourn_settings->{"school_codes"}) {
-					<th class="smaller rightalign">
-						Code
+					<th
+						class="smaller rightalign"
+						title="School Code"
+					>SCode</th>
+%				}
+
+%				if ($person->site_admin &! ($tourn_settings->{"nsda_nats"} || $tourn_settings->{"nsda_ms_nats"})) {
+					<th class="smaller" title="NSDA Member Number">
+						NSDA
 					</th>
 %				}
 
@@ -140,7 +148,7 @@
 				$month =~ s/^0+//;
 </%perl>
 
-				<tr>
+				<tr class='smallish'>
 
 					<td>
 						<a class="white padleftless"
@@ -162,7 +170,10 @@
 						<% $clevel %>
 					</td>
 
-					<td class="rightalign code nowrap">
+					<td
+						class     ="rightalign code nowrap nospace"
+						data-text ="<% $school_state || $chapter_country %>"
+					>
 <%perl>
 						if (($school_state || $cstate) && (not defined $chapter_country)) {
 							$chapter_country = "US";
@@ -186,6 +197,12 @@
 %					} elsif ($tourn_settings->{"school_codes"}) {
 						<td class="rightalign">
 							<% $school_code %>
+						</td>
+%					}
+
+%					if ($person->site_admin &! ($tourn_settings->{"nsda_nats"} || $tourn_settings->{"nsda_ms_nats"})) {
+						<td class="rightalign smallish">
+							<% $chapter_nsda %>
 						</td>
 %					}
 

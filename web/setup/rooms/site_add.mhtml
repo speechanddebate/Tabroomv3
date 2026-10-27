@@ -1,5 +1,6 @@
 <%args>
 	$tourn
+	$person
 	$site_id => undef
 </%args>
 <%init>
@@ -12,8 +13,9 @@
 #	Make sure this site isn't already part of that tournament
 
 	my @already = Tab::TournSite->search(
-			tourn => $tourn->id,
-			site => $site_id );
+		tourn => $tourn->id,
+		site => $site_id
+	);
 
 	if (@already) {
 
@@ -30,7 +32,6 @@
 		});
 
 		if ($only_site) {
-
 			foreach my $round ($m->comp("/funclib/tourn_rounds.mas", tourn => $tourn)) {
 				$round->site($site_id);
 				$round->update;

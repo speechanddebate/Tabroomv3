@@ -1,5 +1,6 @@
 <%args>
 	$dbh
+	$now
 	$person
 	$school
 	$category_id => undef
@@ -54,7 +55,6 @@
 
 	$strike_end->set_time_zone($tz) if $strike_end;
 
-	my $now = DateTime->now;
 	my $read_only++ if $strike_end < $now;
 
 	my $strike_start = $category_settings{"strike_start"};
@@ -750,6 +750,7 @@
 			prefs       => $prefs,
 			no_others   => $ARGS{no_others},
 			dbh         => $dbh,
+			now         => $now,
 		&>
 
 	</div>

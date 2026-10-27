@@ -1,5 +1,6 @@
 <%args>
 	$dbh
+	$now
 	$school
 	$person
 	$person_settings
@@ -12,10 +13,22 @@
 
 	use POSIX;
 
-	my $entry    = Tab::Entry->retrieve($entry_id) if $entry_id;
-	my $event    = $entry->event;
-	my $category = $event->category;
-	my $tourn    = $school->tourn;
+	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
+	my $event = $entry->event;
+	my $tourn = $school->tourn;
+	my $chapter_id = $school->chapter->id;
+
+	my $category = eval {
+		if ($category_id) {
+			return Tab::Category->retrieve($category_id);
+		} elsif ($event) {
+			return $event->category;
+		}
+	};
+
+	if ($event->setting("no_prefs")) {
+		$m->comp("/funclib/abort.mas", message => "No prefs are offered in this division");
+	}
 
 	my %category_settings = $category->all_settings;
 
@@ -110,17 +123,18 @@
 
 	my $results = $sth->fetchall_hash();
 
-	my $now = DateTime->now;
 	my $tz = $tourn->tz;
 	$tz = "UTC" unless $tz;
 
 	my $strike_end = $category_settings{"strike_end"};
-	$strike_end->set_time_zone($tz) if $strike_end;
 	my $read_only++ if $strike_end < $now;
 
 	my $strike_start = $category_settings{"strike_start"};
-	$strike_start->set_time_zone($tz) if $strike_start;
 	$read_only++ if $strike_start > $now;
+
+
+	$strike_end->set_time_zone($tz) if $strike_end;
+	$strike_start->set_time_zone($tz) if $strike_start;
 
 	undef $read_only if $entry && $entry->setting("open_prefs");
 
@@ -595,57 +609,83 @@
 						<input type="hidden" name="school_id" value="<% $school->id %>">
 %					}
 
-					<span class="threequarters centeralign">
 
-					<select name="student_id">
+					<div class="full flexrow nospace">
+
+					<span class="grow padleft padright">
+						<select name="student_id">
 <%perl>
-						my @chapters;
-						my %used;
-						my $school_year = Tab::school_year->year;
+							my $fill_in_sth = $dbh->prepare("
 
-						foreach my $student ($entry->students) {
-							push @chapters, $student->chapter;
-							next if $used{$student."s"}++;
-</%perl>
-							<option
-								value="<% $student->id %>"
-							><% $student->last.", ".$student->first %></option>
-<%perl>
-						}
+								select
+									student.id, student.first, student.last,
+										chapter.name,
+										chapter.id chapter_id,
+									(select e2.code
+										from entry e2, event
+										where 1=1
+										and e2.active   = 1
+										and e2.event    = entry.event
+										and e2.id      != entry.id
+										and exists (select es2.id
+											from entry_student es2
+											where es2.student = student.id
+											and es2.entry = e2.id
+										)
+										group by e2.id
+									) as entry
 
-						my %chapter;
+								from student, chapter, entry_student es, entry, student ess
+								where student.retired = 0
+									and student.chapter = chapter.id
+									and es.entry = ?
+									and es.entry = entry.id
+									and entry.active = 1
+									and es.student = ess.id
+									and chapter.id = ess.chapter
 
-						foreach my $chapter (@chapters) {
+								group by student.id
+								order by entry DESC, chapter.name, student.last
+							");
 
-							next unless $chapter > 0;
-							next unless $chapter->id;
+							$fill_in_sth->execute($entry->id);
+							my $others = $fill_in_sth->fetchall_hash();
+							my %used;
 
-							next if $used{$chapter."c"}++;
-
-							foreach my $student ($chapter->students(retired => 0)) {
-
-								next if $used{$student."s"}++;
-								next if $student->grad_year <= ($school_year - 1);
+							foreach my $student ($entry->students) {
+								next if $used{$student->id}++;
 </%perl>
 								<option
 									value="<% $student->id %>"
 								><% $student->last.", ".$student->first %></option>
+<%perl>
+							}
+
+							foreach my $student (@{$others}) {
+
+								next if $used{$student->{id}}++;
+</%perl>
+								<option
+									value="<% $student->{id} %>"
+								>
+									<% $student->{last}.", ".$student->{first} %>
+									<% $student->{chapter_id} ne $chapter_id ? $student->{name} : "" %>
+									<% $student->{entry} ? "(".$student->{entry}.")" : "" %>
+								</option>
 %							}
-%						}
+						</select>
 
+						</span>
 
-					</select>
-
-					</span>
-
-					<span class="quarter centeralign">
-						<input
-							type  = "submit"
-							class = "thin"
-							value = "Go"
-							style = "padding-left: 2px; padding-right: 2px;"
-						>
-					</span>
+						<span class="padleft padright">
+							<input
+								type  = "submit"
+								class = "thin"
+								value = "Go"
+								style = "padding-left: 2px; padding-right: 2px;"
+							>
+						</span>
+					</div>
 					</form>
 
 				</div>
@@ -677,35 +717,51 @@
 							>
 %						}
 
-						<span class="threequarters centeralign">
+							<div class="flexrow full nospace">
+								<span class="padleft padright grow">
 
-						<select name="target_id">
-							<option value="all">All Entries in <% $entry->event->abbr %></option>
+								<select name="target_id">
+									<option value="all">All Entries in <% $entry->event->abbr %></option>
 <%perl>
-							foreach my $other (
-								$m->comp('/funclib/category_entries.mas',
-									category => $category,
-									school   => $school
-								)
-							) {
 
-								next if $entry->id == $other->id;
-								next if $entry->dropped;
+									my $other_cat = $dbh->prepare("
+										select
+											entry.id, entry.code, entry.name
+										from entry, event
+										where 1=1
+											and entry.active = 1
+											and entry.event = event.id
+											and event.category = ?
+											and entry.school = ?
+											and not exists (
+												select es.id
+												from event_setting es
+												where es.tag = 'no_prefs'
+												and es.event = event.id
+											)
+									");
+
+									$other_cat->execute($category,  $school);
+									my $others = $other_cat->fetchall_hash();
+
+									foreach my $other (@{$others}) {
+										next if $entry->id == $other->{id};
 </%perl>
-								<option value="<% $other->id %>"><% $other->name %></option>
-%							}
-						</select>
+										<option value="<% $other->{id} %>"><% $other->{code} %></option>
+%									}
+								</select>
 
-						</span>
+								</span>
 
-						<span class="quarter centeralign">
-							<input
-								type  = "submit"
-								class = "thin"
-								value = "Go"
-								style = "padding-left: 2px; padding-right: 2px;"
-							>
-						</span>
+								<span class="padleft padright">
+									<input
+										type  = "submit"
+										class = "thin"
+										value = "Go"
+										style = "padding-left: 2px; padding-right: 2px;"
+									>
+								</span>
+							</div>
 						</form>
 					</div>
 %				}
@@ -724,6 +780,7 @@
 			nodiv           => 1,
 			no_others       => $ARGS{no_others},
 			dbh             => $dbh,
+			now             => $now,
 		&>
 
 %		if ($entry && $category_settings{"show_diversity"} && $diverse_total > 0) {

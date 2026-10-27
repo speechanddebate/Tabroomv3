@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$session
 	$person
 	$source_id => undef
@@ -19,24 +20,35 @@
 	}
 
 	my @targets;
+	my $limit;
 
-	if ($target_id eq "all") {
-		foreach my $entry (
-			$source->school->entries(
-				event  => $source->event->id,
-				active => 1
-			)
-		) {
-			next if $entry == $source;
-			push @targets, $entry;
-		}
-	} else {
-		push @targets, Tab::Entry->retrieve($target_id);
+	if ($target_id eq int($target_id)) {
+		$limit = " and entry.id = ".int($target_id);
 	}
+
+	my $sth = $dbh->prepare("
+		select entry.id
+			from entry, event
+		where entry.school     = ?
+
+			and entry.active   = 1
+			and entry.event    = event.id
+			and event.category = ?
+
+			and not exists (
+				select es.id
+				from event_setting es
+				where es.event = event.id
+				and es.tag = 'no_prefs'
+			)
+	");
+
+	$sth->execute($school->id, $source->category->id);
+	my @targets = $sth->fetchall_hash();
 
 	unless (@targets) {
 		$m->print('<div class="blankfull warning centeralign"><h4>');
-		$m->print("No target debater selected.  Please select a debater onto whom to copy prefs");
+		$m->print("No target debater found.  Please select a debater onto whom to copy prefs from your school.");
 		$m->print('</h4></div>');
 		$m->abort;
 	}
@@ -44,46 +56,17 @@
 	my @ratings = $source->ratings;
 
 	unless (@ratings) {
-
 		$m->print('<div class="blankfull warning centeralign"><h4>');
 		$m->print("You are attempting to copy prefs from someone who doesn't have a prefs.  You probably intended to do that the other way around.  Hit back and try again.");
 		$m->print('</h4></div>');
-		$m->abort;
-
-	}
-
-	unless ($source->school->id == $targets[0]->school->id) {
-		$m->print("<p>You appear to be trying to clone the ratings of another school's debaters?</p>");
-		$m->print("<p>Nice try, but no.  If this in error, let us know though.</p>");
-		$m->abort("");
+		$m->abort();
 	}
 
 	my @results;
 
 	foreach my $target (@targets) {
-		my $find_sth = $dbh->prepare("select id from rating where entry = ?");
-		$find_sth->execute($target->id);
-		my $result = $find_sth->fetchall_hash();
-		push @results, @{$result};
-	}
-
-	my $id_string;
-	my $id_count;
-
-	foreach my $ref (@results) {
-		$id_string .= "," if $id_string;
-		$id_string .= $ref->{id};
-		if ($id_count++ > 10) {
-			my $del_sth = $dbh->prepare("delete from rating where id IN ($id_string)");
-			$del_sth->execute();
-			undef $id_string;
-			undef $id_count;
-		}
-	}
-
-	if ($id_string) {
-		my $del_sth = $dbh->prepare("delete from rating where id IN ($id_string)");
-		$del_sth->execute();
+		my $find_sth = $dbh->prepare("delete from rating where entry = ?");
+		$find_sth->execute($target->{id});
 	}
 
 	my $count;
@@ -98,7 +81,7 @@
 			next if $style eq "tiered" && $rating->percentile > 0;
 
 			my $new_rating = $rating->copy({
-				entry   => $target->id,
+				entry   => $target->{id},
 				entered => $now
 			});
 		}
@@ -116,7 +99,7 @@
 	$type = "tiered" if $type eq "caps";
 	$type = $style if $style;
 
-	$m->redirect($type."_prefs.mhtml?school_id=".$source->school->id."&entry_id=".$source->id."&category_id=".$source->event->category->id."&msg=".$msg);
+	$m->redirect($type."_prefs.mhtml&entry_id=".$source->id."&msg=".$msg);
 
 </%init>
 

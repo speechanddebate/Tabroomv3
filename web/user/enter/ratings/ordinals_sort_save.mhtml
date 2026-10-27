@@ -44,6 +44,10 @@
 		);
 	}
 
+	if ($entry->event->setting("no_prefs")) {
+		$m->comp("/funclib/abort.mas", message => "No prefs are offered in this division");
+	}
+
 	my %freebie = $m->comp("/funclib/free_strikes.mas", category => $category);
 
 	my $find_sth = $dbh->prepare("select id from rating where entry = ?");

@@ -1,4 +1,6 @@
 <%args>
+	$now
+	$dbh
 	$school
 	$person
 	$person_settings
@@ -18,9 +20,6 @@
 		$category = $event->category;
 	}
 
-	my $now = DateTime->now;
-	my $tz = $tourn->tz;
-	$tz = "UTC" unless $tz;
 
 	my %category_settings = $category->all_settings();
 	if ($category_settings{"strike_end"}) {
@@ -92,6 +91,7 @@
 		meta            => \%meta,
 		no_others       => $ARGS{no_others},
 		dbh             => $ARGS{dbh},
+		now             => $ARGS{now},
 	&>
 
 	<div class="main">

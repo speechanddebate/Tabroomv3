@@ -11,9 +11,20 @@
 
 	my $entry = Tab::Entry->retrieve($entry_id) if $entry_id;
 	my $tourn = $school->tourn;
+	my $event = $entry->event;
 
-	my $category = Tab::Category->retrieve($category_id) if $category_id;
-	$category = $entry->event->category unless $category;
+	my $category = eval {
+		if ($category_id) {
+			return Tab::Category->retrieve($category_id);
+		} elsif ($event) {
+			return $event->category;
+		}
+	};
+
+	if ($entry->event->setting("no_prefs")) {
+		$m->comp("/funclib/abort.mas", message => "No prefs are offered in this division");
+	}
+
 	my $strike_end = $category->setting("strike_end");
 
 	if ($strike_end < $now && (not defined $entry->setting("open_prefs")) ) {
@@ -182,7 +193,7 @@
 	my %done;
 	my $count;
 	my $rounds_before;
-	my $side_based = $entry->event->category->setting("side_based_prefs");
+	my $side_based = $event->category->setting("side_based_prefs");
 
 	foreach my $judge (sort {$judge_avg{$a->id} <=> $judge_avg{$b->id}} @judges) {
 

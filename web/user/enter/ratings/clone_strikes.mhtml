@@ -16,6 +16,12 @@
 		message => "No entry found with id $entry_id"
 	) unless $entry;
 
+	my $event = $entry->event;
+
+	if ($event->setting("no_prefs")) {
+		$m->comp("/funclib/abort.mas", message => "No prefs are offered in this division");
+	}
+
 	my @clones;
 	my $msg;
 	my $dest_id;
@@ -63,6 +69,7 @@
 
 		next if $clone == $entry;
 		$wipe_strikes_sth->execute($clone);
+		next if $clone->event->setting("no_prefs");
 
 		foreach my $strike (@strikes) {
 			next if $strike->type eq "conflict";

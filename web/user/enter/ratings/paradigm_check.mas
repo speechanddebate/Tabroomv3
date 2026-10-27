@@ -11,9 +11,9 @@
 	Tab::Judge->set_sql( "paradigmless" => "
 		select judge.*
 		from judge
-		where judge.school = ? 
-		and judge.category = ? 
-		and not exists ( 
+		where judge.school = ?
+		and judge.category = ?
+		and not exists (
 			select person_setting.id
 			from person_setting
 			where person_setting.person = judge.person
@@ -24,9 +24,9 @@
 
 	my $notfirst;
 
-	foreach my $judge (Tab::Judge->search_paradigmless($school, $category)) { 
+	foreach my $judge (Tab::Judge->search_paradigmless($school, $category)) {
 
-		unless ($notfirst++) { 
+		unless ($notfirst++) {
 
 </%init>
 
@@ -58,9 +58,9 @@
 
 %	}
 
-%	if ($notfirst) { 
+%	if ($notfirst) {
 %		$m->abort();
-%	} 
+%	}
 
 %	return;
 

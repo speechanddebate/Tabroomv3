@@ -1,5 +1,6 @@
 <%args>
 	$dbh
+	$now
 	$person
 	$school
 	$entry_id
@@ -8,7 +9,6 @@
 </%args>
 <%init>
 
-	my $now = DateTime->now();
 	my $err;
 
 	my $entry = Tab::Entry->retrieve($entry_id);
@@ -32,6 +32,12 @@
 		$m->comp("/funclib/abort.mas",
 			message => "The prefs deadline for ".$category->abbr." was $deadline_was, and has passed."
 		);
+	}
+
+	my $event = $entry->event;
+
+	if ($event->setting("no_prefs")) {
+		$m->comp("/funclib/abort.mas", message => "No prefs are offered in this division");
 	}
 
 	my $limit;

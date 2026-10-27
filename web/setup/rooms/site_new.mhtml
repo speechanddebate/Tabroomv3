@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$person
 	$tourn
 	$name
@@ -16,26 +17,74 @@
 	}
 
 #	Make sure this site doesn't already exist
+	my $already;
 
-	my @already;
-	
-	foreach my $circuit ($tourn->circuits) { 
-		next if @already;
-		@already = Tab::Site->search( 
+	foreach my $circuit ($tourn->circuits) {
+		next if $already;
+		$already = Tab::Site->search(
 			name    => $name,
 			circuit => $circuit->id
-		);
+		)->first;
 	};
 
-	if (@already) { 
+	my $ok;
+	$ok++ if $person->site_admin;
+
+	if ($already && (not defined $ok)) {
+
+		my $sth = $dbh->prepare("
+			select
+			permission.id
+			from permission, tourn, tourn_site ts
+			where ts.site = ?
+			and ts.tourn = tourn.id
+			and tourn.id = permission.tourn
+			and permission.person = ?
+			and permission.tag IN ('owner', 'tabber');
+		");
+
+		$sth->execute($already->id, $person->id);
+		my $rows = $sth->fetchall_hash();
+
+		if ($rows && scalar @{$rows}) {
+			$ok++;
+		}
+	}
+
+	if ($already && $ok) {
+
+		my $join = Tab::TournSite->create ({
+			tourn => $tourn->id,
+			site  => $already->id
+		});
+
+		if ( (scalar (t$tourn->sites) == 1)) {
+
+			foreach my $round ($m->comp('/funclib/tourn_rounds.mas', tourn => $tourn)) {
+				$round->site($already->id);
+				$round->update;
+			}
+		}
+
+		my $msg = "Existing site ".$already->id." ".$already->name." found and added to your tournament.";
+
+		$m->comp("/funclib/log.mas",
+			tag         => "tabbing",
+			tourn       => $tourn,
+			person      => $person,
+			description => $msg
+		);
+
+		$m->redirect("/setup/rooms/manage_sites.mhtml?msg=$msg");
+
+	} elsif ($already) {
 
 		my $err = "That site already exists in your circuit.  Add it from the drop-down menu instead.";
 		$m->redirect("manage_sites.mhtml?err=$err");
-	
- 	} else { 
+
+ 	} else {
 
 		my $only_site++ if scalar $m->comp("/funclib/tourn_sites.mas", tourn => $tourn) < 1;
-
 		my $circuit = $tourn->circuits->first;
 		my $circuit_id = $circuit->id if $circuit;
 
@@ -51,19 +100,19 @@
 			site  => $site->id
 		});
 
-		if ($only_site) { 
+		if ($only_site) {
 
-			foreach my $round ($m->comp('/funclib/tourn_rounds.mas', tourn => $tourn)) { 
+			foreach my $round ($m->comp('/funclib/tourn_rounds.mas', tourn => $tourn)) {
 				$round->site($site->id);
 				$round->update;
 			}
 		}
-	
+
 		my $msg = "Site added to your tournament.";
 
 		$m->redirect("/setup/rooms/manage_sites.mhtml?msg=$msg");
 
 	}
 
-</%init> 
+</%init>
 
