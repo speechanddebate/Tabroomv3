@@ -12,7 +12,7 @@
 
 	return if $m->cache_self(
 		key        => $key,
-		expires_in => '5h'
+		expires_in => '15m'
 	);
 
     my $tourn = Tab::Tourn->retrieve($tourn_id);
@@ -38,18 +38,10 @@
 
 	my %event_settings = $event->all_settings() if $event;
 
-	my @webpages = Tab::Webpage->search(
+	my $webpages = Tab::Webpage->search(
 		tourn   => $tourn_id,
 		special => "events"
-	);
-
-	my $webpage = shift @webpages if @webpages;
-
-	my $switch;
-
-	my @others = Tab::Tourn->search(
-		webname => $tourn->webname
-	) if $tourn->webname;
+	)->first;
 
 </%init>
 
