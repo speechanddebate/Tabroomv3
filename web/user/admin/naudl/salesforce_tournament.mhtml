@@ -107,33 +107,43 @@
 			my $sth = $dbh->prepare("
 				select
 					entry.id entry, student.id student, panel.bye bye,
-						ballot.speakerorder, ballot.bye ballotbye, ballot.forfeit forfeit, ballot.judge judge,
-						winloss.value win, point.value point, rank.value rank,
-						round.name round, round.type type,
-						naudl_updated.value_date, student.timestamp
-				from (entry, ballot, panel, round)
-
-					left join score rank
-						on rank.ballot = ballot.id
+					ballot.speakerorder, ballot.bye ballotbye, ballot.forfeit forfeit, ballot.judge judge,
+					(select rank.value
+						from score rank
+						where rank.ballot = ballot.id
 						and rank.tag = 'rank'
+						limit 1
+					) as rank,
 
-					left join score point
-						on point.ballot = ballot.id
+					(select point.value
+						from score point
+						where point.ballot = ballot.id
 						and point.tag = 'point'
+						limit 1
+					) as point,
 
-					left join score winloss
-						on winloss.ballot = ballot.id
+					(select winloss.value
+						from score winloss
+						where winloss.ballot = ballot.id
 						and winloss.tag = 'winloss'
+					) as winloss,
+					round.name round, round.type type,
+
+					(select naudl_updated.value_date
+						from student_setting naudl_updated
+						where naudl_updated.student = student.id
+						and naudl_updated.tag = 'naudl_updated'
+					) as naudl_updated,
+
+					student.timestamp
+
+				from (entry, ballot, panel, round)
 
 					left join entry_student es
 						on es.entry = entry.id
 
 					left join student
 						on es.student = student.id
-
-					left join student_setting naudl_updated
-						on naudl_updated.student = student.id
-						and naudl_updated.tag = 'naudl_updated'
 
 				where round.event = ?
 					and round.id = panel.round
@@ -197,16 +207,22 @@
 
 			my $sth = $dbh->prepare("
 				select
-						entry.id,
-						panel.bye panel_bye,
-						ballot.side, ballot.bye ballot_bye,
-						ballot.forfeit, ballot.judge,
-						score.tag,
-						score.student,
-						score.value,
-						student.id student_id,
-						round.name round_name, round.type round_type,
-						naudl_updated.value_date naudl, student.timestamp
+					entry.id,
+					panel.bye panel_bye,
+					ballot.side, ballot.bye ballot_bye,
+					ballot.forfeit, ballot.judge,
+					score.tag,
+					score.student,
+					score.value,
+					student.id student_id,
+					round.name round_name, round.type round_type,
+					(select naudl_updated.value_date
+						from student_setting naudl_updated
+						where naudl_updated.student = student.id
+						and naudl_updated.tag = 'naudl_updated'
+					) as naudl,
+					student.timestamp
+
 				from (entry, ballot, panel, round)
 
 					left join entry_student es on es.entry = entry.id
@@ -214,10 +230,6 @@
 
 					left join score on score.ballot = ballot.id
 						and (score.student = student.id OR score.student is NULL or score.student = 0)
-
-					left join student_setting naudl_updated
-						on naudl_updated.student = student.id
-						and naudl_updated.tag = 'naudl_updated'
 
 				where round.event = ?
 					and round.id = panel.round
@@ -256,8 +268,11 @@
 					}
 
 				} elsif ($entry->{tag} eq "point") {
-					unless ($student_data{$entry->{id}}{$entry->{round_name}}{$entry->{judge}}{"done_point"}++) {
+
+					unless ($student_data{$entry->{student_id}}{$entry->{round_name}}{$entry->{judge}}{"done_point"}++) {
 						$student_data{"s".$student_id}{"total_points"} += $entry->{value};
+						if ($student_id == 1766684) {
+						}
 					}
 				}
 

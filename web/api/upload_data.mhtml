@@ -2242,14 +2242,19 @@
 										hired        = ?,
 										category     = ?,
 										alt_category = ?,
-										covers       = ?,
-										person       = ?
+										covers       = ?
 									where judge.id   = ?
 								");
 
-								my $update_judge_cj= $dbh->prepare("
+								my $update_judge_cj = $dbh->prepare("
 									update judge
 									set chapter_judge = ?
+									where judge.id = ?
+								");
+
+								my $update_judge_person = $dbh->prepare("
+									update judge
+									set person = ?
 									where judge.id = ?
 								");
 
@@ -2274,7 +2279,7 @@
 									}
 
 									#nulls, whiny nulls.
-									foreach my $flag ("active", "ada", "school", "person") {
+									foreach my $flag ("active", "ada", "school") {
 										$judge->{$flag} = 0 unless $judge->{$flag} > 0;
 									}
 
@@ -2301,11 +2306,14 @@
 											covers        => $judge->{covers},
 										};
 
-										if ($judge->{person}) {
-											$ref->{person} = $judge->{person},
-										}
-
 										my $obj = Tab::Judge->create($ref);
+
+										if ($judge->{person}) {
+											eval {
+												$update_judge_person->execute($judge->{person}, $obj->id);
+												$ref->{person} = $judge->{person};
+											};
+										}
 
 										$judge->{id} = $obj->id;
 										$ojudge = $judge;
@@ -2318,7 +2326,7 @@
 										foreach my $tag (
 											"code", "first", "middle", "last",
 											"active", "ada", "obligation", "hired", "registered_by",
-											"category", "alt_category", "covers", "person",
+											"category", "alt_category", "covers"
 										) {
 											if ($judge->{$tag} ne $ojudge->{$tag}) {
 												$delta++;
@@ -2329,6 +2337,12 @@
 										if ($delta) {
 											push @updates, $ojudge->{id};
 											$update_judge->execute(@updates);
+										}
+
+										if ($judge->{person} ne $ojudge->{person}) {
+											eval {
+												$update_judge_person->execute($judge->{person}, $ojudge->{id});
+											};
 										}
 									}
 
@@ -2947,14 +2961,19 @@
 						hired        = ?,
 						category     = ?,
 						alt_category = ?,
-						covers       = ?,
-						person       = ?
+						covers       = ?
 					where judge.id   = ?
 				");
 
-				my $update_judge_cj= $dbh->prepare("
+				my $update_judge_cj = $dbh->prepare("
 					update judge
 					set chapter_judge = ?
+					where judge.id = ?
+				");
+
+				my $update_judge_person = $dbh->prepare("
+					update judge
+					set person = ?
 					where judge.id = ?
 				");
 
@@ -3041,11 +3060,14 @@
 							chapter_judge => $cj_id
 						};
 
-						if ($judge->{person}) {
-							$ref->{person} = $judge->{person},
-						}
 
 						my $obj = eval { return Tab::Judge->create($ref); };
+
+						if ($judge->{person}) {
+							eval {
+								$update_judge_person->execute($judge->{person}, $obj->id);
+							};
+						}
 
 						if ($obj > 0) {
 							$judge->{id} = $obj->id;
@@ -3062,7 +3084,7 @@
 						foreach my $tag (
 							"code", "first", "middle", "last",
 							"active", "ada", "obligation", "hired",
-							"category", "alt_category", "covers", "person",
+							"category", "alt_category", "covers",
 						) {
 							if ($judge->{$tag} ne $ojudge->{$tag}) {
 								$delta++;
@@ -3074,6 +3096,12 @@
 							push @updates, $ojudge->{id};
 							$update_judge->execute(@updates);
 							&outlog("T2 Updating judge ".$ojudge->{id}." name ".$ojudge->{last});
+						}
+
+						if ($judge->{person} ne $ojudge->{person}) {
+							eval {
+								$update_judge_person->execute($judge->{person}, $ojudge->{id});
+							};
 						}
 
 						if ($cj_id && $cj_id ne $ojudge->{chapter_judge}) {
@@ -4444,14 +4472,17 @@
 
 					if ($jpool->{judges}) {
 						foreach my $judge (@{$jpool->{judges}}) {
+
 							my $ojudge = $translator{judge}{$judge};
 							next unless $ojudge;
+
 							unless ($jpjs{$old_id}{$ojudge->{id}}) {
 								Tab::JPoolJudge->create({
 									judge => $ojudge->{id},
 									jpool => $ojpool->{id}
 								});
 							}
+
 							delete $jpjs{$old_id}{$ojudge->{id}};
 							delete $jpjs{$old_id}{$judge};
 						}
