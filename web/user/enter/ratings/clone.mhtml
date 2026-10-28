@@ -18,7 +18,6 @@
 		$m->abort;
 	}
 
-	my @targets;
 	my $limit;
 
 	if ($target_id eq int($target_id)) {
@@ -42,10 +41,10 @@
 			)
 	");
 
-	$sth->execute($school->id, $source->category->id);
-	my @targets = $sth->fetchall_hash();
+	$sth->execute($source->school->id, $source->category->id);
+	my $targets = $sth->fetchall_hash();
 
-	unless (@targets) {
+	unless ($targets && scalar @{$targets}) {
 		$m->print('<div class="blankfull warning centeralign"><h4>');
 		$m->print("No target debater found.  Please select a debater onto whom to copy prefs from your school.");
 		$m->print('</h4></div>');
