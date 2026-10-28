@@ -1,15 +1,14 @@
 <%args>
 	$dbh
+	$now
 	$session
 	$person
 	$source_id => undef
 	$target_id  => undef
 	$style     => undef
-	$dbh
 </%args>
 <%init>
 
-	my $now = DateTime->now;
 	my $source = Tab::Entry->retrieve($source_id);
 
 	unless ($source) {

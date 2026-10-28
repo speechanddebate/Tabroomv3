@@ -150,7 +150,8 @@
 						value       = "<% $judge_settings{"notes"} %>"
 					>
 				</span>
-%				if ($chapter_judge->notes) {
+
+%				if ($chapter_judge && $chapter_judge->notes) {
 					<span class="twenty centeralign">
 					</span>
 %				}

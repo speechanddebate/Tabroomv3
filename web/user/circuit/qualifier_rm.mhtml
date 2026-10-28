@@ -18,11 +18,12 @@
 		foreach my $qual (keys %{$qualifiers}) {
 			if ($key == $qual) {
 				$message = "Deleted qualification ruleset ".$qualifiers->{$key}{label},
-				Tab::ChangeLog->create({
+				$m->comp("/funclib/log.mas",
 					person      => $person,
 					circuit     => $circuit,
 					description => $message,
-				});
+					tag         => "circuit"
+				);
 
 				delete $qualifiers->{$key};
 			}
