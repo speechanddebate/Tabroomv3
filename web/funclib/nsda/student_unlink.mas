@@ -18,12 +18,12 @@
 	$sth->execute($student->id);
 	my $was_nsda = $student->nsda;
 
-	Tab::ChangeLog->create({
+	$m->comp("/funclib/log.mas",
 		tag         => "link",
 		chapter     => $student->chapter->id,
 		person      => $person,
 		description => "Student ".$student->id." ".$student->first." ".$student->last." unlinked from their NSDA account $was_nsda. ".$ARGS{"message"},
-	});
+	);
 
 	$student->nsda(0);
 	$student->update();

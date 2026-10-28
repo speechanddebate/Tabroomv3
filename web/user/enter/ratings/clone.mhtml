@@ -62,7 +62,7 @@
 
 	my @results;
 
-	foreach my $target (@targets) {
+	foreach my $target (@{$targets}) {
 		my $find_sth = $dbh->prepare("delete from rating where entry = ?");
 		$find_sth->execute($target->{id});
 	}
@@ -71,7 +71,7 @@
 
 	foreach my $rating (@ratings) {
 
-		foreach my $target (@targets) {
+		foreach my $target (@{$targets}) {
 
 			$count++;
 
@@ -87,7 +87,7 @@
 
 	my $msg;
 
-	foreach my $target (@targets) {
+	foreach my $target (@{$targets}) {
 		$msg .= "$style Cloned $count Ratings from ".$source->name." to ".$target->name;
 	}
 
