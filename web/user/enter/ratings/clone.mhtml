@@ -25,7 +25,7 @@
 	}
 
 	my $sth = $dbh->prepare("
-		select entry.id
+		select entry.id, entry.name, entry.code
 			from entry, event
 		where entry.school     = ?
 
@@ -90,7 +90,7 @@
 	my $msg;
 
 	foreach my $target (@{$targets}) {
-		$msg .= "$style Cloned $count Ratings from ".$source->name." to ".$target->name;
+		$msg .= "$style Cloned $count Ratings from ".$source->code." to ".$target->{code};
 	}
 
 	my $type = $category->setting("prefs");
