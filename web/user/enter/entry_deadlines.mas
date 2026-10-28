@@ -25,10 +25,10 @@
 
 			my $weekend = Tab::Weekend->retrieve($weekend_id);
 
-			$deadline{add}     = $weekend->deadline || $tourn->reg_end;
-			$deadline{freeze}  = $weekend->freeze_deadline || $deadline{drop};
-			$deadline{drop}    = $weekend->drop_deadline || $deadline{add};
-			$deadline{fine}    = $weekend->fine_deadline || $deadline{fine};
+			$deadline{add}    = $weekend->reg_end || $deadline{add};
+			$deadline{freeze} = $weekend->freeze_deadline || $deadline{drop};
+			$deadline{drop}   = $weekend->drop_deadline || $deadline{add};
+			$deadline{fine}   = $weekend->fine_deadline || $deadline{fine};
 
 			$deadline{script}  = $tourn_settings->{script_deadline} || $deadline{drop};
 			$deadline{release} = $tourn_settings->{release_deadline} || $deadline{drop};
