@@ -85,7 +85,6 @@
 		}
 
 		if ($cleaned) {
-			Tab::ChangeLog->create({
 			$m->comp('/funclib/log.mas',
 				person      => $person,
 				round       => $round,

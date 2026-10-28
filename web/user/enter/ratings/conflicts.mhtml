@@ -82,26 +82,29 @@
 		%conflicts_by_id = map {$_->judge->id => 1} @school_conflicts;
 	}
 
-	my @judges = $m->comp("judges.mas", category => $category);
+	my $from = " judge ";
+	my $selector = " where judge.category = ? and judge.school != ".int($school->id);
+	my $item = $category->id;
 
-	@judges = sort {
-		$school_conflicts_by_id{$b->id} <=> $school_conflicts_by_id{$a->id}
-		|| $conflicts_by_id{$b->id} <=> $conflicts_by_id{$a->id}
-		|| $a->last cmp $b->last
-	} @judges;
+	my $jpool_id = $category->setting("pref_jpool");
 
-	my $switch;
-	my %neutrals;
-
-	if ($category->setting("neutrals")) {
-		%neutrals =
-			map {$_->judge->id => 1}
-			$m->comp(
-				"/funclib/category_judge_settings.mas",
-				category => $category,
-				tag      => "neutral"
-			);
+	if ($jpool_id) {
+		$item     = $jpool_id;
+		$from     = " judge, jpool_judge jpj ";
+		$selector =  " where jpj.jpool = ? and jpj.judge = judge.id and judge.school != ".int($school->id);
 	}
+
+	my $sth = $dbh->prepare("
+		select
+			judge.id, judge.first, judge.last,
+			(select school.name from school where judge.school = school.id) as school
+		from $from
+		$selector
+		order by school, judge.last
+	");
+
+	$sth->execute($item);
+	my $judges = $sth->fetchall_hash();
 
 </%init>
 
@@ -201,11 +204,7 @@
 					</th>
 
 					<th>
-						School
-					</th>
-
-					<th>
-						State
+						Judging For
 					</th>
 
 					<th>
@@ -219,48 +218,36 @@
 			<tbody>
 <%perl>
 
-			foreach my $judge (@judges) {
-
-				next if $judge->school
-					&& $judge->school->id == $school->id
-					&& (not defined $neutrals{$judge->id});
-
+			foreach my $judge (sort {
+					$school_conflicts_by_id{$b->{id}} <=> $school_conflicts_by_id{$a->{id}}
+					|| $conflicts_by_id{$b->{id}} <=> $conflicts_by_id{$a->{id}}
+				} @{$judges}
+			) {
 </%perl>
 				<tr>
-
 					<td>
-						<% $judge->first %>
-					</td>
-
-					<td>
-						<%$judge->last %>
+						<% $judge->{first} %>
 					</td>
 
 					<td>
-%						if ($judge->school > 0 ) {
-							<% $judge->school->short_name %>
-%						} else {
-							Unaffiliated
-%						}
-
+						<% $judge->{last} %>
 					</td>
 
-					<td class="centeralign">
-%						if ($judge->school > 0 ) {
-							<% $judge->school->chapter->state %>
-%						}
+					<td>
+						<% $judge->{school} || "Unaffiliated" %>
 					</td>
+
 
 					<td class="padless centeralign">
 
-%						if ($entry && $school_conflicts_by_id{$judge->id}) {
+%						if ($entry && $school_conflicts_by_id{$judge->{id}}) {
 							<span class="semibold redtext">
 								Whole School Conflict
 							</a>
 
 %						} elsif ($read_only) {
 
-%							if ($conflicts_by_id{$judge->id}) {
+%							if ($conflicts_by_id{$judge->{id}}) {
 								<span style="buttonwhite redtext full">
 									Conflict
 								</span>
@@ -272,17 +259,17 @@
 
 %						} else {
 
-							<span class="hidden"><% $conflicts_by_id{$judge->id} %></span>
+							<span class="hidden"><% $conflicts_by_id{$judge->{id}} %></span>
 								<label class="switch">
 									<input
 										type        = "checkbox"
 										value       = "1"
-										id          = "<% $judge->id %>_conflict"
+										id          = "<% $judge->{id} %>_conflict"
 										entry_id    = "<% $entry_id ? $entry_id : "" %>"
 										school_id   = "<% $school ? $school->id : "" %>"
-										judge_id    = "<% $judge->id %>"
+										judge_id    = "<% $judge->{id} %>"
 										onChange    = "postSwitch( this, 'conflict_switch.mhtml');"
-										<% $conflicts_by_id{$judge->id} ? 'checked="checked"' : "" %>
+										<% $conflicts_by_id{$judge->{id}} ? 'checked="checked"' : "" %>
 									>
 									<div class="slider onred offgreen"></div>
 								</label>
