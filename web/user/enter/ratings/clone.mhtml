@@ -41,7 +41,9 @@
 			)
 	");
 
-	$sth->execute($source->school->id, $source->category->id);
+	my $category = $source->event->category;
+
+	$sth->execute($source->school->id, $category->id);
 	my $targets = $sth->fetchall_hash();
 
 	unless ($targets && scalar @{$targets}) {
@@ -91,7 +93,7 @@
 		$msg .= "$style Cloned $count Ratings from ".$source->name." to ".$target->name;
 	}
 
-	my $type = $source->event->category->setting("prefs");
+	my $type = $category->setting("prefs");
 
 	$type = "tiered" if $type eq "tiered_round";
 	$type = "tiered" if $type eq "caps";
