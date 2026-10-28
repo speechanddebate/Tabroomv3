@@ -20,6 +20,7 @@
 		$category = $event->category;
 	}
 
+	my $tz = $tourn->tz || "UTC";
 
 	my %category_settings = $category->all_settings();
 	if ($category_settings{"strike_end"}) {
