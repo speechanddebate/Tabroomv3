@@ -38,7 +38,7 @@
 
 	my %event_settings = $event->all_settings() if $event;
 
-	my $webpages = Tab::Webpage->search(
+	my $webpage = Tab::Webpage->search(
 		tourn   => $tourn_id,
 		special => "events"
 	)->first;

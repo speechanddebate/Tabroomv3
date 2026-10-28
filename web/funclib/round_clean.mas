@@ -86,11 +86,13 @@
 
 		if ($cleaned) {
 			Tab::ChangeLog->create({
+			$m->comp('/funclib/log.mas',
 				person      => $person,
 				round       => $round,
 				event       => $round->event,
-				description => "Cleared out phantom rounds and panels"
-			});
+				description => "Cleared out phantom rounds and panels",
+				tag         => "tabbing"
+			);
 		}
 	}
 

@@ -63,6 +63,9 @@
 			$sth->execute($person->id);
 		}
 
+		$sth = $dbh->prepare("update message set sender = null where sender = ?");
+		$sth->execute($person->id);
+
 		$sth = $dbh->prepare("delete from follower where follower = ? ");
 		$sth->execute($person->id);
 
