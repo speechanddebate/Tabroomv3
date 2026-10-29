@@ -158,8 +158,9 @@
 			} elsif ($category_settings->{"judge_per"} > 0) {
 
 				my $adjustment = 1;
+
 				if ($event_settings->{$event_id}{"adjust_judges_owed"}) {
-					$adjustment = $event_settings->{$event_id}{"adjust_judges_owed"};
+					$adjustment = ($event_settings->{$event_id}{"adjust_judges_owed"} / 100);
 				}
 
 				$judge_burden += ($adjustment) * Math::Round::nearest(1, 100* ($entries_in_event{$event_id} / $category_settings->{"judge_per"}));
