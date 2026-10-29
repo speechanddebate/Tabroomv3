@@ -700,7 +700,7 @@
 
 							<input
 								type  = "hidden"
-								name  = "source_id"
+								name  = "entry_id"
 								value = "<% $entry->id %>"
 							>
 

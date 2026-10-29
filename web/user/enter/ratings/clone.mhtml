@@ -3,13 +3,13 @@
 	$now
 	$session
 	$person
-	$source_id => undef
+	$entry_id => undef
 	$target_id  => undef
 	$style     => undef
 </%args>
 <%init>
 
-	my $source = Tab::Entry->retrieve($source_id);
+	my $source = Tab::Entry->retrieve($entry_id);
 
 	unless ($source) {
 		$m->print('<div class="blankfull warning centeralign"><h4>');
