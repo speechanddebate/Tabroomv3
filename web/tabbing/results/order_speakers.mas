@@ -146,7 +146,9 @@
 	while (
 		my ($id,
 			$student, $first, $last, $novice,
-			$entry, $code, $dq, $type, $roundname, $round, $tag, $value,
+			$entry, $code, $dq,
+			$type, $roundname, $round,
+			$tag, $value,
 			$event, $panel, $speech,
 			$judge, $forfeit, $tv, $letter,
 			$school, $school_name, $formal, $chair, $bye, $pbye
@@ -192,7 +194,12 @@
 		$student_data{"novice"}{$student}      = $novice;
 		$student_data{"dq"}{$student}          = $dq;
 
-		if ($tag eq "point" && $student && $value ) {
+		if (
+			$tag eq "point"
+			&& $student
+			&& $value
+			&& $round_data{"type"}{$round} eq "prelim"
+		) {
 			$speech_counts{$student}{$round}++;
 		}
 

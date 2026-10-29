@@ -10,7 +10,6 @@
 <%init>
 
 	my $msg;
-	my $circuit;
 
 	my @settings = (
 		"url",
