@@ -153,6 +153,7 @@
 				sha      => $ARGS{sha},
 				salt     => $ARGS{salt},
 				return   => "yaskween",
+				now      => $now,
 			);
 
 			if ($ARGS{"return"} eq "signups") {
