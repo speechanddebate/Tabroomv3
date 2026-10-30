@@ -188,33 +188,36 @@
 
 		my $tz = $tourn->tz;
 		my $original = $round->start_time();
+
 		$original->set_time_zone("UTC");
 		$original->set_time_zone($tz);
 
 		my $start_dt = eval {
-			return Tab::dtme($property_value, $tz);
+			return Tab::dtme($property_value, $original->hms(":"), $tz);
 		};
 
 		unless ($start_dt) {
 			$start_dt = $round->timeslot->start;
 		}
 
-		$start_dt->set(hour => $original->hour);
+		$start_dt->set(hour   => $original->hour);
 		$start_dt->set(minute => $original->minute);
 		$start_dt->set(second => $original->second);
+
 		$round->start_time($start_dt);
 		$round->update();
+
 		$message = "Round start date changed to ".$property_value;
 
 	} elsif ($property_name eq "start_time") {
 
-		my $timeslot = $round->timeslot;
+		my $timeslot   = $round->timeslot;
 		my $start_date = $timeslot->start;
 		my $tz = $tourn->tz;
 
 		if ($start_date) {
-			$start_date->set_time_zone("UTC");
 			$start_date->set_time_zone($tz);
+			$start_date->set_time_zone("UTC");
 		}
 
 		my $start_dt;
@@ -233,10 +236,19 @@
 
 		if ($start_dt) {
 			$round->start_time($start_dt);
-			$datestring = $m->comp("/funclib/showtime.mas", dt => $start_dt, return => 1);
+
+			$datestring = $m->comp("/funclib/showtime.mas",
+				dt     => $start_dt,
+				return => 1
+			);
+
 		} elsif ($start_date) {
 			$round->start_time($start_date);
-			$datestring = $m->comp("/funclib/showtime.mas", dt => $start_date, return => 1);
+
+			$datestring = $m->comp("/funclib/showtime.mas",
+				dt     => $start_date,
+				return => 1
+			);
 		}
 
 		$round->update();
