@@ -41,6 +41,7 @@
 		where perm.person = ?
 	");
 
+
 	#I hate everything especially online debate
 	my $now = DateTime->now();
 	$now->subtract(days => 5);
@@ -116,7 +117,6 @@
 				} else {
 					$region_name = "Diocese of ".$region_name;
 				}
-
 				$menus{"region"}{$region_id}{"diocese"}++;
 			}
 
@@ -138,20 +138,38 @@
 
 	my $judge_sth = $dbh->prepare("
 		select
-			judge.id, chapter.id chapter_id, chapter.name chapter_name
-		from judge, school, chapter, tourn
-		where judge.person = ?
-			and judge.school = school.id
-			and school.chapter = chapter.id
-			and school.tourn = tourn.id
-			and tourn.end > NOW()
+			cj.id, chapter.id chapter_id, chapter.name chapter_name
+		from chapter, chapter_judge cj
+		where 1=1
+			and cj.person = ?
+			and cj.chapter = chapter.id
+			and (
+				( 	cj.created_at > (NOW() - INTERVAL 1 YEAR)
+					AND NOT EXISTS (
+						select judge.id
+						from judge, category, tourn
+						where judge.chapter_judge = cj.id
+							and judge.category = category.id
+							and category.tourn = tourn.id
+					)
+				) OR (
+					select judge.id
+					from judge, category, tourn
+					where judge.chapter_judge = cj.id
+						and judge.category = category.id
+						and category.tourn = tourn.id
+						and (
+							(tourn.end > (NOW() - INTERVAL 2 YEAR))
+						)
+				)
+			)
 	");
 
 	$judge_sth->execute($person->id);
-
 	my $judges = $judge_sth->fetchall_hash();
 
 	foreach my $sref (@{$judges}) {
+		$m->flush_buffer();
 		$menus{"rchapter"}{$sref->{chapter_id}}{"sort"} = $sref->{chapter_id};
 		$menus{"rchapter"}{$sref->{chapter_id}}{"name"} = $sref->{chapter_name};
 	}
@@ -462,14 +480,14 @@
 		<div class="sidenote">
 
 			<h4>NSDA Campus Test Rooms</h4>
-
-%			foreach my $cid (
-%				sort {
-%					 ($a == $ARGS{chapter} ? 0 : 1) <=> ($b == $ARGS{chapter} ? 0 : 1)
-%					|| $menus{rchapter}{$a}{"sort"} cmp $menus{rchapter}{$b}{"sort"}
-%				} keys %{$menus{rchapter}}
-%			) {
-
+<%perl>
+			foreach my $cid (
+				sort {
+					 ($a == $ARGS{chapter} ? 0 : 1) <=> ($b == $ARGS{chapter} ? 0 : 1)
+					|| $menus{rchapter}{$a}{"sort"} cmp $menus{rchapter}{$b}{"sort"}
+				} keys %{$menus{rchapter}}
+			) {
+</%perl>
 				<div
 					class = "row flexrow"
 					title = "This online room is on the NSDA Campus server.  It will disconnect you after 2 mins."
@@ -483,7 +501,10 @@
 						</div>
 					</span>
 
-					<span class="padmore" title="<% $menus{rchapter}{$cid}{name} %>">
+					<span
+						class = "padmore"
+						title = "<% $menus{rchapter}{$cid}{name} %>"
+					>
 						<& "/funclib/online_room.mas",
 							person      => $person,
 							test        => "private",
