@@ -151,6 +151,7 @@
 						where judge.chapter_judge = cj.id
 							and judge.category = category.id
 							and category.tourn = tourn.id
+						limit 1
 					)
 				) OR (
 					select judge.id
@@ -161,6 +162,7 @@
 						and (
 							(tourn.end > (NOW() - INTERVAL 2 YEAR))
 						)
+					limit 1
 				)
 			)
 	");
