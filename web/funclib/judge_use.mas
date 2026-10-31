@@ -378,7 +378,7 @@
 	foreach my $round (@{$rounds}) {
 
 		my $flights = 1;
-		$flights = $round->{flighted} if $debates_per;
+		$flights = $future->{flighted} || 1 if $debates_per;
 
 		next unless $round->{name} > $current_name;
 
@@ -405,7 +405,7 @@
 			next unless $future->{timeslot};
 
 			my $flights = 1;
-			$flights = $future->{flighted} if $debates_per;
+			$flights = $future->{flighted} || 1 if $debates_per;
 
 			my $future_strikes_sth = $dbh->prepare("
 				select distinct strike.id, strike.judge
@@ -423,7 +423,7 @@
 			my $strikes = $future_strikes_sth->fetchall_hash();
 
 			foreach my $strike (@{$strikes}) {
-				if ($judge_hash{$strike->{judge}}{"future_possible"} > 1) {
+				if ($judge_hash{$strike->{judge}}{"future_possible"} > 0) {
 					$judge_hash{$strike->{judge}}{"future_possible"} -= $flights;
 				}
 			}
