@@ -21,7 +21,7 @@
 	my $past_prefs_sth = $dbh->prepare("
 		select rating.*,
 			entry.name as entry_name,
-			chapter.name as chapter_name
+			chapter.name as chapter_name,
 			(select rating_tier.name
 				from rating_tier
 				where rating_tier.id = rating.rating_tier
