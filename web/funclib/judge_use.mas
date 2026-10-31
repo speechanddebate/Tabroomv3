@@ -378,7 +378,7 @@
 	foreach my $round (@{$rounds}) {
 
 		my $flights = 1;
-		$flights = $future->{flighted} || 1 if $debates_per;
+		$flights = $round->{flighted} || 1 if $debates_per;
 
 		next unless $round->{name} > $current_name;
 
