@@ -20,52 +20,61 @@
 			ballot.chair,
 			score.id, score.tag, score.value, score.position,
 			judge.id, judge.code, judge.first, judge.last,
-			aff_label.value, neg_label.value,
-			judge_publish_results.value,
-			motion.value_text, motion_publish.value,
-			show_chair.value,
-			point_increments.value,
-			use_regions.value,
+
+			( select aff_label.value
+				from event_setting aff_label
+				where aff_label.event = event.id
+				and aff_label.tag = 'aff_label'
+			) aff_label,
+
+			( select neg_label.value
+				from event_setting neg_label
+				where neg_label.event = event.id
+				and neg_label.tag = 'neg_label'
+			) neg_label,
+
+			( select judge_publish_results.value
+				from event_setting judge_publish_results
+				where judge_publish_results.event = event.id
+				and judge_publish_results.tag = 'judge_publish_results'
+			) as judge_publish_results,
+
+			( select motion.value
+				from round_setting motion
+				where motion.round = round.id
+				and motion.tag = 'motion'
+			) motion,
+
+			( select motion_publish.value
+				from round_setting motion_publish
+				where motion_publish.round = round.id
+				and motion_publish.tag = 'motion_publish'
+			) motion_publish,
+
+			( select show_chair.value
+				from round_setting show_chair
+				where show_chair.round = round.id
+				and show_chair.tag = 'show_chair'
+			) show_chair,
+
+			( select point_increments.value
+				from event_setting point_increments
+				where point_increments.event = event.id
+				and point_increments.tag = 'point_increments'
+			) point_increments,
+
+			( select use_regions.value
+				from tourn_setting use_regions
+				where use_regions.tourn = event.tourn
+				and use_regions.tag = 'regions'
+			) use_regions,
+
 			event.tourn
 
 		from (round, panel, entry, ballot, event)
 
-			left join tourn_setting use_regions
-				on use_regions.tourn = event.tourn
-				and use_regions.tag = 'regions'
-
-			left join event_setting judge_publish_results
-				on judge_publish_results.event = event.id
-				and judge_publish_results.tag = 'judge_publish_results'
-
-			left join event_setting point_increments
-				on point_increments.event = event.id
-				and point_increments.tag = 'point_increments'
-
-			left join event_setting aff_label
-				on aff_label.event = event.id
-				and aff_label.tag = 'aff_label'
-
-			left join event_setting neg_label
-				on neg_label.event = event.id
-				and neg_label.tag = 'neg_label'
-
-			left join round_setting motion
-				on motion.round = round.id
-				and motion.tag = 'motion'
-
-			left join round_setting show_chair
-				on show_chair.round = round.id
-				and show_chair.tag = 'show_chair'
-
-			left join round_setting motion_publish
-				on motion_publish.round = round.id
-				and motion_publish.tag = 'motion_publish'
-
 			left join room on panel.room = room.id
-
 			left join judge on ballot.judge = judge.id
-
 			left join score on ballot.id = score.ballot
 			left join student on score.student = student.id
 
@@ -84,7 +93,7 @@
 				where s2.tag IN ('winloss', 'point', 'rank')
 				and s2.ballot = ballot.id
 			)
-		order by panel.bracket, panel.bye, score.tag
+		order by panel.bracket, panel.bye, score.tag, panel.started
 	");
 
 	$sth->execute($round->id);

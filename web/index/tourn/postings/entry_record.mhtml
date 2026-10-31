@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$tourn    => undef
 	$entry_id => undef
 	$person   => undef
@@ -24,6 +25,7 @@
 	if ($r->hostname eq "www.tabroom.com.") {
 
 		if ($ARGS{"invalidate_silent"}) {
+
 			$m->cache_self(
 				key        => $key,
 				expire_if  => sub { return 1 }
@@ -32,7 +34,9 @@
 			$m->clear_buffer();
 			$m->print("Cache cleared for $key");
 			$m->abort();
+
 		} else {
+
 			return if $m->cache_self(
 				key        => $key,
 				expires_in => '5m',
@@ -41,7 +45,6 @@
 		}
 	}
 
-	my $dbh = Tab::DBI->db_Main();
 	my $sth = $dbh->prepare("
 		select
 			entry.id, entry.code, entry.name,
@@ -231,8 +234,8 @@
 				round.id, round.name, round.label, round.type,
 
 				round.published,
-					round.post_primary,
-					round.post_secondary,
+				round.post_primary,
+				round.post_secondary,
 
 				panel.id panel_id, panel.letter panel_letter, panel.bye panel_bye,
 				ballot.id ballot_id, ballot.side side, ballot.speakerorder speakerorder,
