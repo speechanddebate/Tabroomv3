@@ -7,6 +7,11 @@
 <%init>
 
 	my $round = Tab::Round->retrieve($round_id) if $round_id;
+
+	unless ($round) {
+		$m->comp("/funclib/abort.mas", message => "No round found");
+	}
+
 	my $event = $round->event if $round;
 
 	$event = Tab::Event->retrieve($event_id) unless $event;
