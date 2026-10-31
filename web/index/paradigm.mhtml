@@ -423,18 +423,17 @@
 
 	<div class="menu">
 
-%		if ($person && $judge_person_id) {
+%		if ($person->id && $judge_person_id) {
 			<div class="sidenote">
 				<a
 					href  = "/user/tourn/show_past_prefs.mhtml?judge_person_id=<% $judge_person_id %>"
 					class = "blue full"
-				>
-					View Past Ratings
-				</a>
+				>View Past Ratings</a>
 
-				<a href="#judging" class="blue full">
-					View Judging Record
-				</a>
+				<a
+					href  ="#judging"
+					class ="blue full"
+				>View Judging Record</a>
 			</div>
 %		}
 

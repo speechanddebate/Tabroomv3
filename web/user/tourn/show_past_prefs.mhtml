@@ -1,4 +1,6 @@
 <%args>
+	$dbh
+	$now
 	$person
 	$tourn
 	$judge_person_id => undef
@@ -10,61 +12,36 @@
 	}
 
 	#find the chapter for this person at this tourney
-	$judge_person_id = int($judge_person_id);
-
-	my $chapter;
-
-	#first see if this is an admin account
-	my @admin = Tab::Permission->search(
-		person => $person->id,
-		tag    => "chapter"
-	);
-
-	push @admin, Tab::Permission->search(
-		person => $person->id,
-		tag    => "prefs"
-	);
-
-	foreach my $admin (@admin) {
-		$chapter = $admin->chapter if $admin->chapter;
-	}
-
-	unless ($chapter) {
-		$m->print("I could not find a school corresponding to your account.  Are you logged in?");
-		$m->abort();
-	}
-
-	Tab::Rating->columns(TEMP => qw/entry_name/);
-	Tab::Rating->set_sql(pull_ratings => "
-		select rating.*, entry.name as entry_name
-			from rating, entry, school, judge
-		where rating.entry = entry.id
-			and entry.school   = school.id
-			and school.chapter = ?
-			and rating.judge   = judge.id
-			and judge.person   = ?
-			and (rating.ordinal > 0 OR rating.rating_tier > 0)
-	");
-
-	my @ratings = Tab::Rating->search_pull_ratings($chapter, $judge_person_id);
-
-	Tab::Rating->columns(TEMP => qw/entry_name/);
-	Tab::Rating->columns(TEMP => qw/rating_tier_name/);
-
-	Tab::Rating->set_sql(pull_tiered_ratings => "
-		select rating.*, entry.name as entry_name, rating_tier.name as rating_tier_name
-			from rating, entry, school, judge, rating_tier
-		where rating.entry = entry.id
-			and entry.school   = school.id
-			and school.chapter = ?
-			and rating.judge   = judge.id
-			and judge.person   = ?
-			and rating_tier.id = rating.rating_tier
-	");
-
-	my @tiered_ratings = Tab::Rating->search_pull_tiered_ratings($chapter, $judge_person_id);
-
 	my $judge_person = Tab::Person->retrieve($judge_person_id);
+
+	unless ($judge_person) {
+		$m->comp("/funclib/abort.mas", message => "No valid judge found");
+	}
+
+	my $past_prefs_sth = $dbh->prepare("
+		select rating.*,
+			entry.name as entry_name,
+			chapter.name as chapter_name
+			(select rating_tier.name
+				from rating_tier
+				where rating_tier.id = rating.rating_tier
+			) as rating_tier,
+			tourn.name tourn_name
+		from rating, entry, school, judge, chapter, permission, tourn
+		where rating.entry = entry.id
+			and entry.school   = school.id
+			and rating.judge   = judge.id
+			and judge.person   = ?
+			and school.chapter = chapter.id
+			and school.tourn = tourn.id
+			and chapter.id = permission.chapter
+			and permission.person = ?
+			and permission.tag IN ('prefs', 'chapter')
+			and tourn.end < NOW()
+	");
+
+	$past_prefs_sth->execute($judge_person->id, $person->id);
+	my $past_prefs = $past_prefs_sth->fetchall_hash();
 
 </%init>
 
@@ -102,47 +79,23 @@
 
 			<tbody>
 
-%			foreach my $rating (@ratings) {
+%			foreach my $rating (@{$past_prefs}) {
 
-				<tr 'class="ligrnrow"' : $switch++ % 2 >
-
+				<tr class="row">
 					<td class="last smallish padless">
-						<% $rating->entry->event->tourn->name %>
+						<% $rating->{tourn_name} %>
 					</td>
 					<td class="last smallish padless">
-						<% $rating->entry_name %>
+						<% $rating->{entry_name} %>
 					</td>
 					<td class="last smallish padless">
-						<% $rating->rating_tier %>
+						<% $rating->{rating_tier} %>
 					</td>
 					<td class="last smallish padless">
-						<% $rating->ordinal %>
+						<% $rating->{ordinal} %>
 					</td>
 					<td class="last smallish padless">
-						<% $rating->percentile %>
-					</td>
-				</tr>
-
-%			}
-
-%			foreach my $rating (@tiered_ratings) {
-
-				<tr 'class="ligrnrow"' : $switch++ % 2 >
-
-					<td class="last smallish padless">
-						<% $rating->entry->event->tourn->name %>
-					</td>
-					<td class="last smallish padless">
-						<% $rating->entry_name %>
-					</td>
-					<td class="last smallish padless">
-						<% $rating->rating_tier_name %>
-					</td>
-					<td class="last smallish padless">
-						<% $rating->ordinal %>
-					</td>
-					<td class="last smallish padless">
-						<% $rating->percentile %>
+						<% $rating->{percentile} %>
 					</td>
 				</tr>
 
