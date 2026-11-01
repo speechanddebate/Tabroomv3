@@ -1709,14 +1709,14 @@
 </%perl>
 											<span
 												id            = "done_<% $panel_id %>_<% $person_id %>"
-												class         = "centeralign full done padless marno judgefixedheight"
+												class         = "centeralign full done padless marno judgefixedheight flex"
 												panel         = "<% $panel_id %>"
 												bye           = "<% $panels{$panel_id}{"bye"} ? 1 : 0 %>"
 												property_name = "<% $not_done ? "0" : "1" %>"
 											>
 												<span
 													id="<% $panel_id %>_<% $person_id %>_done"
-													class="full centeralign fa fa-sm <% $not_done ? "" : "fa-certificate" %> greentext doneicon"
+													class="full centeralign fa fa-sm <% $not_done ? "" : "fa-certificate" %> greentext doneicon nospace"
 													title="<% $not_done ? "" : "Done" %>"
 												>&nbsp;</span>
 											</span>
