@@ -13,6 +13,7 @@
 <%init>
 
 	use Scalar::Util "reftype";
+	use Encode qw( encode );
 
 	# I hate this.
 	our $no_return;
@@ -168,7 +169,8 @@
 	my %filter;
 
 	my $jdata = eval {
-		$json->pretty->decode($contents);
+		my $utf8_contents = encode("UTF-8", $contents);
+		return $json->decode($utf8_contents);
 	};
 
 	unless ($jdata) {
@@ -3095,7 +3097,7 @@
 						if ($delta) {
 							push @updates, $ojudge->{id};
 							$update_judge->execute(@updates);
-							&outlog("T2 Updating judge ".$ojudge->{id}." name ".$ojudge->{last});
+							&outlog("<br /> Updating judge ".$ojudge->{id}." name ".$ojudge->{last});
 						}
 
 						if ($judge->{person} ne $ojudge->{person}) {
