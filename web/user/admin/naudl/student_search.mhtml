@@ -62,60 +62,60 @@
 
 	<div class="main">
 
-	<div class='full flexrow'>
-		<span class="half">
-			<h4>Student Search</h4>
-		</span>
+		<div class='full flexrow'>
+			<span class="half nospace">
+				<h4>Student Search</h4>
+			</span>
 
-		<span class="half rightalign">
-			<span class="third">
-				<% $student_id %>
-			</span>
-			<span class="third">
-				<% $student_first %>
-			</span>
-			<span class="third">
-				<% $student_last %>
-			</span>
-		</span>
-	</div>
-
-	<form action="student_search.mhtml" method="post">
-		<div class='full flexrow yellowrow'>
-			<span class="ninetenths flexrow">
-				<span class="sixth semibold padleft">
-					Student Lookup:
-				</span>
-				<span class="sixth">
-					<input
-						type        = "number"
-						class       = "sizeme"
-						min  		= "0"
-						max         = "9999999999999"
-						name        = "student_id"
-						placeholder = "<% $student_id || "TRID #" %>"
-					>
+			<span class="half rightalign">
+				<span class="third">
+					<% $student_id %>
 				</span>
 				<span class="third">
-					<input
-						type        = "text"
-						name        = "student_first"
-						placeholder = "<% $student_first || "First Name" %>"
-					>
+					<% $student_first %>
 				</span>
 				<span class="third">
-					<input
-						type        = "text"
-						name        = "student_last"
-						placeholder = "<% $student_last || "Last Name" %>"
-					>
+					<% $student_last %>
 				</span>
-			</span>
-			<span class="tenth centeralign padright">
-				<input type="submit" value="Search">
 			</span>
 		</div>
-	</form>
+
+		<form action="student_search.mhtml" method="post">
+			<div class='full flexrow ltyellow'>
+				<span class="ninetenths flexrow">
+					<span class="sixth semibold padleft">
+						Search By
+					</span>
+					<span class="sixth padright">
+						<input
+							type        = "number"
+							class       = "sizeme"
+							min  		= "0"
+							max         = "9999999999999"
+							name        = "student_id"
+							placeholder = "<% $student_id || "TRID #" %>"
+						>
+					</span>
+					<span class="third padright">
+						<input
+							type        = "text"
+							name        = "student_first"
+							placeholder = "<% $student_first || "First Name" %>"
+						>
+					</span>
+					<span class="third padright">
+						<input
+							type        = "text"
+							name        = "student_last"
+							placeholder = "<% $student_last || "Last Name" %>"
+						>
+					</span>
+				</span>
+				<span class="tenth centeralign padright padvert">
+					<input type="submit" value="Search">
+				</span>
+			</div>
+		</form>
 
 %	if ($refs) {
 

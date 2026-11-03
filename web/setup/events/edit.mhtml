@@ -266,10 +266,10 @@
 
 							<span class="quarter rightalign rightalign">
 								<& "/funclib/bool_switch.mas",
-									tag     => "usa_wsdc",
-									value   => $event_settings->{"usa_wsdc"},
-									event_id  => $event,
-									smaller => 1,
+									tag      => "usa_wsdc",
+									value    => $event_settings->{"usa_wsdc"},
+									event_id => $event,
+									smaller  => 1,
 								&>
 							</span>
 						</div>

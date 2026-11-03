@@ -7330,7 +7330,7 @@ h6.padsetting {
 .flexrow label.switch {
 	flex        : none;
 	padding-top : 4px;
-	width       : 50px;
+	width       : 48px;
 	height      : 24px;
 }
 
@@ -7390,6 +7390,8 @@ h6.padsetting {
 	content            : "N";
 	color              : var(--medium-gray);
 	vertical-align     : bottom;
+	display            : flex;
+	justify-content    : center;
 }
 
 .slider.invert {

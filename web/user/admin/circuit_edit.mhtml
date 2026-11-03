@@ -52,15 +52,14 @@
 		<div class='full flexrow top nospace'>
 
 		<span class="pagehalf">
-
 			<h5>Name & Information</h5>
 
-			<div class="row flexrow">
+			<div class="row flexrow fixedheight">
 				<span class="fifth padleft">
 					Full Name
 				</span>
 
-				<span class="fourfifths padright">
+				<span class="fourfifths padright padvertless">
 					<input
 						type  = "text"
 						name  = "name"
@@ -68,12 +67,12 @@
 				</span>
 			</div>
 
-			<div class="row flexrow">
+			<div class="row flexrow fixedheight">
 				<span class="fifth padleft">
 					Abbreviation
 				</span>
 
-				<span class="fourfifths padright">
+				<span class="fourfifths padright padvertless">
 					<input
 						type  = "text"
 						name  = "abbr"
@@ -82,12 +81,12 @@
 				</span>
 			</div>
 
-			<div class="row flexrow">
+			<div class="row flexrow fixedheight">
 				<span class="fifth padleft">
 					State/Prov
 				</span>
 
-				<span class="fourfifths padright">
+				<span class="fourfifths padright padvertless">
 					<select name="state">
 						<option value="" >None</option>
 						<& /funclib/state_select.mas, state => $circuit ? $circuit->state : "" &>
@@ -95,12 +94,12 @@
 				</span>
 			</div>
 
-			<div class="row flexrow">
+			<div class="row flexrow fixedheight">
 				<span class="fifth padleft">
 					Country
 				</span>
 
-				<span class="fourfifths padright">
+				<span class="fourfifths padvertless padright">
 					<select name="country">
 						<& "/funclib/country_select.mas",
 							country => $circuit ? $circuit->country
@@ -109,12 +108,12 @@
 				</span>
 			</div>
 
-			<div class="row flexrow">
+			<div class="row flexrow fixedheight">
 				<span class="fifth padleft">
 					Website
 				</span>
 
-				<span class="fourfifths padright">
+				<span class="fourfifths padvertless padright">
 					<input
 						type  = "text"
 						name  = "url"
@@ -123,12 +122,12 @@
 				</span>
 			</div>
 
-			<div class="row flexrow">
+			<div class="row flexrow fixedheight">
 				<span class="fifth padleft">
 					Timezone
 				</span>
 
-				<span class="fourfifths padright">
+				<span class="fourfifths padvertless padright">
 					<select name="timezone">
 %						if ($circuit) {
 							<& /funclib/timezones.mas, tz => $circuit->tz &>
@@ -141,7 +140,7 @@
 
 			<div
 				id    = "naudl_code"
-				class = "row flexrow"
+				class = "row flexrow fixedheight"
 				title = "Supplied by NAUDL for Salesforce demographic tracking"
 			>
 				<span class="half padleft">
@@ -166,18 +165,19 @@
 
 			<label for="active">
 				<div
-					class = "row flexrow hover"
+					class = "row flexrow fixedheight hover"
 					title = "Enables the circuit to appear on listings &amp; the front page"
 				>
 					<span class="fourfifths padleft">
 						Active Circuit
 					</span>
-					<span class="centeralign fifth">
+					<span class="fifth centeralign">
 						<& "/funclib/bool_switch.mas",
 							target        => $circuit,
 							tag           => "active",
 							property_name => "active",
-							value         => $circuit->active
+							value         => $circuit->active,
+							smaller       => 1,
 						&>
 					</span>
 				</div>
@@ -186,18 +186,19 @@
 <%doc>
 			<label for="full_members">
 				<div
-					class = "row flexrow hover"
+					class = "row flexrow fixedheight hover"
 					title = "Enables features like sending mail to members only, etc"
 				>
 					<span class="fourfifths padleft">
 						Allow Full Memberships
 					</span>
-					<span class="centeralign fifth">
+					<span class="fifth centeralign">
 						<& "/funclib/bool_switch.mas",
 							target       => $circuit,
 							tag          => "full_members",
 							setting_name => "full_members",
-							value        => $circuit_settings{"full_members"}
+							value        => $circuit_settings{"full_members"},
+							smaller      => 1,
 						&>
 					</span>
 				</div>
@@ -205,18 +206,19 @@
 
 			<label for = "tourn_only" >
 				<div
-					class = "row flexrow hover"
+					class = "row flexrow fixedheight hover"
 					title = "Allow non-full members to register for tournaments"
 				>
 					<span class="fourfifths padleft">
 						Tournaments open to non-members
 					</span>
-					<span class="centeralign fifth">
+					<span class="fifth centeralign">
 						<& "/funclib/bool_switch.mas",
-							target        => $circuit,
-							tag           => "tourn_only",
+							target       => $circuit,
+							tag          => "tourn_only",
 							setting_name => "tourn_only",
-							value         => $circuit_settings{"tourn_only"}
+							value        => $circuit_settings{"tourn_only"},
+							smaller      => 1,
 						&>
 					</span>
 				</div>
@@ -225,18 +227,19 @@
 
 			<label for = "tourns_no_add">
 				<div
-					class = "row flexrow"
+					class = "row flexrow fixedheight"
 					title = "Only circuit admins can request to add tournaments"
 				>
 					<span class="fourfifths padleft">
 						Only circuit admins may add tournaments
 					</span>
-					<span class="centeralign fifth">
+					<span class="fifth centeralign">
 						<& "/funclib/bool_switch.mas",
 							target       => $circuit,
 							tag          => "tourns_no_add",
 							setting_name => "tourns_no_add",
-							value        => $circuit_settings{"tourns_no_add"}
+							value        => $circuit_settings{"tourns_no_add"},
+							smaller      => 1,
 						&>
 					</span>
 				</div>
@@ -244,15 +247,16 @@
 
 			<label for = "chapters_no_add">
 				<div
-					class = "row flexrow"
+					class = "row flexrow fixedheight"
 					title = "Only circuit admins can request to add tournaments"
 				>
 					<span class="fourfifths padleft">
 						Only circuit admins may add schools
 					</span>
-					<span class="centeralign fifth">
+					<span class="fifth centeralign">
 						<& "/funclib/bool_switch.mas",
 							target       => $circuit,
+							smaller      => 1,
 							tag          => "chapters_no_add",
 							setting_name => "chapters_no_add",
 							value        => $circuit_settings{"chapters_no_add"}
@@ -263,15 +267,16 @@
 
 			<label for = "regions" >
 				<div
-					class = "row flexrow"
+					class = "row flexrow fixedheight"
 					title = "Enables stable/permanent regions for your tournaments"
 				>
 					<span class="fourfifths padleft">
 						Use regions
 					</span>
-					<span class="centeralign fifth">
+					<span class="fifth centeralign">
 						<& "/funclib/bool_switch.mas",
 							target       => $circuit,
+							smaller      => 1,
 							tag          => "regions",
 							setting_name => "regions",
 							value        => $circuit_settings{"regions"}
@@ -284,15 +289,16 @@
 
 				<label for = "track_bids">
 					<div
-						class = "row flexrow hover"
+						class = "row flexrow fixedheight hover"
 						title = "Tracks running sweepstakes records as a seasonal bid/qual or cumulative award"
 					>
 						<span class="fourfifths padleft">
 							Track bids/quals
 						</span>
-						<span class="centeralign fifth">
+						<span class="fifth centeralign">
 							<& "/funclib/bool_switch.mas",
 								target       => $circuit,
+								smaller      => 1,
 								tag          => "track_bids",
 								setting_name => "track_bids",
 								value        => $circuit_settings{"track_bids"}
@@ -303,15 +309,16 @@
 
 				<label for = "nsda_categories">
 					<div
-						class = "row flexrow hover"
+						class = "row flexrow fixedheight hover"
 						title = "Automatically enabled if an NSDA member registers for your tournament"
 					>
 						<span class="fourfifths padleft">
 							Use NSDA Event Categories
 						</span>
-						<span class="centeralign fifth">
+						<span class="fifth centeralign">
 							<& "/funclib/bool_switch.mas",
 								target       => $circuit,
+								smaller      => 1,
 								tag          => "nsda_categories",
 								setting_name => "nsda_categories",
 								value        => $circuit_settings{"nsda_categories"}
@@ -322,15 +329,16 @@
 
 				<label for = "ncfl">
 					<div
-						class = "row flexrow hover"
+						class = "row flexrow fixedheight hover"
 						title = "Enables features specific to the NCFL.  NOT for a member diocese, only the NCFL itself."
 					>
 						<span class="fourfifths padleft">
 							NCFL (Diocese tracking, etc)
 						</span>
-						<span class="centeralign fifth">
+						<span class="fifth centeralign">
 							<& "/funclib/bool_switch.mas",
 								target       => $circuit,
+								smaller      => 1,
 								tag          => "ncfl",
 								setting_name => "ncfl",
 								value        => $circuit_settings{"ncfl"}
@@ -341,7 +349,7 @@
 
 				<label for = "demographics">
 					<div
-						class = "row flexrow hover"
+						class = "row flexrow fixedheight hover"
 						title = "Enables collection of demographic tracking for NAUDL member leagues"
 					>
 						<span class="fourfifths padleft">
@@ -350,6 +358,7 @@
 						<span class="fifth centeralign">
 							<& "/funclib/bool_switch.mas",
 								target       => $circuit,
+								smaller      => 1,
 								tag          => "demographics",
 								setting_name => "demographics",
 								value        => $circuit_settings{"demographics"}
@@ -360,16 +369,18 @@
 
 				<label for = "naudl">
 					<div
-						class = "row flexrow hover"
+						class = "row flexrow fixedheight hover"
 						title = "Enables features specific to the NAUDL.  NOT for a member diocese, only NAUDL itself."
 					>
 						<span class="fourfifths padleft">
 							NAUDL (Demo tracking, etc)
 						</span>
-						<span class="centeralign fifth">
+						<span class="fifth centeralign">
 							<& "/funclib/bool_switch.mas",
 								target       => $circuit,
+								smaller      => 1,
 								tag          => "naudl",
+								class        => "nospace",
 								setting_name => "naudl",
 								value        => $circuit_settings{"naudl"}
 							&>
@@ -393,13 +404,13 @@
 
 %			if ($circuit) {
 
-				<div class="martop">
+				<div class="martopmore">
 					<h5>Circuit Administrators</h5>
 				</div>
 
 %				foreach my $admin (sort {$a->last cmp $b->last} $circuit->admins) {
 
-					<div class="row flexrow" id="<% $admin %>">
+					<div class="row flexrow fixedheight" id="<% $admin %>">
 
 						<span class="twofifths semibold padleft">
 							<% $admin->first." ".$admin->last %>
