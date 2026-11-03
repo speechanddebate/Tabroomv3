@@ -29,7 +29,9 @@
 	my $dbh = Tab::DBI->db_Main();
 
 	my $sth = $dbh->prepare("
-		select school.id, school.name, school.state,
+		select school.id, school.name,
+			COALESCE(NULLIF(school.state, ''), chapter.state),
+			chapter.country,
 			contact_name.value,
 			contact_email.value,
 			contact_number.value,
@@ -38,6 +40,7 @@
 			second_contact_number.value
 
 		from school
+			left join chapter on chapter.id = school.chapter
 			left join school_setting contact_name on contact_name.school = school.id and contact_name.tag='contact_name'
 			left join school_setting contact_email on contact_email.school = school.id and contact_email.tag='contact_email'
 			left join school_setting contact_number on contact_number.school = school.id and contact_number.tag='contact_number'
@@ -60,7 +63,7 @@
 
 	while (
 		my (
-			$id, $name, $state,
+			$id, $name, $state, $country,
 			$contact, $email, $number,
 			$contact2, $email2, $number2
 		) = $sth->fetchrow_array()
@@ -70,6 +73,7 @@
 			"id"       => $id,
 			"name"     => $name,
 			"state"    => $state,
+			"country"  => $country,
 			"contact"  => $contact,
 			"email"    => $email,
 			"number"   => $number,
