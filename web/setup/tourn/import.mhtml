@@ -333,63 +333,64 @@
 		};
 
 		if ($ncategory) {
+
 			$translator{"category"}{$category->id} = $ncategory->id;
-		}
 
-		#Settings
+			#Settings
 
-		foreach my $setting ($category->settings) {
+			foreach my $setting ($category->settings) {
 
-			next if $ncategory->setting($setting->tag);
+				next if $ncategory->setting($setting->tag);
 
-			my $nsetting = $setting->copy({
-				category => $ncategory->id
-			});
+				my $nsetting = $setting->copy({
+					category => $ncategory->id
+				});
 
-			$nsetting->category($ncategory->id);
+				$nsetting->category($ncategory->id);
 
-			if ($nsetting->value eq "date") {
-				if ($nsetting->value_date) {
-					my $new_date = $nsetting->value_date->clone;
-					$new_date->add_duration($diff);
-					$nsetting->value_date($new_date);
+				if ($nsetting->value eq "date") {
+					if ($nsetting->value_date) {
+						my $new_date = $nsetting->value_date->clone;
+						$new_date->add_duration($diff);
+						$nsetting->value_date($new_date);
+					}
+				}
+
+				$nsetting->update();
+			}
+
+
+			foreach my $rs ($category->rating_subsets) {
+
+				my $nrs = $rs->copy({
+					category => $ncategory->id
+				});
+
+				$translator{"rating_subset"}{$rs->id} = $nrs->id;
+
+				#Rating/Preference Tiers
+				foreach my $rating_tier ($rs->rating_tiers) {
+					my $nrating_tier = $rating_tier->copy({
+						rating_subset => $nrs->id
+					});
 				}
 			}
 
-			$nsetting->update();
-		}
+			foreach my $shift ($category->shifts) {
 
+				my $nshift = $shift->copy;
+				$nshift->category($ncategory->id);
 
-		foreach my $rs ($category->rating_subsets) {
+				my $new_start = $shift->start;
+				$new_start->add_duration($diff);
+				$nshift->start($new_start);
 
-			my $nrs = $rs->copy({
-				category => $ncategory->id
-			});
+				my $new_end = $shift->end;
+				$new_end->add_duration($diff);
+				$nshift->end($new_end);
 
-			$translator{"rating_subset"}{$rs->id} = $nrs->id;
-
-			#Rating/Preference Tiers
-			foreach my $rating_tier ($rs->rating_tiers) {
-				my $nrating_tier = $rating_tier->copy({
-					rating_subset => $nrs->id
-				});
+				$nshift->update();
 			}
-		}
-
-		foreach my $shift ($category->shifts) {
-
-			my $nshift = $shift->copy;
-			$nshift->category($ncategory->id);
-
-			my $new_start = $shift->start;
-			$new_start->add_duration($diff);
-			$nshift->start($new_start);
-
-			my $new_end = $shift->end;
-			$new_end->add_duration($diff);
-			$nshift->end($new_end);
-
-			$nshift->update();
 		}
 	}
 
