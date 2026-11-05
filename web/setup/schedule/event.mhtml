@@ -799,11 +799,10 @@
 %						}
 
 %						if ($event->{type} ne "congress") {
-							<td class="centeralign smallish">
-								<span class="hidden"><% $round->{flighted} %></span>
+							<td class="centeralign smallish" data-text="<% $round->{flighted} %>">
 								<div class = "nospace padhoriz <% $hidden %> <% $timeslot_id %>" >
 									<select
-										name="<% $timeslot_id %><% $count ? "_".$count : ""%>_flight"
+										name  = "<% $timeslot_id %><% $count ? "_".$count : ""%>_flight"
 										class = "plain smallish"
 									>
 %										foreach my $value (1 ... 5) {
@@ -821,7 +820,7 @@
 %							if ($round_id > 0) {
 								<div class = "padhoriz nospace <% $hidden %> <% $timeslot_id %>" >
 									<select
-										name  = "<% $timeslot_id %><% $count ? "_".$count : ""%>_move"
+										name = "<% $timeslot_id %><% $count ? "_".$count : ""%>_move"
 									>
 										<option value="">No Move</option>
 <%perl>

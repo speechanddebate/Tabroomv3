@@ -409,8 +409,6 @@
 
 		function submitLink() {
 
-			console.log(`Who summoned me?`);
-
 			var accountEmail = $("#accountEmail").val();
 			var judgeId      = $("#accountEmail").attr("judge");
 			var replyUrl     = 'link.mhtml';
@@ -423,9 +421,6 @@
 					email    : accountEmail
 				},
 				success : function(data) {
-
-					console.log(`Hello we are wonderful`);
-					console.log(data);
 
 					if (data.error) {
 
@@ -447,13 +442,8 @@
 							$("#identityBox").addClass("row flexrow fixedheight");
 						}
 
-						if (data.message) {
-
-							alertify.notify(data.message, "custom");
-
-						}
-
-						zebraRows();
+						if (data.message) alertify.notify(data.message, "custom");
+						fixVisual();
 					}
 				},
 				error: function(data) {
@@ -462,7 +452,40 @@
 			});
 		};
 
+		function checkOtp() {
+
+			$.ajax({
+				type    : 'GET',
+				url     : 'otp.mhtml',
+				data    : {
+					judge_id : <% $judge_id %>,
+				},
+				success : function(data) {
+
+					console.log(data);
+
+					if (data.error) {
+						$('#judge_otp_no').attr("title", data.message);
+						$('#judge_otp_no_button').attr("title", data.message);
+					} else {
+						$('#judge_otp_monitor').removeClass('hidden');
+						$('#judge_otp_no').addClass('hidden');
+						fixVisual();
+					}
+				},
+				error: function(data) {
+					console.log(data);
+				}
+			});
+		}
+
+		function showOtp() {
+			$('#otp_<% $judge_id %>').removeClass('hidden');
+			fixVisual();
+		}
+
 		$(document).ready(function() {
+
 			$('.noEnterSubmit').keypress(function(e){
 				if ( e.which == 13 ) {
 					e.preventDefault();
@@ -470,6 +493,7 @@
 				}
 			});
 
+			checkOtp();
 			fixVisual();
 		});
 
@@ -1090,6 +1114,37 @@
 					>
 					</a>
 				</span>
+
+% 				if ($tourn_settings->{"mock_trial_registration"}) {
+%					$warn = "This button will issue you a one-time use password this judge can use to log in.  This password will expire after an hour, and a session created with it will expire after 48 hours. It will be logged.  Continue?";
+					<span
+						class ="rightalign padright hidden"
+						id    ="judge_otp_monitor"
+					>
+						<a
+							class    = "buttonwhite greentext invert fa fa-key fa-sm"
+							generate = 1
+							judge_id = "<% $judge->id %>"
+							onClick  = "postConfirm('<% $warn %>', this, 'otp.mhtml'); showOtp();"
+						></a>
+					</span>
+					<span
+						class ="rightalign padright"
+						id    ="judge_otp_no"
+					>
+						<a
+							id       = "judge_otp_no_button"
+							class    = "buttonwhite greytext invert fa fa-key fa-sm"
+							title    = "One Time Password cannot be generated for this judge"
+						></a>
+					</span>
+%				}
+			</div>
+
+			<div
+				id    = "otp_<% $judge_id %>"
+				class = "row fixedheight flexrow hidden"
+			>
 			</div>
 
 %			unless ($jperson > 0) {
@@ -1649,6 +1704,7 @@
 
 		my %used;
 </%perl>
+
 		<div id="pools" class="screens pools hidden">
 
 			<div class="nospace full ltbordertop"></div>
@@ -1826,7 +1882,6 @@
 							next;
 						}
 </%perl>
-
 						<tr
 							class    = "judge smallish hover"
 							pool_id  = "<% $id %>"

@@ -1,0 +1,111 @@
+<%args>
+	$tourn
+	$person
+	$judge
+	$dbh
+</%args>
+<%init>
+
+	my $jp_id = $judge->person;
+
+	unless (1==2 && $person->site_admin) {
+
+		return "Judge does not have an linked Tabroom account" unless $jp_id;
+
+		Tab::debuglog("Looking for other roles for person $jp_id");
+
+		my $sth = $dbh->prepare("
+			select count(permission.id) as count
+			from permission
+			where permission.person = ?
+		");
+
+		$sth->execute($jp_id);
+		my $perms = $sth->fetch_hash();
+		if ($perms->{count} > 0) {
+			return "Judge has external Tabroom permissions so their password cannot be reset this way";
+		}
+
+		my $other_sth = $dbh->prepare("
+			select count(cj.id) as count
+			from chapter_judge cj
+			where cj.person = ?
+		");
+
+		$other_sth->execute($jp_id);
+		my $cjs = $other_sth->fetch_hash();
+		if ($cjs->{count} > 0) {
+			return "Judge is attached to a school roster, so their password cannot be reset this way";
+		}
+
+		my $student_sth = $dbh->prepare("
+			select count(student.id) as count
+			from student
+			where student.person = ?
+		");
+
+		$student_sth->execute($jp_id);
+		my $students = $student_sth->fetch_hash();
+		if ($students->{count} > 0) {
+			return "Judge is linked to student records, so their password cannot be reset this way";
+		}
+
+		my $many_sth = $dbh->prepare("
+			select count(judge.id) count
+				from judge, category, tourn
+			where judge.person = ?
+				and judge.category = category.id
+				and category.tourn = tourn.id
+				and tourn.start < NOW()
+				and tourn.end > NOW()
+				and not exists (
+					select permission.id
+					from permission
+					where permission.person = ?
+					and permission.tourn = tourn.id
+					and permission.tag IN ('owner', 'tabber')
+				)
+		");
+
+		$many_sth->execute($jp_id, $person->id);
+
+		my $others = $many_sth->fetch_hash();
+		if ($others->{count} > 0) {
+			return "Judge is judging tournaments besides yours right now, so their password cannot be reset this way";
+		}
+	}
+
+	if ($ARGS{generate}) {
+
+		my $salt = $m->comp("/funclib/generate_randomstring.mas");
+		my $otp = uc($m->comp("/funclib/generate_randomstring.mas"));
+
+		my $sha_crypt = crypt(uc($otp), '$6$' . $salt);
+
+		$judge->person->setting("otp", 0);
+
+		my $make_otp_sth = $dbh->prepare("
+			insert into person_setting (person, tag, value, value_date)
+				values (?, 'otp', ?, (NOW() + INTERVAL 1 HOUR));
+		");
+
+		$make_otp_sth->execute($jp_id, $sha_crypt);
+
+		$m->comp("/funclib/log.mas",
+			tag         => "account",
+			person      => $judge->person,
+			description => "One time password created by ".$person->email." ID ".$person->id." for tourn ".$tourn->name,
+			tourn       => $tourn,
+			judge       => $judge
+		);
+
+		my $payload = {
+			otp => $otp
+		};
+
+		return $payload;
+	}
+
+	return 1;
+
+</%init>

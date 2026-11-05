@@ -6,6 +6,7 @@
 </%args>
 <%init>
 
+	my $dbh = Tab::DBI->db_Main();
 	use Math::Round qw(nearest);
 
 	my @events;
@@ -132,56 +133,88 @@
 
 		push @{$data->{'events'}}, $event_hash;
 
-		my $dbh = Tab::DBI->db_Main();
+		my $student_sth = $dbh->prepare("
+			select
+				entry.id entry_id,
+				chapter.nsda chapter_nsda,
+				student.id student_id, student.first, student.last, student.nsda student_nsda,
+				panel.round, round.name round_name,
+				(select coach_id.value
+					from student_setting coach_id
+					where coach_id.tag = 'coach_id'
+					and coach_id.student = student.id
+				) coach_id,
+				(select coach_points.value
+					from entry_setting coach_points
+					where coach_points.tag = 'coach_points'
+					and coach_points.entry = entry.id
+				) coach_points
+			from (student, chapter, entry, score, ballot, panel, round)
+			where 1=1
+				and entry.event = ?
+				and entry.id = ballot.entry
+				and ballot.panel = panel.id
+				and panel.round = round.id
+				and ballot.id = score.ballot
+				and score.student = student.id
+				and student.chapter = chapter.id
+				and student.nsda > 0
+				and chapter.nsda > 0
+		");
+
+		$student_sth->execute($event->id);
+		my $students = $student_sth->fetchall_hash();
+
+		my %entry_students;
+		my %students;
+
+		foreach my $ref (@{$students}) {
+
+			$entry_students{$ref->{entry_id}}{$ref->{round_name}}{$ref->{student_nsda}}++;
+			$entry_students{$ref->{entry_id}}{all}{$ref->{student_nsda}}++;
+
+			if ($ref->{coach_id} || $ref->{coach_points}) {
+				$students{$ref->{student_nsda}} = ({
+					coach_id  => ($ref->{coach_id} || $ref->{coach_points}),
+					school_id => $ref->{chapter_nsda},
+				});
+			}
+		}
 
 		my $sth = $dbh->prepare("
 			select
-				chapter.nsda, chapter.name,
-				student.id, student.first, student.last, student.nsda,
-				entry.id,
+				entry.id entry_id,
 				CONVERT_TZ(timeslot.start, '+00:00', tourn.tz) start,
-				round.id, round.name, round.type,
-				panel.id, panel.letter, panel.bye,
-				ballot.id, ballot.bye, ballot.forfeit, ballot.judge,
-				score.id, score.tag, score.value, score.student, score.speech,
-				sstudent.id, sstudent.nsda,
-				schapter.id, schapter.nsda, schapter.name,
-				protocol.id,
-				coach_points.value
+				round.id round_id, round.name round_name, round.type round_type,
+				panel.id panel_id, panel.letter, panel.bye,
+				ballot.id ballot_id, ballot.bye ballot_bye, ballot.forfeit ballot_forfeit, ballot.judge judge_id,
+				score.id score_id, score.tag score_tag, score.value score_value, score.speech,
+				protocol.id protocol_id
 			from (
-				entry, entry_student es, student, chapter,
+				entry,
 				tourn, event,
 				round, timeslot, panel, ballot, protocol
 			)
 
 			left join score
 				on score.ballot = ballot.id
-				and score.tag in ('point', 'winloss', 'rank', 'speech')
-
-			left join student sstudent on sstudent.id = score.student
-			left join chapter schapter on schapter.id = sstudent.chapter
-
-			left join entry_setting coach_points
-				on coach_points.tag = 'coach_points'
-				and coach_points.entry = entry.id
+				and score.tag in ('winloss', 'rank', 'speech')
 
 			where event.id = ?
-				and event.tourn        = tourn.id
-				and entry.event        = event.id
-				and entry.id           = es.entry
-				and es.student         = student.id
-				and student.chapter    = chapter.id
-				and entry.id           = ballot.entry
-				and ballot.panel       = panel.id
-				and panel.round        = round.id
-				and round.timeslot     = timeslot.id
-				and round.protocol     = protocol.id
+
+				and event.tourn     = tourn.id
+				and entry.event     = event.id
+				and entry.id        = ballot.entry
+				and ballot.panel    = panel.id
+				and panel.round     = round.id
+				and round.timeslot  = timeslot.id
+				and round.protocol  = protocol.id
 
 				and not exists (
-					select es.id
-					from event_setting es
-					where es.tag = 'dq'
-					and es.entry = entry.id
+					select dq.id
+					from entry_setting dq
+					where dq.tag = 'dq'
+					and dq.entry = entry.id
 				)
 
 				and not exists (
@@ -190,6 +223,7 @@
 					where ignore_results.round = round.id
 						and ignore_results.tag = 'ignore_results'
 				)
+
 			order by score.speech, round.name
 		");
 
@@ -199,7 +233,6 @@
 		my %scores;
 		my %rounds;
 		my %sections;
-		my %students;
 		my %tiebreaks;
 
 		my $event_type = $event->type;
@@ -240,28 +273,15 @@
 
 		while (
 			my (
-				$chapter_nsda, $chapter_name,
-				$student_id, $student_first, $student_last, $student_nsda,
 				$entry_id,
 				$timeslot_start,
 				$round_id, $round_name, $round_type,
 				$section_id, $section_letter, $section_bye,
 				$ballot_id, $ballot_bye, $ballot_forfeit, $judge_id,
-				$score_id, $score_tag, $score_value, $score_student, $score_speech,
-				$sstudent_id, $sstudent_nsda,
-				$schapter_id, $schapter_nsda, $schapter_name,
-				$protocol_id,
-				$coach_id
+				$score_id, $score_tag, $score_value, $score_speech,
+				$protocol_id
 			) = $sth->fetchrow_array()
 		) {
-
-			my $school_id;
-			my $student_id;
-
-			unless ($event_settings{"usa_wsdc"}) {
-				$school_id = $schapter_nsda;
-				$student_id = $sstudent_nsda;
-			}
 
 			unless ($tiebreaks{$protocol_id}) {
 				my %types = $m->comp("/funclib/tiebreak_types.mas", protocol_id => $protocol_id);
@@ -276,19 +296,6 @@
 				$tiebreaks{$protocol_id}{"rank"} || $tiebreaks{$protocol_id}{"point"}
 			) {
 				$defacto_elim++;
-			}
-
-			$school_id = $chapter_nsda unless $school_id;
-			$student_id = $student_nsda unless $student_id;
-
-			if ($student_id) {
-				unless ($students{$student_id}{"school"}) {
-					$students{$student_id}{"school"} = $school_id;
-				}
-			}
-
-			if ($coach_id) {
-				$students{$student_id}{"coach"} = int($coach_id);
 			}
 
 			if ($event_type eq "congress") {
@@ -309,10 +316,7 @@
 
 				$speech_counter{$entry_id}{$round_name}{$judge_id}++;
 				my $speech_count = $speech_counter{$entry_id}{$round_name}{$judge_id};
-
-				if ($student_id && $school_id) {
-					$scores{$entry_id}{$student_id}{$round_name}{"speech"}{$speech_count}{$judge_id} = $score_value;
-				}
+				$scores{$entry_id}{$round_name}{"speech"}{$speech_count}{$judge_id} = $score_value;
 
 			} elsif ($event_type eq "speech") {
 
@@ -327,38 +331,19 @@
 					$sections{$section_id}{$entry_id}{$judge_id}++;
 				}
 
-				if ($student_id && $school_id) {
-					$scores{$entry_id}{$student_id}{$round_name}{"rank"}{$judge_id} = $score_value;
-					$scores{$entry_id}{$student_id}{$round_name}{"section"} = $section_id;
-				}
+				$scores{$entry_id}{$round_name}{"rank"}{$judge_id} = $score_value;
+				$scores{$entry_id}{$round_name}{"section"}         = $section_id;
 
 			} elsif ($event_type eq "debate" || $event_type eq "wsdc") {
 
-				if (
-					$round_type eq "elim"
-					|| $round_type eq "final"
-					|| $round_type eq "runoff"
-					|| $event_settings{"usa_wsdc"}
-					|| $event_settings{"round_robin"}
-					|| $defacto_elim
-				) {
-					$scores{$entry_id}{$sstudent_nsda}{$round_name}{"spoke"}++ if $sstudent_nsda;
-					$scores{$entry_id}{$student_nsda}{$round_name}{"spoke"}++ if $student_nsda;
+				if ($section_bye || $ballot_bye) {
+					$scores{$entry_id}{$round_name}{"bye"}++;
+				} elsif ($ballot_forfeit) {
+					$scores{$entry_id}{$round_name}{"forfeit"}++;
 				} else {
-					$scores{$entry_id}{$sstudent_nsda}{$round_name}{"spoke"}++ if $sstudent_nsda;
-				}
-
-				if ($student_id && $school_id) {
-
-					if ($section_bye || $ballot_bye) {
-						$scores{$entry_id}{$student_id}{$round_name}{"bye"}++;
-					} elsif ($ballot_forfeit) {
-						$scores{$entry_id}{$student_id}{$round_name}{"forfeit"}++;
-					} else {
-						next unless $score_tag eq "winloss";
-						$score_value = 0 unless $score_value;
-						$scores{$entry_id}{$student_id}{$round_name}{"winloss"}{$judge_id} = $score_value;
-					}
+					next unless $score_tag eq "winloss";
+					$score_value = 0 unless $score_value;
+					$scores{$entry_id}{$round_name}{"winloss"}{$judge_id} = $score_value;
 				}
 			}
 
@@ -399,42 +384,45 @@
 
 			foreach my $entry_id (keys %scores) {
 
-				foreach my $student_id (keys %{$scores{$entry_id}}) {
+				foreach my $round_name (keys %{$scores{$entry_id}}) {
 
-					foreach my $round_name (keys %{$scores{$entry_id}{$student_id}}) {
+					my $result;
+					my $round_total;
+					my $score_string;
 
-						my $result;
-						my $round_total;
-						my $score_string;
+					foreach my $speech (
+						keys %{$scores{$entry_id}{$round_name}{"speech"}}
+					) {
 
-						foreach my $speech (
-							keys %{$scores{$entry_id}{$student_id}{$round_name}{"speech"}}
+						my $speech_total;
+						my $judge_count;
+
+						foreach my $judge (
+							keys %{$scores{$entry_id}{$round_name}{"speech"}{$speech}}
 						) {
-
-							my $speech_total;
-							my $judge_count;
-
-							foreach my $judge (
-								keys %{$scores{$entry_id}{$student_id}{$round_name}{"speech"}{$speech}}
-							) {
-								next unless $scores{$entry_id}{$student_id}{$round_name}{"speech"}{$speech}{$judge} > 0;
-								$judge_count++;
-								$speech_total += $scores{$entry_id}{$student_id}{$round_name}{"speech"}{$speech}{$judge};
-							}
-
-							if ($judge_count > 0) {
-								my $speech_score = nearest(1, ($speech_total / $judge_count));
-								$round_total += $speech_score;
-							}
+							next unless $scores{$entry_id}{$round_name}{"speech"}{$speech}{$judge} > 0;
+							$judge_count++;
+							$speech_total += $scores{$entry_id}{$round_name}{"speech"}{$speech}{$judge};
 						}
 
-						if ($round_total) {
+						if ($judge_count > 0) {
+							my $speech_score = nearest(1, ($speech_total / $judge_count));
+							$round_total += $speech_score;
+						}
+					}
+
+					my $student_ref = $entry_students{$entry_id}{$round_name} || $entry_students{$entry_id}{"all"};
+
+					if ($round_total && $student_ref) {
+
+						foreach my $student_id (keys %{$student_ref}) {
+
 							$result = {
 								person_id => int($student_id),
 								entry_id  => int($entry_id),
-								school_id => int($students{$student_id}{"school"}),
+								school_id => int($students{$student_id}{school_id}),
 								event_id  => int($event->id),
-								coach_id  => int($students{$student_id}{"coach"}),
+								school_id => int($students{$student_id}{coach_id} || 0),
 								round     => int($round_name),
 								result    => $round_total,
 								points    => $round_total,
@@ -486,51 +474,59 @@
 			}
 
 			foreach my $entry_id (keys %scores) {
-				foreach my $student_id (keys %{$scores{$entry_id}}) {
-					foreach my $round_name (keys %{$scores{$entry_id}{$student_id}}) {
-						my $section_id = $scores{$entry_id}{$student_id}{$round_name}{"section"};
-						my $place = $sections{$section_id}{$entry_id}{"place"};
-						my $nat_place;
 
-						if ($nationals
-							&& $sections{$section_id}{$entry_id}{"round_type"} eq "prelim"
-							&& (not defined $supp)
-						) {
-							if ($event_type eq "speech") {
-								$place = $sections{$section_id}{$entry_id}{"rank"};
+				foreach my $round_name (keys %{$scores{$entry_id}}) {
+
+					my $section_id = $scores{$entry_id}{$round_name}{"section"};
+					my $place = $sections{$section_id}{$entry_id}{"place"};
+					my $nat_place;
+
+					if ($nationals
+						&& $sections{$section_id}{$entry_id}{"round_type"} eq "prelim"
+						&& (not defined $supp)
+					) {
+						if ($event_type eq "speech") {
+							$place = $sections{$section_id}{$entry_id}{"rank"};
+						}
+					}
+
+					if ($nationals
+						&& $sections{$section_id}{$entry_id}{"round_type"} eq "final"
+					) {
+						$nat_place = int($places{$entry_id});
+					}
+
+					next unless $place;
+
+					my $student_ref = $entry_students{$entry_id}{$round_name} || $entry_students{$entry_id}{"all"};
+
+					if ($student_ref) {
+
+						foreach my $student_id (keys %{$student_ref}) {
+
+							my $result = {
+								person_id => int($student_id),
+								entry_id  => int($entry_id),
+								school_id => int($students{$student_id}{"school"}),
+								event_id  => int($event->id),
+								round     => int($round_name),
+								coach_id  => int($students{$student_id}{"coach"}),
+								result    => $place
+							};
+
+							if ($nat_place) {
+								$result->{"place"} = int($nat_place);
 							}
+
+							if ($sections{$section_id}{$entry_id}{"round_type"} eq "elim"
+								|| $sections{$section_id}{$entry_id}{"round_type"} eq "final"
+								|| $sections{$section_id}{$entry_id}{"round_type"} eq "runoff"
+							) {
+								$result->{"elim"} = \1;
+							}
+
+							push @{$data->{'results'}}, $result;
 						}
-
-						if ($nationals
-							&& $sections{$section_id}{$entry_id}{"round_type"} eq "final"
-						) {
-							$nat_place = int($places{$entry_id});
-						}
-
-						next unless $place;
-
-						my $result = {
-							person_id => int($student_id),
-							entry_id  => int($entry_id),
-							school_id => int($students{$student_id}{"school"}),
-							event_id  => int($event->id),
-							round     => int($round_name),
-							coach_id  => int($students{$student_id}{"coach"}),
-							result    => $place
-						};
-
-						if ($nat_place) {
-							$result->{"place"} = int($nat_place);
-						}
-
-						if ($sections{$section_id}{$entry_id}{"round_type"} eq "elim"
-							|| $sections{$section_id}{$entry_id}{"round_type"} eq "final"
-							|| $sections{$section_id}{$entry_id}{"round_type"} eq "runoff"
-						) {
-							$result->{"elim"} = \1;
-						}
-
-						push @{$data->{'results'}}, $result;
 					}
 				}
 			}
@@ -538,46 +534,49 @@
 		} elsif ($event_type eq "debate" || $event_type eq "wsdc") {
 
 			foreach my $entry_id (keys %scores) {
-				foreach my $student_id (keys %{$scores{$entry_id}}) {
-					foreach my $round_name (keys %{$scores{$entry_id}{$student_id}}) {
 
-						next unless $scores{$entry_id}{$student_id}{$round_name}{"spoke"};
+				foreach my $round_name (keys %{$scores{$entry_id}}) {
 
-						my $place;
+					my $place;
 
-						if ($scores{$entry_id}{$student_id}{$round_name}{"bye"}) {
+					if ($scores{$entry_id}{$round_name}{"bye"}) {
 
-							$place = "B";
+						$place = "B";
 
-						} elsif ($scores{$entry_id}{$student_id}{$round_name}{"forfeit"}) {
+					} elsif ($scores{$entry_id}{$round_name}{"forfeit"}) {
 
-							$place = "F";
+						$place = "F";
 
-						} else {
+					} else {
 
-							my $wins;
-							my $losses;
+						my $wins;
+						my $losses;
 
-							foreach my $judge_id ( keys %{$scores{$entry_id}{$student_id}{$round_name}{"winloss"}}) {
-								if ($scores{$entry_id}{$student_id}{$round_name}{"winloss"}{$judge_id} > 0) {
-									$wins++;
-								} else {
-									$losses++;
-								}
-							}
-
-							if ($wins > $losses) {
-								$place = "W"; # Win
-							} elsif ($wins < $losses) {
-								$place = "L";  # Loss
-							} elsif ( ($wins > 0) && $wins == $losses) {
-								$place = "S"; # Split
+						foreach my $judge_id ( keys %{$scores{$entry_id}{$round_name}{"winloss"}}) {
+							if ($scores{$entry_id}{$round_name}{"winloss"}{$judge_id} > 0) {
+								$wins++;
 							} else {
-								$place = "ND"; # No decision
+								$losses++;
 							}
 						}
 
-						if (int($students{$student_id}{"school"}) && int($student_id)) {
+						if ($wins > $losses) {
+							$place = "W"; # Win
+						} elsif ($wins < $losses) {
+							$place = "L";  # Loss
+						} elsif ( ($wins > 0) && $wins == $losses) {
+							$place = "S"; # Split
+						} else {
+							$place = "ND"; # No decision
+						}
+					}
+
+					my $student_ref = $entry_students{$entry_id}{$round_name} || $entry_students{$entry_id}{"all"};
+
+					if ($place && $student_ref) {
+
+						foreach my $student_id (keys %{$student_ref}) {
+
 							my $result = {
 								person_id => int($student_id),
 								entry_id  => int($entry_id),

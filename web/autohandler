@@ -10,11 +10,11 @@
 	if ($ARGS{"accept_redirect"}) {
 		$m->abort();
 	}
+	my $dbh = Tab::DBI->db_Main();
 
 	my $debug = $Tab::debug;
-	my ($person, $session) = $m->comp( "/user/login/authenticate.mas");
+	my ($person, $session) = $m->comp("/user/login/authenticate.mas", dbh => $dbh);
 
-	my $dbh = Tab::DBI->db_Main();
 	my $now = DateTime->now();
 
 	my $tourn;

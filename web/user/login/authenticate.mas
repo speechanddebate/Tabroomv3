@@ -1,3 +1,6 @@
+<%args>
+	$dbh
+</%args>
 <%perl>
 
 	use APR::Request;
@@ -34,15 +37,23 @@
 		# Authentication key must correspond to a session in the database
 		my $user_key = $cookies{$cookie_name};
 
-		my $session = Tab::Session->search(
-			userkey => $user_key
-		)->first;
+		my $session_sth = $dbh->prepare("
+			select
+				session.*
+			from session
+			where session.userkey = ?
+				and (session.expires > NOW() OR session.expires IS NULL)
+		");
 
-		my $check_key = crypt($session->id.$Tab::string, $user_key) if $session;
+		$session_sth->execute($user_key);
+		my $session_ref = $session_sth->fetch_hash();
 
-		if ($session) {
+		my $check_key = crypt($session_ref->{id}.$Tab::string, $user_key) if $session_ref;
+
+		if ($session_ref) {
 
 			# Userid must correspond to a user in the database
+			my $session = Tab::Session->retrieve($session_ref->{id});
 			my $person = $session->person();
 
 			if (
@@ -50,9 +61,7 @@
 				&& (defined $person->email)
 				&& ($check_key eq $user_key)
 			) {
-
 				return ($person, $session);
-
 			} else {
 
 				$session->delete();
@@ -121,9 +130,7 @@
 				-path     => '/'
 			);
 
-			Tab::debuglog("Here with the token");
 			my $reply = $tokencookie->bake($r);
-			Tab::debuglog("Reply $reply");
 		}
 	}
 

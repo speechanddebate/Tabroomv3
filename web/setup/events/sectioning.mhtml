@@ -1129,7 +1129,10 @@
 				</span>
 			</div>
 
-			<label for="disable_flight_limit">
+			<label
+				for   = "disable_flight_limit"
+				title = "Enabling this setting allows you to set the number of flights higher than 3, which ordinarily is a typo.  If you use this setting, your event round time should be very short.  Please, think of your poor judges."
+			>
 				<div class="hover row flexrow">
 					<span class="fivesixths padleft">
 						Disable flight limit

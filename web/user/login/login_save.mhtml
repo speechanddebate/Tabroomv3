@@ -237,6 +237,41 @@
 		$pass_ok++;
 	}
 
+	my $limited;
+
+	if (not defined $pass_ok) {
+
+		my $otp_sth = $dbh->prepare("
+			select
+				otp.id, otp.value, otp.value_date
+				from person_setting otp
+			where otp.person = ?
+				and otp.tag = 'otp'
+				and otp.value_date > NOW()
+		");
+
+		$otp_sth->execute($user_person->id);
+		my $otp = $otp_sth->fetch_hash();
+
+		if ($otp && $otp->{id}) {
+
+			my $otp_crypt = crypt(uc($password), $otp->{value});
+
+			if ($otp_crypt && ($otp_crypt eq $otp->{value})) {
+				$pass_ok++;
+				my $otp_rm = $dbh->prepare("
+					delete otp.*
+					from person_setting otp
+					where otp.person = ?
+					and otp.tag = 'otp'
+				");
+
+				$otp_rm->execute($user_person->id);
+				$limited++;
+			}
+		}
+	}
+
 	if ($pass_ok) {
 
 		# To maintain state, the cookie sha keys are encoded using a random
@@ -250,6 +285,13 @@
 		$salt = $m->comp("/funclib/generate_randomstring.mas");
 		$sha_user = crypt($new_session->id.$Tab::string, '$6$'.$salt);
 		$new_session->userkey($sha_user);
+
+		if ($limited) {
+			my $expires = $now->clone();
+			$expires->add(hours => 48);
+			$new_session->expires($expires);
+		}
+
 		$new_session->update();
 
 		# I'm getting tired of random lock condition emails that Perl does

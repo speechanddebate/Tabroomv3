@@ -1,0 +1,72 @@
+<%args>
+	$person
+	$tourn
+	$dbh
+	$judge_id
+	$generate => undef
+</%args>
+<%init>
+
+	$m->clear_buffer();
+	$r->content_type('application/json');
+
+	unless ($judge_id) {
+		$m->print('{ "error": true, "message": "No judge ID sent"}');
+		$m->abort();
+	}
+
+	my $judge = Tab::Judge->retrieve($judge_id);
+
+	unless ($judge) {
+		$m->print('{ "error": true, "message": "No judge found for ID '.$judge_id.'"}');
+		$m->abort();
+	}
+
+	my $response = $m->comp("/funclib/judge_otp.mas",
+		tourn    => $tourn,
+		dbh      => $dbh,
+		person   => $person,
+		judge    => $judge,
+		generate => $generate,
+	);
+
+	my $reply;
+
+	my $ref = eval {
+		if ($response && $response->{otp}) {
+			return $response;
+		}
+	};
+
+	if ($ref && $ref->{otp}) {
+
+		my @replace = ( {
+			id      => "otp_".$judge_id,
+			content => "<span class='third padleft'>One-Time Password</span><span title='You can read this password to the judge or use it to log them in once.  It will expire in 1 hour.' class='twothirds semibold biggish centeralign greentext'>".$response->{otp}."</span>",
+		} );
+
+		$reply = {
+			error   => \0,
+			message => "One-time password issued for ".$judge->person->email,
+			replace => \@replace,
+		}
+
+	} elsif ($response eq "1") {
+
+		$reply = {
+			error   => \0,
+		}
+
+	} else {
+
+		$reply = {
+			error   => \1,
+			message => $response,
+		}
+	}
+
+	$m->print(JSON::encode_json($reply));
+	$m->abort();
+
+</%init>
+

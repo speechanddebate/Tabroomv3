@@ -8,10 +8,9 @@
 <%init>
 
 	my $origin;
+	my $dbh = Tab::DBI->db_Main();
 
 	if ($ARGS{"method"} eq "api_key") {
-
-		my $dbh = Tab::DBI->db_Main();
 
 		my $sth = $dbh->prepare("
 			select person.id
@@ -49,7 +48,7 @@
 		return;
 	}
 
-	my ($person, $session) = $m->comp("/user/login/authenticate.mas");
+	my ($person, $session) = $m->comp("/user/login/authenticate.mas", dbh => $dbh);
 
 	if ($person && $session) {
 		$origin = "cookies";
