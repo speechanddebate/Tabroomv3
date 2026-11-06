@@ -54,6 +54,11 @@
 
 			# Userid must correspond to a user in the database
 			my $session = Tab::Session->retrieve($session_ref->{id});
+
+			if (not defined $session) {
+				return;
+			}
+
 			my $person = $session->person();
 
 			if (
