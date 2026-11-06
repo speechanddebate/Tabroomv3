@@ -67,7 +67,7 @@
 		my $check_ip_bans = $dbh->prepare("
 			select login.id
 				from login_log login
-			where login.description = 'banned'
+			where login.banned = 1
 				and login.created_at > (NOW() - INTERVAL 10 MINUTE)
 				and login.ip = ?
 				and login.revoked != 1
@@ -94,9 +94,9 @@
 		my ($ip_limit) = $ip_failure_rate_limit->fetch();
 
 		if ($ip_limit > 32) {
-			my $err = "There have been too many failed login attempts from $ip.  Please wait a few minutes before trying again.";
+			my $err = "There have been too many failed login attempts from $ip.  Please whowit a few minutes before trying again.";
 			Tab::log("Failed Attempt Ban Issued for $ip");
-			my $ban_ip = $dbh->prepare("insert into login_log (description, ip) values ('banned', ?)");
+			my $ban_ip = $dbh->prepare("insert into login_log (description, ip, banned) values ('banned', ?, 1)");
 			$ban_ip->execute($ip);
 			$m->redirect("/user/login/login.mhtml?username=$username&err=$err");
 		}
@@ -105,7 +105,7 @@
 	my $check_username_ban = $dbh->prepare("
 		select login.id
 			from login_log login
-		where login.description = 'banned'
+		where login.banned = 1
 			and login.created_at > (NOW() - INTERVAL 10 MINUTE)
 			and login.username = ?
 			and login.revoked != 1
@@ -133,7 +133,7 @@
 
 	if ($username_limit > 10) {
 
-		my $user_ban = $dbh->prepare("insert into login_log (description, username) values ('banned', ?)");
+		my $user_ban = $dbh->prepare("insert into login_log (description, username, banned) values ('banned', ?, 1)");
 		$user_ban->execute($username);
 
 		if ($user_person) {

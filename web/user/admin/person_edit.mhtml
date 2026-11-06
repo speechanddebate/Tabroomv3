@@ -33,7 +33,6 @@
 	");
 
 	$sth->execute( $edit_id );
-
 	my %campus;
 
 	while (
@@ -49,7 +48,6 @@
 		$campus{$id}{"description"} = $last_campus_description;
 	}
 
-
 	$sth->finish();
 
 	$sth = $dbh->prepare("
@@ -57,9 +55,10 @@
 			log.id,
 			log.tag,
 			log.description,
+			log.created_at,
+			log.ip,
 			count.id count,
-			count.email, count.first, count.last,
-			CONVERT_TZ(log.created_at, '+00:00', count.tz) created
+			count.email, count.first, count.last
 		from change_log log
 			left join person count on count.id = log.count
 		where log.person = ?
@@ -69,6 +68,17 @@
 
 	$sth->execute($edit);
 	my $bans = $sth->fetchall_hash();
+
+	$sth = $dbh->prepare("
+		select
+			log.*
+		from login_log log
+			where log.username = ?
+		order by log.created_at DESC
+	");
+
+	$sth->execute($edit->email);
+	my $failures = $sth->fetchall_hash();
 
 	$sth->finish();
 
@@ -607,81 +617,68 @@
 			</div>
 
 			<h5>Account Data</h5>
-				<div class="odd martop bluebordertop">
-					<span class="half padvert redtext semibold">
-						Last Password Change
-					</span>
-					<span class="threetenths">
-						<& "/funclib/showdt.mas",
-							dt     => $edit->pass_timestamp,
-							tz     => $person->tz,
-							tzname => "yes",
-							length => "murica_short",
-							at     => 1
-						&>
-					</span>
 
-					<span class="eighth semibold padright redtext">
-						Send Reset
-					</span>
-					<span class="twenty semibold centeralign">
-						<a
-							target = "_blank"
-							class  = "buttonwhite redtext fa fa-sm fa-retweet"
-							href   = "/user/login/forgot_send.mhtml?username=<% $edit->email %>&origin_ip=<% $ENV{HTTP_X_FORWARDED_FOR} %>"
-							title  = "Trigger Password Reset"
-						></a>
-					</span>
-				</div>
-<%perl>
-			if (
-				$edit_settings{"pass_changekey"}
-				&& $edit_settings{"pass_change_expires"}->epoch > $now->epoch)
-			{
-</%perl>
-				<div class="odd">
-					<span class="half padvert orangetext semibold">
-						Password Change Link Active Until
-					</span>
-					<span class="threetenths semibold bluetext">
-						<& "/funclib/showdt.mas",
-							dt     => $edit_settings{"pass_change_expires"},
-							tz     => $person->tz,
-							tzname => "yes",
-							length => "long",
-							at     => 1
-						&>
-					</span>
+			<div class="odd martop bluebordertop">
+				<span class="half padvert redtext semibold">
+					Last Password Change
+				</span>
+				<span class="threetenths">
+					<& "/funclib/showdt.mas",
+						dt     => $edit->pass_timestamp,
+						tz     => $person->tz,
+						tzname => "yes",
+						length => "murica_short",
+						at     => 1
+					&>
+				</span>
 
-					<span class="eighth semibold padright redtext">
-						Change Link
-					</span>
-					<span class="twenty semibold centeralign">
-						<a
-							class  = "buttonwhite redtext fa fa-sm fa-link"
-							href   = "/user/login/forgot_change.mhtml?id=<% $edit->id %>&key=<% $edit_settings{"pass_changekey"} %>"
-							title  = "Password Change Link"
-						></a>
-					</span>
-				</div>
-%			}
+				<span class="eighth semibold padright redtext">
+					Send Reset
+				</span>
 
+				<span class="twenty semibold centeralign">
+					<a
+						target    = "_blank"
+						class     = "buttonwhite redtext fa fa-sm fa-retweet"
+						href      = "/user/login/forgot_send.mhtml?username=<% $edit->email %>&origin_ip=<% $ENV{HTTP_X_FORWARDED_FOR} %>"
+						target_id = "<% $edit->id %>"
+						logmsg    = "Reset Triggered"
+						title     = "Trigger Password Reset"
+					></a>
+				</span>
+			</div>
+
+			<div class="odd">
+				<span class="half padvert">
+					User has logged into Tabroom
+				</span>
+				<span class="third semibold bluetext">
+					<& "/funclib/commify.mas", number => $edit->accesses &> times
+				</span>
+			</div>
+
+			<div class="odd">
+				<span class="half padvert">
+					Last successful login was on
+				</span>
+				<span class="third semibold bluetext">
+					<& "/funclib/showdt.mas",
+						dt => $edit->last_access,
+						tz => $person->tz,
+						length => "long",
+						at => 1
+					&>
+				</span>
+			</div>
+
+%			if ($edit_settings{"last_attempt"}) {
 				<div class="odd">
 					<span class="half padvert">
-						User has logged into Tabroom
-					</span>
-					<span class="third semibold bluetext">
-						<& "/funclib/commify.mas", number => $edit->accesses &> times
-					</span>
-				</div>
-
-				<div class="odd">
-					<span class="half padvert">
-						Last successful login was on
+						Last unsuccessful login was on
 					</span>
 					<span class="third semibold bluetext">
 						<& "/funclib/showdt.mas",
-							dt => $edit->last_access,
+							dt => $edit_settings{"last_attempt"},
 							tz => $person->tz,
 							length => "long",
 							at => 1
@@ -689,103 +686,142 @@
 					</span>
 				</div>
 
-%				if ($edit_settings{"last_attempt"}) {
-					<div class="odd">
-						<span class="half padvert">
-							Last unsuccessful login was on
-						</span>
-						<span class="third semibold bluetext">
-							<& "/funclib/showdt.mas",
-								dt => $edit_settings{"last_attempt"},
-								tz => $person->tz,
-								length => "long",
-								at => 1
-							&>
-						</span>
-					</div>
+				<div class="odd">
+					<span class="half padvert">
+						That attempt IP address was
+					</span>
+					<span class="third semibold bluetext">
+						<% $edit_settings{"last_attempt_ip"} %>
+					</span>
+				</div>
 
-					<div class="odd">
-						<span class="half padvert">
-							That attempt IP address was
-						</span>
-						<span class="third semibold bluetext">
-							<% $edit_settings{"last_attempt_ip"} %>
-						</span>
-					</div>
-
-					<div class="odd">
-						<span class="half padvert">
-							That attempt user agent
-						</span>
-						<span class="third semibold bluetext">
-							<% $edit_settings{"last_attempt_agent"} %>
-						</span>
-					</div>
-%				}
+				<div class="odd">
+					<span class="half padvert">
+						That attempt user agent
+					</span>
+					<span class="third semibold bluetext">
+						<% $edit_settings{"last_attempt_agent"} %>
+					</span>
+				</div>
+%			}
 <%perl>
-				if ($edit->nsda) {
+			if ($edit->nsda) {
 
-					my ($person_ref, $flubber) = $m->comp(
-						"/funclib/nsda/api_client.mas",
-						path => "/members/".$edit->nsda
-					) if $edit->nsda;
+				my ($person_ref, $flubber) = $m->comp(
+					"/funclib/nsda/api_client.mas",
+					path => "/members/".$edit->nsda
+				) if $edit->nsda;
 
-					if ($person_ref) {
+				if ($person_ref) {
 </%perl>
-						<div class="odd">
-							<span class="half padvert">
-								NSDA Member link
-							</span>
+					<div class="odd">
+						<span class="half padvert">
+							NSDA Member link
+						</span>
 
-							<span class="third greentext semibold">
-								#<% $person_ref->{person_id} %>
-								(<% $person_ref->{first}." ".$person_ref->{middle}." ".$person_ref->{last} %>)
-							</span>
-						</div>
+						<span class="third greentext semibold">
+							#<% $person_ref->{person_id} %>
+							(<% $person_ref->{first}." ".$person_ref->{middle}." ".$person_ref->{last} %>)
+						</span>
+					</div>
 
-						<div class="odd">
-							<span class="half padvert">
-								NSDA Merit Point total is
-							</span>
+					<div class="odd">
+						<span class="half padvert">
+							NSDA Merit Point total is
+						</span>
 
-							<span class="third greentext semibold">
-								<& "/funclib/commify.mas", number => $person_ref->{points} &>
-							</span>
-						</div>
-%					}
+						<span class="third greentext semibold">
+							<& "/funclib/commify.mas", number => $person_ref->{points} &>
+						</span>
+					</div>
 %				}
+%			}
+
 		</form>
 
-%			if ($bans && @{$bans}) {
+%		if ($bans && @{$bans}) {
+			<div class="full flexrow nospace martopmore">
+				<span class="fourfifths nospace">
+					<h5>Account Log</h5>
+				</span>
+				<span class="fifth rightalign padright explain">
+					All Times in US/Central
+				</span>
+			</div>
 
-				<h5>Ban Log</h5>
-
-				<div class="martop bluebordertop">
+			<div class="martop bluebordertop">
 %				foreach my $ban (@{$bans}) {
 					<div class="row smallish flexrow">
-						<span class="threetenths grow">
+						<span class="fifth grow">
 							<% $ban->{description} %>
 						</span>
 
-						<span class="fifth">
+						<span class="seventh">
 							<& "/funclib/showdt.mas",
-								string => $ban->{created},
-								tzname => 1,
+								string => $ban->{created_at},
+								tz     => "America/Chicago",
 								format => 'murica_short'
 							&>
 						</span>
 
-						<span class="fifth padvert">
+						<span class="eighth padvert">
 							<% $ban->{first}." ".$ban->{last} %>
 						</span>
 
-						<span class="quarter padvert">
-							ID <% $ban->{count}.": ".$ban->{email} %>
+						<span class="sixth padvert">
+							<% $ban->{count}." ".$ban->{email} %>
+						</span>
+
+						<span class="eighth padvert rightalign padright">
+							<a
+								href="ip_logs.mhtml?ip=<% $ban->{ip} %>"
+								class="white full nospace padvertless"
+							><% $ban->{ip} %></a>
 						</span>
 					</div>
 %				}
+			</div>
+%		}
+
+%		if ($failures && @{$failures}) {
+			<div class="full flexrow nospace martopmore">
+				<span class="fourfifths nospace">
+					<h5>Login Failures</h5>
+				</span>
+				<span class="fifth rightalign">
+					Times in US/Central
+				</span>
+			</div>
+
+			<div class="martop bluebordertop">
+%			foreach my $failure (@{$failures}) {
+				<div class="row smallish flexrow">
+					<span class="fifth grow">
+						<% $failure->{description} %>
+					</span>
+
+					<span class="fifth">
+						<& "/funclib/showdt.mas",
+							string => $failure->{created_at},
+							tz     => "America/Chicago",
+							format => 'murica_short'
+						&>
+					</span>
+
+					<span class="fifth padvert">
+						<% $failure->{username} %>
+					</span>
+
+					<span class="eighth padvert rightalign padright">
+						<a
+							href="ip_logs.mhtml?ip=<% $failure->{ip} %>"
+							class="white full nospace padvertless"
+						><% $failure->{ip} %></a>
+					</span>
 				</div>
 %			}
+			</div>
+%		}
 
 		<h5 class="martopmore">
 			NSDA Campus Usage
@@ -819,9 +855,11 @@
 			</span>
 		</div>
 
-		<p class="semibold martopmore bigger">
-			Last Tournament Campus Rooms Entered
-		</p>
+%		if (keys %campus) {
+			<p class="semibold martopmore bigger">
+				Last Tournament Campus Rooms Entered
+			</p>
+%		}
 
 %		my $notfirst;
 
@@ -853,6 +891,9 @@
 			</div>
 %		}
 
+%		my @seshes = Tab::Session->search( person => $edit_id );
+
+%		if (@seshes) {
 		<div class="flexrow full">
 
 			<span class="half">
@@ -869,14 +910,14 @@
 			</span>
 
 		</div>
-
+%		}
 <%perl>
 
 		undef $notfirst;
 		foreach my $sesh (
 			sort {
 				$b->timestamp->epoch <=> $a->timestamp->epoch
-			} Tab::Session->search( person => $edit_id )
+			} @seshes
 		) {
 
 			my $location = $sesh->location;

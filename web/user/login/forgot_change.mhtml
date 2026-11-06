@@ -97,8 +97,24 @@
 
 					<h5><% $reset_key %></h5>
 
-					<p class="martopmore">Do NOT use this key to reset the user's password for them,
-					no matter how much they beg. Doing so is a violation of security protocols.</p>
+					<p>
+						You can read or otherwise send them this code if email
+						is not delivering for them and you are sure it is them.
+						If they have closed out Tabroom, they can go to the
+						Reset Password screen again, enter their tabroom email,
+						and click I Have A Code to access the page to enter
+						this code.
+					</p>
+
+					<p>
+						The code is not case sensitive. It will expire after 1 hour.
+					</p>
+
+					<p class="martopmore semibold">
+						Do NOT use this key to reset the user's password for
+						them, no matter how much they beg. Doing so is a
+						violation of security protocols.
+					</p>
 
 					<p>Remember, I'm always watching, <% $person->first %>.</p>.
 %				}

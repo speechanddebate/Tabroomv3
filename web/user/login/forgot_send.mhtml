@@ -16,9 +16,11 @@
 		);
 	}
 
-	if ($ENV{HTTP_X_FORWARDED_FOR} ne $ARGS{'origin_ip'}) {
+	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
+
+	if ($ip ne $ARGS{'origin_ip'}) {
 		$m->comp("/funclib/abort.mas",
-			message => "Your IP address ".$ENV{HTTP_X_FORWARDED_FOR}." differs from the origin of the requested reset ".$ARGS{'origin_ip'}."  To prevent duplicate requests, your password was not reset.  If this was in error, go back, refresh the page, and try again."
+			message => "Your IP address ".$ip." differs from the origin of the requested reset ".$ARGS{'origin_ip'}."  To prevent duplicate requests, your password was not reset.  If this was in error, go back, refresh the page, and try again."
 		);
 	}
 
@@ -76,10 +78,10 @@
 		my $reset = substr($key, 6);
 
 		my $expires = DateTime->now;
-		$expires->add(minutes => '20');
+		$expires->add(minutes => '60');
 
 		$user_person->setting("pass_changekey", $key);
-		$user_person->setting("pass_change_ip", $ENV{HTTP_X_FORWARDED_FOR});
+		$user_person->setting("pass_change_ip", $ip);
 		$user_person->setting("pass_change_expires", "date", $expires);
 		$user_person->setting("pass_change_attempts", 0);
 
@@ -96,7 +98,7 @@
 			<p>help\@tabroom.com</p>
 			<br />
 			<br />
-			<p>Requestor IP: ".$ENV{HTTP_X_FORWARDED_FOR}."</p>
+			<p>Requestor IP: ".$ip."</p>
 			<p>Timestamp: $nowstring</p>
 		";
 
@@ -116,23 +118,33 @@
 			html            => $message_text
 		);
 
-		my $logmsg = "Password change link requested for user ".$user_person->id." ".$user_person->email." from IP: ".$ENV{HTTP_X_FORWARDED_FOR};
+		my $logmsg = "Password change link requested for user ".$user_person->id." ".$user_person->email." from IP: ".$ip;
 
 		if ($ARGS{"session"}) {
 
 			my $req_person = $ARGS{session}->su || $ARGS{session}->person;
 
-			$logmsg .= "User session ".$ARGS{"session"}." user ".$req_person;
-
 			if ($ARGS{'session'}->su) {
-				$logmsg .= "SU from ".$ARGS{"session"}->su." ".$req_person->email;
+				$logmsg .= " From SU admin session ".$ARGS{"session"}." by ".$req_person." ".$req_person->email;
+			} else {
+				$logmsg .= " From session ".$ARGS{"session"}." user ID ".$req_person." ".$req_person->email;
 			}
 
 			my $change = $m->comp("/funclib/log.mas",
-				type        => "admin",
+				type        => "account",
 				description => $logmsg,
-				person      => $req_person
+				person      => $user_person,
+				count       => $req_person
 			);
+
+		} else {
+
+			my $change = $m->comp("/funclib/log.mas",
+				type        => "account",
+				description => $logmsg,
+				person      => $user_person
+			);
+
 		}
 
 		Tab::log($logmsg);

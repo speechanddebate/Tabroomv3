@@ -1,0 +1,118 @@
+<%args>
+	$person
+	$dbh
+	$ip => undef
+</%args>
+<%init>
+
+	unless ($person  && $person->site_admin) {
+		$m->abort();
+	}
+
+	my $login_sth = $dbh->prepare("
+		select log.*,
+			(select person.email from person where person.id = log.person) as person_email
+		from login_log log
+		where log.ip = ?
+		order by created_at DESC
+	");
+
+	my $change_sth = $dbh->prepare("
+		select log.*,
+			(select tourn.name from tourn where tourn.id = log.tourn) as tourn_name,
+			(select person.email from person where person.id = log.person) as person_email,
+			(select count.email from person count where count.id = log.count) as count_email
+		from change_log log
+		where log.ip = ?
+		order by created_at DESC
+	");
+
+	my $campus_sth = $dbh->prepare("
+		select log.*,
+			(select tourn.name from tourn where tourn.id = log.tourn) as tourn_name,
+			(select person.email from person where person.id = log.person) as person_email,
+			(select marker.email from person marker where marker.id = log.marker) as marker_email
+		from campus_log log
+		where log.ip = ?
+		order by created_at DESC
+	");
+
+	$login_sth->execute($ip);
+	$change_sth->execute($ip);
+	$campus_sth->execute($ip);
+
+	my $logins = $login_sth->fetchall_hash();
+	my $changes = $change_sth->fetchall_hash();
+	my $campuses = $campus_sth->fetchall_hash();
+
+</%init>
+
+	<div class="blankfull">
+
+		<h4>Login attempts from <% $ip %></h4>
+
+%		foreach my $login (@{$logins}) {
+			<div class='full flexrow row'>
+				<span class="fifth grow">
+					<% $login->{description} %>
+				</span>
+
+				<span class="fifth">
+					<% $login->{created_at} %>
+				</span>
+
+				<span class="fifth">
+					<% $login->{username} %>
+				</span>
+				<span class="fifth">
+					<% $login->{person_email} %>
+				</span>
+			</div>
+%		}
+
+		<h4>Change Logs entries from <% $ip %></h4>
+
+%		foreach my $cl (@{$changes}) {
+			<div class='full flexrow row'>
+				<span class="fifth grow">
+					<% $cl->{description} %>
+				</span>
+
+				<span class="fifth">
+					<% $cl->{created_at} %>
+				</span>
+
+				<span class="fifth">
+					<% $cl->{count_email} || $cl->{person_email} %>
+				</span>
+
+				<span class="fifth">
+					<% $cl->{tourn_name} %>
+				</span>
+			</div>
+%		}
+
+		<h4>Campus Logs entries from <% $ip %></h4>
+
+%		foreach my $campus (@{$campuses}) {
+			<div class='full flexrow row'>
+				<span class="fifth grow">
+					<% $campus->{description} %>
+				</span>
+
+				<span class="fifth">
+					<% $campus->{created_at} %>
+				</span>
+
+				<span class="fifth">
+					<% $campus->{marker_email} %>
+				</span>
+
+				<span class="fifth">
+					<% $campus->{tourn_name} %>
+				</span>
+			</div>
+%		}
+	</div>
+
+

@@ -14,7 +14,17 @@
 		$m->redirect("profile.mhtml?err=$err");
 	}
 
-	$m->abort unless $person;
+	unless ($person) {
+		$m->comp("/funclib/abort.mas",
+			message => "You are not logged in"
+		);
+	}
+
+	if ($session && $session->su) {
+		$m->comp("/funclib/abort.mas",
+			message => "Because of security requirements you may not change another user's password while SU'd"
+		);
+	}
 
 	my $then = $now->clone();
 	$then->subtract( hours => 2 );
@@ -108,10 +118,13 @@
 				$sesh->delete();
 			}
 
-			Tab::log(
-				"PASSWORD CHANGE: Person ID ".$person->id." (".$person->email.") "
-				.$person->first." ".$person->last.
-				" password was changed from IP address ".$ENV{HTTP_X_FORWARDED_FOR}
+			my $logmsg = "PASSWORD CHANGE: Person ID ".$person->id." (".$person->email.") " .$person->first." ".$person->last. " password was changed from IP address ".$ENV{HTTP_X_FORWARDED_FOR};
+			Tab::log($logmsg);
+
+			$m->comp("/funclib/log.mas",
+				person      => $person,
+				tag         => "account",
+				description => "Login password was changed using a logged in session ".$session->id
 			);
 
 			my $subject = "Your Tabroom.com password has been changed";

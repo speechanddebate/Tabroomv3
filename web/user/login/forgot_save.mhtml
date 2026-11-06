@@ -17,7 +17,6 @@
 		}
 	}
 
-
 	if ($ENV{HTTP_X_FORWARDED_FOR} ne $ARGS{'origin_ip'}) {
 		$m->comp("/funclib/abort.mas",
 			message => "Your IP address ".$ENV{HTTP_X_FORWARDED_FOR}." differs from the origin of the requested password change ".$ARGS{'origin_ip'}.".  For security purposes, that is not permitted."
@@ -108,14 +107,20 @@
 
 	$pass_change_sth->execute($target->id);
 
-	Tab::log(
-		"PASSWORD CHANGE: Person ID ".$target->id." (".$target->email.") "
-		.$target->first." ".$target->last.
-		" password was changed from IP address ".$ENV{HTTP_X_FORWARDED_FOR}.
-		" using a forgotten password link "
+	my $msg = "PASSWORD CHANGE: Person ID ".$target->id." (".$target->email.") ";
+	$msg .= $target->first." ".$target->last;
+	$msg .= " password was changed from IP address ".$ENV{HTTP_X_FORWARDED_FOR};
+	$msg .= " using a forgotten password link ";
+
+	$m->comp("/funclib/log.mas",
+		type        => "account",
+		description => "User changed password using a forgotten password code or link",
+		person      => $target,
 	);
 
-	my $msg = "Your password has been changed.  You may now log in.";
+	Tab::log($msg);
+
+	my $message = "Your password has been changed.  You may now log in.";
 	my $subject = "Your Tabroom.com password has been changed";
 	my $email = "\n\tHello! \n";
 
@@ -143,7 +148,7 @@
 		body     => $email
 	);
 
-	$m->redirect("/user/login/login.mhtml?username=".$target->email."&msg=$msg");
+	$m->redirect("/user/login/login.mhtml?username=".$target->email."&msg=$message");
 
 </%init>
 
