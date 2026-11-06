@@ -129,6 +129,7 @@
 			$person->setting("creation", "text", "NEW ACCOUNT: $email was created with id ".$person->id.". ".$ip." at ".$now);
 
 			$m->comp("/funclib/email_confirm.mas",
+				dbh    => $ARGS{dbh},
 				person => $person,
 				send   => 1,
 				return => 1
@@ -148,6 +149,7 @@
 			}
 
 			$m->comp("login_save.mhtml",
+				dbh      => $ARGS{dbh},
 				username => $email,
 				password => $pass1,
 				sha      => $ARGS{sha},
