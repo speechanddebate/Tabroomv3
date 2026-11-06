@@ -228,7 +228,7 @@
 
 	my $notme;
 
-	if ($judge->person->id == $person->id) {
+	if ($judge && $judge->person == $person->id) {
 
 	} elsif (
 		$person->site_admin

@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$person
 	$chapter_judge_id
 </%args>
@@ -12,9 +13,10 @@
 		$m->abort;
 	}
 
-	my $msg = "Judge ".$chapter_judge->first." ".$chapter_judge->last." was unlinked from the account ".$chapter_judge->person->email;
+	my $msg = eval {
+		return "Judge ".$chapter_judge->first." ".$chapter_judge->last." was unlinked from the account ".$chapter_judge->person->email;
+	};
 
-	my $dbh = Tab::DBI->db_Main();
 	my $sth = $dbh->prepare("
 		update chapter_judge set person = null where id = ?
 	");

@@ -135,7 +135,7 @@
 		foreach my $entry (@entries) {
 			$schools{$entry->school->id}++;
 		}
-		$num_schools = scalar (keys %schools));
+		$num_schools = scalar (keys %schools);
 	}
 
 	if ($event->abbr eq "BQ") {
