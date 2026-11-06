@@ -8,11 +8,9 @@
 
 	my $jp_id = $judge->person;
 
-	unless (1==2 && $person->site_admin) {
+	unless ($person->site_admin) {
 
 		return "Judge does not have an linked Tabroom account" unless $jp_id;
-
-		Tab::debuglog("Looking for other roles for person $jp_id");
 
 		my $sth = $dbh->prepare("
 			select count(permission.id) as count

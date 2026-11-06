@@ -68,9 +68,44 @@
 
 	} elsif ($property_name) {
 
-		$target->$property_name($property_value);
-		$target->update();
-		$message = "Property $property_name changed to $property_value";
+		if ($property_name eq "site_admin" && $property_value ne $target->site_admin) {
+
+			my $subject = "Site admin privileges revoked from ".$target->email;
+			my $desc = "Site admin privileges revoked by ".$person->email." from ".$target->email;
+
+			if ($property_value) {
+				$subject = "Site admin privileges granted to ".$target->email;
+				$desc = "Site admin privileges granted by ".$person->email." to ".$target->email;
+			}
+
+			my $log = $m->comp("/funclib/log.mas",
+				person      => $target->id,
+				count       => $person->id,  # HACK HACK YOU ARE SUCH A HACK
+				tag         => "account",
+				description => $desc
+			);
+
+			Tab::debuglog("Log message $log created");
+
+			$target->site_admin($property_value);
+			$target->update();
+
+			$m->comp("/funclib/send_notify.mas",
+				from_string => "Tabroom Userbot <littlesnitch\@www.tabroom.com>",
+				ids         => [1, 25656],
+				subject     => $subject,
+				html        => "<p>".$desc."</p>",
+			);
+
+			$message = $target->email." has been granted Godlike powers.";
+
+		} else {
+
+			$target->$property_name($property_value);
+			$target->update();
+			$message = "Property $property_name changed to $property_value";
+
+		}
 	}
 
 
