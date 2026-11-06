@@ -147,6 +147,12 @@
 					href="check_shifts.mhtml
 				">Judge Timeshift Blocks</a>
 
+%				if ($tourn_settings->{"judge_release"}) {
+					<a class="<% ($whoami eq "judge_release_forms") ? "dk" : "" %>blue half"
+						href="judge_release_forms.mhtml"
+					>Judge Forms</a>
+%				}
+
 				<a class="<% ($whoami eq "school_events") ? "dk" : "" %>blue half "
 					href="school_events.mhtml
 				">School entry matrix</a>
@@ -244,6 +250,11 @@
 								href  = "school_forms.mhtml"
 							>School Forms</a>
 %						}
+
+						<a
+							class = "<% ($whoami eq "forms_download") ? "dk" : "" %>blue full"
+							href  = "forms_download.mhtml"
+						>Download Forms</a>
 
 						<a
 							class = "<% $whoami eq "nats_status" ? "dk" : "" %>blue half"
@@ -441,6 +452,18 @@
 							href  = "release_forms.mhtml"
 						>
 							Eligibility Documentation
+						</a>
+%					}
+
+%					if (
+%						@forms || $tourn_settings->{"school_upload"} || $tourn_settings->{"entry_release"}
+%						|| $tourn_settings->{"entry_upload"} || $tourn_settings->{"judge_release"}
+%					) {
+						<a
+							class = "<% ($whoami eq "forms_download") ? "dk" : "" %>blue half"
+							href  = "forms_download.mhtml"
+						>
+							Download Forms
 						</a>
 %					}
 

@@ -159,6 +159,10 @@
 						Eligibility
 					</th>
 %				}
+
+				<th class="hiddencsv">
+					Student ID
+				</th>
 			</tr>
 		</thead>
 
@@ -253,6 +257,10 @@
 %							}
 						</td>
 %					}
+
+					<td class='centeralign hiddencsv smallish'>
+						<% $student_id %>
+					</td>
 				</tr>
 %			}
 

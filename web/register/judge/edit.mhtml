@@ -2915,6 +2915,15 @@
 
 		</div>
 
+		<& "/funclib/judge_release.mas",
+			judge          => $judge,
+			tourn          => $tourn,
+			tourn_settings => $tourn_settings,
+			action         => "release_upload.mhtml",
+			delete         => "release_rm.mhtml?judge_id=".$judge->id,
+			admin          => 1
+		&>
+
 %		if (@questionnaires) {
 
 			<div class="sidenote">

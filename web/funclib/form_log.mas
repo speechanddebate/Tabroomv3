@@ -1,0 +1,36 @@
+<%args>
+	$person
+	$tourn
+	$form
+	$school  => undef
+	$subject => undef
+	$old     => undef
+	$new     => undef
+</%args>
+<%init>
+
+	my $action = "uploaded";
+	$action = "replaced" if $old && $new && $old ne $new;
+	$action = "deleted" unless $new;
+
+	my $description = $form." ".$action;
+	$description .= " for ".$subject if $subject;
+	$description .= ": ";
+
+	if ($action eq "replaced") {
+		$description .= $old." replaced by ".$new;
+	} else {
+		$description .= $new || $old;
+	}
+
+	$m->comp("/funclib/log.mas",
+		type        => "registration",
+		tourn       => $tourn,
+		school      => $school,
+		person      => $person,
+		description => $description
+	);
+
+	return;
+
+</%init>

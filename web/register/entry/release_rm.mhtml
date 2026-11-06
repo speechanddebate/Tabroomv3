@@ -30,6 +30,16 @@
 		};
 
 		if (%eligibility_forms) {
+
+			$m->comp("/funclib/form_log.mas",
+				person  => $person->id,
+				tourn   => $tourn->id,
+				school  => $school->id,
+				form    => "Eligibility form",
+				subject => $student->first." ".$student->last,
+				old     => $eligibility_forms{$student->id}
+			) if $eligibility_forms{$student->id};
+
 			delete $eligibility_forms{$student->id};
 			$school->setting("eligibility_forms", "text", JSON::encode_json(\%eligibility_forms));
 		}
@@ -43,6 +53,16 @@
 		};
 
 		if (%release_forms) {
+
+			$m->comp("/funclib/form_log.mas",
+				person  => $person->id,
+				tourn   => $tourn->id,
+				school  => $school->id,
+				form    => "Release form",
+				subject => $student->first." ".$student->last,
+				old     => $release_forms{$student->id}
+			) if $release_forms{$student->id};
+
 			delete $release_forms{$student->id};
 			$school->setting("release_forms", "text", JSON::encode_json(\%release_forms));
 		}

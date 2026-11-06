@@ -250,6 +250,18 @@
 			</div>
 %		}
 
+%		if ($tourn_settings->{"judge_release"}) {
+			<h5>Notes about judge form</h5>
+			<div class="full centeralign">
+				<textarea
+					rows = "5"
+					cols = "65"
+					class = "full"
+					name = "judge_form_message"
+				><% $tourn_settings->{"judge_form_message"} %></textarea>
+			</div>
+%		}
+
 %		if ($tourn_settings->{"nsda_nats"}) {
 			<h5>Registration Open Notice Email</h5>
 
@@ -452,6 +464,78 @@
 							>
 							<span
 								id  = "entry_release_form_file"
+								class = "filename"
+								style = "-webkit-user-select: none;"
+							>Upload File</span>
+
+							<span
+								class = "action"
+								style = "-webkit-user-select: none;"
+							>Choose File</span>
+						</div>
+					</span>
+				</div>
+
+				<div class="rightalign liblrow padvertless">
+					<span class="half centeralign nospace">
+						<input
+							type  = "submit"
+							class = 'thin'
+							value = "Upload"
+						>
+					</span>
+				</div>
+			</form>
+
+			<h4 class="martop" title="Upload a template form each judge must fill out, such as a code of conduct acknowledgement.">
+				Per-Judge Forms
+			</h4>
+
+%			if ($tourn_settings->{"judge_release"}) {
+				<div class="row flexrow" id="judge_release">
+					<span class="fourfifths padleft">
+						<a
+							class  = "link-underline bluetext marno"
+							target = "_blank"
+							href   = "<% $Tab::s3_url %>/<% $tourn->id."/judge_release/".$tourn_settings->{"judge_release"} %>"
+						><% $tourn_settings->{"judge_release"} %></a>
+					</span>
+
+					<span class="fifth padleft">
+						<a
+							class      = "buttonwhite redtext fa fa-sm rightalign fa-trash"
+							target_id  = "judge_release"
+							on_success = "destroy"
+							onClick    = "postConfirm('This removes the judge form template. Forms judges have already uploaded stay on file but are hidden until a template is uploaded again.', this, 'form_rm.mhtml');"
+						>
+						</a>
+					</span>
+				</div>
+%			}
+
+			<form
+				enctype  = "multipart/form-data"
+				name     = "form"
+				action   = "form_upload.mhtml"
+				method   = "post"
+			>
+
+				<div class="row flexrow">
+					<span class="quarter semibold padleft">
+						Form
+					</span>
+
+					<span class="threequarters padright nospace">
+						<div class="uploader dynamic">
+							<input
+								type     = "file"
+								name     = "judge_release_form"
+								style    = "opacity: 0;"
+								onChange = "uploaderName('judge_release_form', 'judge_release_form_file')"
+								id       = "judge_release_form"
+							>
+							<span
+								id  = "judge_release_form_file"
 								class = "filename"
 								style = "-webkit-user-select: none;"
 							>Upload File</span>

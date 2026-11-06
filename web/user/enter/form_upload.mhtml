@@ -1,4 +1,5 @@
 <%args>
+	$person
 	$tourn
 	$school_id => undef
 	$parent_id => undef
@@ -44,6 +45,14 @@
 			}
 
 			system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$reply_form->parent->id."/".$school->id."/".$filename;
+
+			$m->comp("/funclib/form_log.mas",
+				person => $person->id,
+				tourn  => $tourn->id,
+				school => $school->id,
+				form   => "School form ".$reply_form->parent->label,
+				new    => $filename
+			);
 
 			$msg = "Form ".$reply_form->filename." uploaded for ".$school->name;
 		}

@@ -1,0 +1,26 @@
+<%args>
+	$person
+	$now => undef
+</%args>
+<%init>
+
+	return if $person->site_admin;
+
+	$now = DateTime->now() unless $now;
+	my $local = $now->clone->set_time_zone("America/Chicago");
+
+	my $day  = $local->day_of_week;
+	my $hour = $local->hour;
+
+	if (
+		($day == 5 && $hour >= 12)
+		|| $day == 6
+		|| $day == 7
+		|| ($day == 1 && $hour < 12)
+	) {
+		return "Zip downloads of forms are paused from noon Friday to noon Monday (US Central) while tournaments are running. The CSV index is still available.";
+	}
+
+	return;
+
+</%init>

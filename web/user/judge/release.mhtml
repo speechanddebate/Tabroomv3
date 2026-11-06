@@ -1,0 +1,52 @@
+<%args>
+	$person
+	$judge => undef
+</%args>
+<%init>
+
+	unless ($judge && ($person->site_admin || $judge->person == $person->id)) {
+		$m->comp("/funclib/abort.mas", message => "No judge record found");
+	}
+
+	my $tourn = $judge->category->tourn;
+	my %tourn_settings = $tourn->all_settings();
+
+	unless ($tourn_settings{"judge_release"}) {
+		$m->comp("/funclib/abort.mas", message => $tourn->name." does not ask judges for a form");
+	}
+
+</%init>
+
+	<div class="main">
+
+		<h3><% $tourn->name %></h3>
+
+		<h5>Judge Form for <% $judge->first." ".$judge->last %></h5>
+
+		<p>
+			Download the blank form, complete it, and upload the finished
+			copy here. Your status is shown to the tournament and to the
+			school you judge for.
+		</p>
+
+%		if ($tourn_settings{"judge_form_message"}) {
+			<div class="padmore">
+				<% $tourn_settings{"judge_form_message"} %>
+			</div>
+%		}
+
+		<a
+			class = "buttonwhite bluetext"
+			href  = "index.mhtml"
+		>Return to your judging</a>
+
+	</div>
+
+	<div class="menu">
+		<& "/funclib/judge_release.mas",
+			judge          => $judge,
+			tourn          => $tourn,
+			tourn_settings => \%tourn_settings,
+			action         => "release_upload.mhtml"
+		&>
+	</div>

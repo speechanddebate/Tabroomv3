@@ -56,7 +56,21 @@
 					from tourn_setting nsda_nats
 					where nsda_nats.tourn = tourn.id
 					and nsda_nats.tag = 'nsda_nats'
-				) nsda_nats
+				) nsda_nats,
+				(select
+					judge_release_template.value
+					from tourn_setting judge_release_template
+					where judge_release_template.tourn = tourn.id
+					and judge_release_template.tag = 'judge_release'
+					limit 1
+				) judge_release_template,
+				(select
+					judge_release.value
+					from judge_setting judge_release
+					where judge_release.judge = judge.id
+					and judge_release.tag = 'judge_release'
+					limit 1
+				) judge_release
 
 		from (judge, category, tourn)
 
@@ -237,7 +251,9 @@
 				$jpool_parli,
 				$paradigm_quiz,
 				$jpool, $jpool_name,
-				$nsda_nats
+				$nsda_nats,
+				$judge_release_template,
+				$judge_release
 			) = $sth->fetchrow_array()
 		) {
 
@@ -293,6 +309,8 @@
 			$judges{$judge_id}{"rounds"}           = $judge_obligation + $judge_hired;
 
 			$judges{$judge_id}{"nsda_nats"}        = $nsda_nats;
+			$judges{$judge_id}{"judge_release_template"} = $judge_release_template;
+			$judges{$judge_id}{"judge_release"}    = $judge_release;
 			$judges{$judge_id}{"livedoc_url"}      = $category_settings{"livedoc_url"}{value_text};
 			$judges{$judge_id}{"livedoc_caption"}  = $category_settings{"livedoc_caption"}{value};
 			$judges{$judge_id}{"rounds_per"}       = $category_settings{rounds_per}{value};
@@ -727,7 +745,7 @@
 				</span>
 			</div>
 
-%			if ($judge->{"diversity_selfie"} || $judge->{"quizzes"} || $judge->{"nsda_nats"}) {
+%			if ($judge->{"diversity_selfie"} || $judge->{"quizzes"} || $judge->{"nsda_nats"} || $judge->{"judge_release_template"}) {
 
 				<div class="padtop">
 
@@ -735,7 +753,7 @@
 						Additional Information for <% $judge->{"tourn_name"} %>
 					</h6>
 
-%					if ($judge->{"diversity_selfie"} || $judge->{"quizzes"}) {
+%					if ($judge->{"diversity_selfie"} || $judge->{"quizzes"} || $judge->{"judge_release_template"}) {
 
 						<span class="pagehalf marno">
 %							if ($judge->{"diversity_selfie"}) {
@@ -768,6 +786,33 @@
 										</span>
 									</div>
 								</label>
+%							}
+
+%							if ($judge->{"judge_release_template"}) {
+								<div class="nospace ltbordertop">
+									<a
+										title = "Upload the tournament's judge form"
+										href  = "release.mhtml?judge_id=<% $judge_id %>"
+										class = "white full flexrow"
+									>
+										<span class="padleft padrightless">
+%											if ($judge->{"judge_release"}) {
+												<span class="fa fa-sm greentext fa-check" title="Uploaded"></span>
+%											} else {
+												<span class="fa fa-sm redtext fa-times" title="Not uploaded"></span>
+%											}
+										</span>
+
+										<span class="grow fourfifths semibold leftalign smallish padleft">
+											Judge Form
+										</span>
+
+										<span class="tenth rightalign padrightmore">
+											<span class="fa fa-sm fa-upload buttonwhite bluetext padless">
+											</span>
+										</span>
+									</a>
+								</div>
 %							}
 
 %							my $counter = 1;

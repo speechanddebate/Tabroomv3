@@ -1,0 +1,184 @@
+<%args>
+	$dbh
+	$tourn
+	$tourn_settings
+</%args>
+<%init>
+
+	my $sth = $dbh->prepare("
+		select
+			judge.id, judge.first, judge.last, judge.code, judge.active,
+			category.abbr,
+			school.id school_id, school.name school_name,
+			person.email,
+			judge_release.value form,
+			judge_release_at.value_date uploaded
+
+		from (judge, category)
+
+			left join school on school.id = judge.school
+			left join person on person.id = judge.person
+
+			left join judge_setting judge_release
+				on judge_release.judge = judge.id
+				and judge_release.tag = 'judge_release'
+
+			left join judge_setting judge_release_at
+				on judge_release_at.judge = judge.id
+				and judge_release_at.tag = 'judge_release_at'
+
+		where category.tourn = ?
+			and category.id = judge.category
+		group by judge.id
+		order by school.name, judge.last, judge.first
+	");
+
+	$sth->execute($tourn->id);
+
+	my $judges = $sth->fetchall_hash();
+
+</%init>
+
+	<& "menu.mas",
+		tourn          => $tourn,
+		tourn_settings => $tourn_settings,
+		whoami         => "judge_release_forms"
+	&>
+
+	<div class="main">
+
+		<span class="threequarters nospace">
+			<h4>Judge Form Status</h4>
+		</span>
+
+		<span
+			class = "quarter nospace rightalign"
+			id    = "judge_forms_buttonarea"
+		> </span>
+
+		<& "/funclib/tablesorter.mas", table => "judge_forms" &>
+
+		<table id="judge_forms">
+
+			<thead>
+				<tr class="yellow smallish">
+					<th>
+						School
+					</th>
+
+					<th>
+						First
+					</th>
+
+					<th>
+						Last
+					</th>
+
+					<th>
+						Category
+					</th>
+
+					<th>
+						Code
+					</th>
+
+					<th class="hiddencsv">
+						Email
+					</th>
+
+					<th class="hiddencsv">
+						Judge ID
+					</th>
+
+					<th title="Active in the tournament">
+						Active
+					</th>
+
+					<th class="smallish">
+						Form
+					</th>
+
+					<th class="smallish">
+						Uploaded
+					</th>
+				</tr>
+			</thead>
+
+			<tbody>
+%				foreach my $judge (@{$judges}) {
+					<tr>
+						<td class="nospace">
+%							if ($judge->{"school_id"}) {
+								<a
+									href  = "/register/school/edit.mhtml?school_id=<% $judge->{"school_id"} %>"
+									class = "white full padtop padbottom"
+								>
+									<% $judge->{"school_name"} %>
+								</a>
+%							} else {
+								Hired
+%							}
+						</td>
+
+						<td class="nospace">
+							<a
+								href  = "/register/judge/edit.mhtml?judge_id=<% $judge->{"id"} %>"
+								class = "white full padtop padbottom"
+							>
+								<% $judge->{"first"} %>
+							</a>
+						</td>
+
+						<td>
+							<% $judge->{"last"} %>
+						</td>
+
+						<td>
+							<% $judge->{"abbr"} %>
+						</td>
+
+						<td>
+							<% $judge->{"code"} %>
+						</td>
+
+						<td class="hiddencsv">
+							<% $judge->{"email"} %>
+						</td>
+
+						<td class="hiddencsv">
+							<% $judge->{"id"} %>
+						</td>
+
+						<td class="centeralign">
+							<% $judge->{"active"} ? "Y" : "N" %>
+						</td>
+
+						<td class="centeralign">
+							<span class="hidden">
+								<% $judge->{"form"} ? "1" : "10" %>
+							</span>
+							<span class="hiddencsv">
+								<% $judge->{"form"} ? "Y" : "" %>
+							</span>
+%							if ($judge->{"form"}) {
+								<a
+									class = "fa-sm fa fa-arrow-down bluetext buttonwhite"
+									href  = "<% $Tab::s3_url %>/<% $tourn->id."/judge_release/".$judge->{"id"}."/".$judge->{"form"} %>"
+								></a>
+%							}
+						</td>
+
+						<td class="smallish">
+%							if ($judge->{"uploaded"}) {
+								<& "/funclib/showdate.mas",
+									length => "sortable",
+									string => $judge->{"uploaded"},
+									tz     => $tourn->tz
+								&>
+%							}
+						</td>
+					</tr>
+%				}
+			</tbody>
+		</table>
+	</div>

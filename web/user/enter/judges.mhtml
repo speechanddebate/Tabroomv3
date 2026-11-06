@@ -556,6 +556,26 @@
 					</p>
 %				}
 
+<%perl>
+				if ($tourn_settings{"judge_release"}) {
+
+					my $release_deadline = $tourn_settings{"release_deadline"}
+						|| $tourn_settings{"drop_deadline"}
+						|| $tourn->reg_end;
+</%perl>
+%					if ($release_deadline && $now < $release_deadline) {
+						<p class="padleftmore leftalign semibold greentext marleftmore">
+							You may upload judge forms until
+								<& "/funclib/showdate.mas", dt => $release_deadline, tz => $tz &>
+								<& "/funclib/showtime.mas", dt => $release_deadline, tz => $tz &>
+						</p>
+%					} else {
+						<p class="padleftmore leftalign semibold redtext marleftmore">
+							The deadline to upload judge forms has passed.
+						</p>
+%					}
+%				}
+
 %				if ($category_settings{"school_registration_notice"}) {
 					<p class="leftalign semibold bluetext bigger">
 						<% $category_settings{"school_registration_notice"} %>
@@ -691,6 +711,12 @@
 								</th>
 %							}
 
+%							if ($tourn_settings{"judge_release"}) {
+								<th title="Judge form uploaded">
+									Form
+								</th>
+%							}
+
 %							if (@shifts) {
 								<th>
 									Availability
@@ -817,6 +843,21 @@
 %										} else {
 											<span class="fa redtext fa fa-times"></span>
 %										}
+									</td>
+%								}
+
+%								if ($tourn_settings{"judge_release"}) {
+									<td class="centeralign nospace">
+										<a
+											class = "white"
+											href  = "judge_release.mhtml?<% $args %>"
+										>
+%										if ($judge->setting("judge_release")) {
+											<span class="fa greentext fa fa-check"></span>
+%										} else {
+											<span class="fa redtext fa fa-times"></span>
+%										}
+										</a>
 									</td>
 %								}
 

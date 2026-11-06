@@ -1,0 +1,144 @@
+<%args>
+	$judge
+	$tourn
+	$tourn_settings
+	$action
+	$hidden    => undef
+	$delete    => undef
+	$admin     => undef
+</%args>
+<%init>
+
+	return unless $tourn_settings->{"judge_release"};
+
+	my $filename = $judge->setting("judge_release");
+	my $uploaded_at = $judge->setting("judge_release_at");
+
+	my $release_deadline = $tourn_settings->{"release_deadline"}
+		|| $tourn_settings->{"drop_deadline"}
+		|| $tourn->reg_end;
+
+	my $open = $admin;
+	$open++ if (not defined $release_deadline) || DateTime->now() < $release_deadline;
+
+</%init>
+
+	<div class="sidenote">
+
+		<span class="twothirds nospace">
+			<h4>Judge Form</h4>
+		</span>
+
+		<span class="third centeralign nospace">
+			<a
+				class  = "white full bluetext semibold padvertmore marno centeralign link-underline"
+				target = "_blank"
+				href   = "<% $Tab::s3_url %>/<% $tourn->id."/judge_release/".$tourn_settings->{"judge_release"} %>"
+			>
+				<span class='fa fa-sm fa-file-pdf-o'></span>
+				Blank Form
+			</a>
+		</span>
+
+%		if ($tourn_settings->{"judge_form_message"}) {
+			<p class="smallish">
+				<% $tourn_settings->{"judge_form_message"} %>
+			</p>
+%		}
+
+%		if ($filename) {
+			<div class="ltbordertop flexrow">
+				<span class="fa fa-lg fa-check greentext fifth centeralign marvertno">
+				</span>
+
+				<span class="<% $delete ? "threefifths" : "fourfifths" %> padvertless">
+					<a
+						class  = "greentext semibold link-underline"
+						target = "_blank"
+						title  = "Uploaded <% $uploaded_at ? Tab::shortdate($uploaded_at) : "" %>"
+						href   = "<% $Tab::s3_url %>/<% $tourn->id."/judge_release/".$judge->id."/".$filename %>"
+					><% $filename %></a>
+				</span>
+
+%				if ($delete) {
+					<span class="fifth centeralign">
+						<a
+							class = "buttonwhite redtext fa fa-sm fa-trash"
+							<& "/funclib/confirm.mas", warn => "Are you sure you mean to delete this judge's form?" &>
+							href  = "<% $delete %>"
+						></a>
+					</span>
+%				}
+			</div>
+
+%		} else {
+			<div class="ltbordertop flexrow">
+				<span
+					class="fa fa-2x fa-times redtext marno sixth centeralign"
+				></span>
+
+				<span class="semibold redtext padvert threequarters">
+					Not Complete
+				</span>
+			</div>
+%		}
+
+%		if ($open) {
+			<form
+				action  = "<% $action %>"
+				enctype = "multipart/form-data"
+				method  = "post"
+			>
+
+				<input
+					type  = "hidden"
+					name  = "judge_id"
+					value = "<% $judge->id %>"
+				>
+
+%				foreach my $key (sort keys %{$hidden}) {
+					<input
+						type  = "hidden"
+						name  = "<% $key %>"
+						value = "<% $hidden->{$key} %>"
+					>
+%				}
+
+				<div class="full ltbordertop">
+					<div class="uploader dynamic">
+						<input
+							type     = "file"
+							name     = "judge_release_form"
+							id       = "judge_release_form"
+							style    = "opacity: 0;"
+							onchange = "uploaderName(
+								'judge_release_form',
+								'judge_release_form_file'
+							)"
+						>
+
+						<span
+							id    = "judge_release_form_file"
+							class = "filename"
+							style = "-webkit-user-select: none;"
+						>Upload File</span>
+
+						<span
+							class = "action"
+							style = "-webkit-user-select: none;"
+						>Choose File</span>
+					</div>
+				</div>
+
+				<div class="liblrow rightalign padvertless">
+					<span class="centeralign third nospace">
+						<input type="submit" class="thin" value="Upload">
+					</span>
+				</div>
+			</form>
+%		} else {
+			<p class="semibold redtext centeralign">
+				The deadline for judge form uploads has passed.
+			</p>
+%		}
+	</div>

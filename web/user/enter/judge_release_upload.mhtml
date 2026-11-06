@@ -1,0 +1,34 @@
+<%args>
+	$person
+	$school
+	$judge_id => undef
+	$from     => undef
+</%args>
+<%init>
+
+	my $judge = Tab::Judge->retrieve($judge_id) if $judge_id;
+
+	unless ($judge && $judge->school == $school->id) {
+		$m->comp("/funclib/abort.mas",
+			message => "No judge found with ID ".int($judge_id)." for this school"
+		);
+	}
+
+	my $tourn = $school->tourn;
+	my $req = Apache2::Request->new($r);
+
+	my $filename = $m->comp("/funclib/judge_release_save.mas",
+		judge    => $judge,
+		tourn    => $tourn,
+		person   => $person,
+		upload   => $req->upload("judge_release_form"),
+		deadline => 1
+	);
+
+	my $msg = $filename ? "Form uploaded for ".$judge->first." ".$judge->last : "";
+	my $err = $filename ? "" : "No valid upload processed";
+
+	my $page = ($from eq "form") ? "judge_release.mhtml" : "judge_details.mhtml";
+	$m->redirect($page."?judge_id=".$judge->id."&school_id=".$school->id."&msg=$msg&err=$err");
+
+</%init>

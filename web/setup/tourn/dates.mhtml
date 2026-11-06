@@ -97,6 +97,7 @@
 	if (
 		$tourn_settings->{"entry_release"}
 		|| $tourn_settings->{"entry_upload"}
+		|| $tourn_settings->{"judge_release"}
 	) {
 		$release_deadline = $tourn_settings->{"release_deadline"};
 		$release_deadline = $reg_end->clone unless ($release_deadline || (not defined $reg_end));
@@ -478,7 +479,7 @@
 
 			</div>
 
-%			if ($tourn_settings->{"entry_release"} || $tourn_settings->{"entry_upload"}) {
+%			if ($tourn_settings->{"entry_release"} || $tourn_settings->{"entry_upload"} || $tourn_settings->{"judge_release"}) {
 
 				<& "/funclib/datepicker.mas",
 					id  => "release_deadline",
@@ -488,7 +489,7 @@
 				<div class="row">
 
 					<span class="half smallish ">
-						Entry Release forms due
+						Release forms due
 					</span>
 
 					<span class="quarter">

@@ -1,0 +1,339 @@
+<%args>
+	$tourn
+	$tourn_settings
+	$perms
+	$person
+	$layout  => "school"
+	$missing => undef
+	$mode    => "zip"
+</%args>
+<%init>
+
+	use IO::Compress::Zip qw($ZipError :zip_method);
+	use File::Path qw(make_path);
+	use File::Temp;
+	use Encode;
+
+	unless (
+		$person->site_admin
+		|| $perms->{tourn}{$tourn} eq "owner"
+		|| $perms->{tourn}{$tourn} eq "tabber"
+	) {
+		$m->comp("/funclib/abort.mas",
+			message => "Only tournament owners and tabbers can download forms"
+		);
+	}
+
+	unless ($mode eq "zip" || $mode eq "csv") {
+		$m->comp("/funclib/abort.mas", message => "Unknown download type");
+	}
+
+	my @requested = ref $ARGS{"types"} ? @{$ARGS{"types"}} : grep { $_ } ($ARGS{"types"});
+
+	my ($records, $labels) = $m->comp("/funclib/tourn_forms.mas",
+		tourn          => $tourn,
+		tourn_settings => $tourn_settings,
+		types          => [ @requested ]
+	);
+
+	my @types = grep { $labels->{$_} } @requested;
+
+	unless (@types) {
+		$m->comp("/funclib/abort.mas", message => "Choose at least one kind of form to download");
+	}
+
+	my @uploaded = grep { $_->{status} eq "Uploaded" } @{$records};
+
+	my $limit = 3000;
+
+	if ($mode eq "zip" && scalar @uploaded > $limit) {
+		$m->comp("/funclib/abort.mas",
+			message => scalar(@uploaded)." files is more than can be zipped at once (limit $limit). Choose fewer kinds of forms and download them separately."
+		);
+	}
+
+	my $dbh = Tab::DBI->db_Main();
+	my $lock_prefix = ($Tab::dbname || "tabroom")."_forms_";
+	my @locks;
+
+	my $release = sub {
+		foreach my $lock (@locks) {
+			eval { $dbh->do("SELECT RELEASE_LOCK(?)", undef, $lock) };
+		}
+		@locks = ();
+	};
+
+	my $ok = eval {
+
+		if ($mode eq "zip") {
+
+			my $paused = $m->comp("/funclib/forms_download_paused.mas", person => $person);
+
+			if ($paused) {
+				$m->comp("/funclib/abort.mas", message => $paused);
+			}
+
+			my ($got) = $dbh->selectrow_array("SELECT GET_LOCK(?, 0)", undef, $lock_prefix."tourn_".$tourn->id);
+
+			unless ($got) {
+				$m->comp("/funclib/abort.mas",
+					message => "A forms download for this tournament is already being built. Please wait for it to finish, then try again."
+				);
+			}
+
+			push @locks, $lock_prefix."tourn_".$tourn->id;
+
+			foreach my $slot (1 .. 2) {
+				my ($slot_got) = $dbh->selectrow_array("SELECT GET_LOCK(?, 0)", undef, $lock_prefix."slot_".$slot);
+				if ($slot_got) {
+					push @locks, $lock_prefix."slot_".$slot;
+					last;
+				}
+			}
+
+			unless (scalar @locks > 1) {
+				$m->comp("/funclib/abort.mas",
+					message => "Tabroom is building other forms downloads right now. Please try again in a few minutes."
+				);
+			}
+		}
+
+		my $clean = sub {
+			my $text = shift;
+			$text = "" unless defined $text;
+			$text =~ s/[\/\\:*?"<>|\x00-\x1f]/_/g;
+			$text =~ s/\s+/ /g;
+			$text =~ s/^\s+|\s+$//g;
+			$text =~ s/^\.+//;
+			$text = substr($text, 0, 80);
+			$text =~ s/[\s.]+$//;
+			return length($text) ? $text : "Unnamed";
+		};
+
+		my $tourn_name = $tourn->name;
+		$tourn_name =~ s/[\W_]//g;
+
+		my $workdir = File::Temp->newdir("tabroom-forms-XXXXXXXX", TMPDIR => 1, CLEANUP => 1);
+
+		if ($mode eq "zip" && @uploaded) {
+
+			my @s3 = split(" ", $Tab::s3_cmd);
+			my %prefixes;
+
+			foreach my $record (@uploaded) {
+
+				$record->{keys} = [ grep { $_ !~ /\.\./ && $_ !~ /^\// } @{$record->{keys}} ];
+
+				foreach my $key (@{$record->{keys}}) {
+					if ($key =~ /^\d+\/entry_release\//) {
+						$prefixes{""}++;
+					} elsif ($key =~ /^([a-z_]+)\//) {
+						$prefixes{$1}++;
+					}
+				}
+			}
+
+			foreach my $prefix (sort keys %prefixes) {
+
+				my @filter = length($prefix) ? () : ("--exclude", "*", "--include", "*/entry_release/*");
+				my $folder = length($prefix) ? $prefix."/" : "";
+
+				make_path($workdir."/".$folder);
+
+				system(@s3, "--no-progress", "--quiet", "--no-preserve", @filter, "sync",
+					$Tab::s3_bucket."/tourns/".$tourn->id."/".$folder,
+					$workdir."/".$folder
+				);
+
+				if ($? != 0) {
+					$m->comp("/funclib/abort.mas",
+						message => "Tabroom could not fetch the forms from file storage. Please try again in a few minutes."
+					);
+				}
+			}
+
+			foreach my $record (@uploaded) {
+
+				my ($found) = grep { -f $workdir."/".$_ && -r _ } @{$record->{keys}};
+
+				if ($found) {
+					$record->{local} = $workdir."/".$found;
+				} else {
+					$record->{status} = "Not found in storage";
+				}
+			}
+		}
+
+		my %used;
+		my %references;
+
+		foreach my $record (@{$records}) {
+
+			next unless $record->{status} eq "Uploaded";
+
+			my $school = $record->{school_name}
+				? $clean->($record->{school_name}.($record->{school_code} ? " (".$record->{school_code}.")" : ""))
+				: ($record->{type} eq "judge" ? "Hired judges" : "No school");
+
+			my $kind = $clean->($record->{label});
+			$kind = $clean->($record->{label}." - ".$record->{form_name}) if $record->{type} eq "school_form";
+
+			my $filename = $clean->($record->{file});
+			$filename = $clean->($record->{name})." - ".$filename if $record->{name};
+
+			my $base = ($layout eq "type") ? "$kind/$school/$filename" : "$school/$kind/$filename";
+			my $path = $base;
+			my $n = 1;
+
+			while ($used{lc $path}) {
+				$n++;
+				$path = $base;
+				$path =~ s/(\.[^.\/]*)?$/" ($n)".(defined $1 ? $1 : "")/e;
+			}
+
+			$used{lc $path}++;
+			$record->{zip_path} = $path;
+			$references{$record->{local}}++ if $record->{local};
+		}
+
+		my @rows = $missing ? @{$records} : grep { $_->{status} ne "Missing" } @{$records};
+
+		@rows = sort {
+			($a->{school_name} || "~") cmp ($b->{school_name} || "~")
+			|| $a->{label} cmp $b->{label}
+			|| ($a->{last} || "") cmp ($b->{last} || "")
+			|| ($a->{first} || "") cmp ($b->{first} || "")
+		} @rows;
+
+		my $csv_cell = sub {
+			my $value = shift;
+			$value = "" unless defined $value;
+			$value = "'".$value if $value =~ /^[=+\-@\t\r]/;
+			$value =~ s/"/""/g;
+			return '"'.$value.'"';
+		};
+
+		my $csv = join(",", map { $csv_cell->($_) } (
+			"Form Type", "Form Name", "Form Status", "School", "School Code", "School TabID",
+			"Person Type", "First Name", "Last Name", "Student ID", "Judge ID",
+			"Participation", "Events", "Entry IDs", "Dropped Events", "Waitlisted Events", "Judge Category",
+			"File", "Uploaded", "Path in Zip"
+		))."\n";
+
+		foreach my $record (@rows) {
+			$csv .= join(",", map { $csv_cell->($_) } (
+				$record->{label},
+				$record->{form_name},
+				$record->{status},
+				$record->{school_name} || ($record->{type} eq "judge" ? "Hired" : ""),
+				$record->{school_code},
+				$record->{school_id} || "",
+				$record->{person_type},
+				$record->{first},
+				$record->{last},
+				($record->{person_type} eq "Student" ? $record->{person_id} : ""),
+				($record->{person_type} eq "Judge" ? $record->{person_id} : ""),
+				$record->{participation},
+				$record->{events},
+				$record->{entry_ids},
+				$record->{dropped_events},
+				$record->{waitlist_events},
+				$record->{category},
+				$record->{file},
+				$record->{uploaded},
+				$record->{zip_path}
+			))."\n";
+		}
+
+		$csv = Encode::encode_utf8($csv);
+
+		$m->comp("/funclib/log.mas",
+			type        => "registration",
+			tourn       => $tourn->id,
+			person      => $person->id,
+			description => "Forms downloaded as ".($mode eq "csv" ? "CSV" : "zip")." (".join(", ", map { $labels->{$_} } @types)."): "
+				.scalar(grep { $_->{status} eq "Uploaded" } @{$records})." uploaded forms"
+		);
+
+		$m->clear_buffer;
+
+		if ($ARGS{"token"} && $ARGS{"token"} =~ /^\w{1,40}$/) {
+			Apache2::Cookie->new(
+				$r,
+				-name    => "tabroom_forms_download",
+				-value   => $ARGS{"token"},
+				-expires => "+10m",
+				-path    => "/register/reports"
+			)->bake($r);
+		}
+
+		if ($mode eq "csv") {
+			$r->content_type("text/csv; charset=utf-8");
+			$r->headers_out->{"Content-Disposition"} = "attachment; filename=Forms-".$tourn_name.".csv";
+			$m->print($csv);
+			$m->abort();
+		}
+
+		my $zipfile = $workdir."/forms.zip";
+
+		my $zip = IO::Compress::Zip->new($zipfile, Name => "index.csv", Minimal => 1, EFS => 1, Zip64 => 1)
+			or die "Unable to create zip: $ZipError";
+
+		$zip->print($csv) or die "Unable to write zip: $ZipError";
+
+		foreach my $record (@{$records}) {
+
+			next unless $record->{zip_path} && $record->{local};
+
+			open(my $in, "<:raw", $record->{local})
+				or die "Unable to read ".$record->{local};
+
+			$zip->newStream(
+				Name    => Encode::encode_utf8($record->{zip_path}),
+				Method  => ZIP_CM_STORE,
+				Minimal => 1,
+				EFS     => 1,
+				Zip64   => 1
+			) or die "Unable to write zip: $ZipError";
+
+			local $/ = \65536;
+			while (my $chunk = <$in>) {
+				$zip->print($chunk) or die "Unable to write zip: $ZipError";
+			}
+			close $in;
+
+			unlink $record->{local} unless --$references{$record->{local}};
+		}
+
+		$zip->close() or die "Unable to finish zip: $ZipError";
+
+		$release->();
+
+		open(my $out, "<:raw", $zipfile)
+			or die "Unable to read zip $zipfile";
+
+		$r->content_type("application/zip");
+		$r->headers_out->{"Content-Disposition"} = "attachment; filename=Forms-".$tourn_name.".zip";
+		$r->headers_out->{"Content-Length"} = -s $zipfile;
+
+		{
+			local $/ = \65536;
+			while (my $chunk = <$out>) {
+				$m->print($chunk);
+				$m->flush_buffer;
+			}
+		}
+		close $out;
+
+		$m->abort();
+
+		1;
+	};
+
+	my $error = $@;
+
+	$release->();
+
+	die $error unless $ok;
+
+</%init>

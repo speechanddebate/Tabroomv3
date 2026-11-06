@@ -1,0 +1,239 @@
+<%args>
+	$tourn
+	$tourn_settings
+	$perms
+	$person
+</%args>
+<%init>
+
+	unless (
+		$person->site_admin
+		|| $perms->{tourn}{$tourn} eq "owner"
+		|| $perms->{tourn}{$tourn} eq "tabber"
+	) {
+		$m->comp("/funclib/abort.mas",
+			message => "Only tournament owners and tabbers can download forms"
+		);
+	}
+
+	my ($records, $labels) = $m->comp("/funclib/tourn_forms.mas",
+		tourn          => $tourn,
+		tourn_settings => $tourn_settings
+	);
+
+	my %counts;
+
+	foreach my $record (@{$records}) {
+		$counts{$record->{type}}{$record->{status}}++;
+	}
+
+	my @types = grep { $counts{$_} } ("school_form", "school_upload", "release", "eligibility", "judge");
+
+	my $paused = $m->comp("/funclib/forms_download_paused.mas", person => $person);
+
+</%init>
+
+	<& "menu.mas",
+		tourn          => $tourn,
+		tourn_settings => $tourn_settings,
+		whoami         => "forms_download"
+	&>
+
+	<div class="main">
+
+		<h4>Download Forms</h4>
+
+%		unless (@types) {
+			<p class="semibold redtext">
+				This tournament doesn't collect any forms yet.
+			</p>
+%		} else {
+
+			<p>
+				Download every uploaded form as one zip file. The zip
+				includes index.csv, which lists each form with its school,
+				student or judge, and status; the CSV can also be
+				downloaded on its own. Large tournaments may take a minute
+				or two to build the zip.
+			</p>
+
+%			if ($paused) {
+				<p class="semibold orangetext">
+					<% $paused %>
+				</p>
+%			}
+
+			<form
+				id     = "forms_download"
+				action = "forms_zip.mhtml"
+				method = "post"
+			>
+
+			<input
+				type  = "hidden"
+				name  = "token"
+				id    = "forms_token"
+				value = ""
+			>
+
+			<div class="full ltbordertop padvert">
+%				foreach my $type (@types) {
+					<label for="type_<% $type %>">
+						<div class="row flexrow hover">
+							<span class="tenth centeralign">
+								<input
+									type    = "checkbox"
+									name    = "types"
+									id      = "type_<% $type %>"
+									value   = "<% $type %>"
+									data-uploaded = "<% $counts{$type}{"Uploaded"} || 0 %>"
+									checked
+								>
+							</span>
+							<span class="third semibold">
+								<% $labels->{$type} %>
+							</span>
+							<span class="quarter">
+								<% $counts{$type}{"Uploaded"} || 0 %> uploaded
+							</span>
+							<span class="quarter <% $counts{$type}{"Missing"} ? "redtext" : "" %>">
+								<% $counts{$type}{"Missing"} || 0 %> missing
+							</span>
+						</div>
+					</label>
+%				}
+			</div>
+
+			<div class="row flexrow">
+				<span class="third semibold padleft">
+					Zip folders
+				</span>
+				<span class="third">
+					<label>
+						<input type="radio" name="layout" value="school" checked>
+						By school
+					</label>
+				</span>
+				<span class="third">
+					<label>
+						<input type="radio" name="layout" value="type">
+						By kind of form
+					</label>
+				</span>
+			</div>
+
+			<label for="missing">
+				<div class="row flexrow hover">
+					<span class="tenth centeralign">
+						<input
+							type    = "checkbox"
+							name    = "missing"
+							id      = "missing"
+							value   = "1"
+							checked
+						>
+					</span>
+					<span class="grow semibold">
+						List forms that haven't been uploaded in the CSV
+					</span>
+				</div>
+			</label>
+
+			<div class="liblrow rightalign">
+				<span class="third centeralign">
+					<button type="submit" name="mode" value="csv" class="buttonwhite bluetext thin">
+						CSV only
+					</button>
+				</span>
+				<span class="third centeralign">
+					<button type="submit" name="mode" value="zip" class="buttonwhite greentext thin" <% $paused ? "disabled data-paused=\"1\" title=\"".$paused."\"" : "" %>>
+						Download zip
+					</button>
+				</span>
+			</div>
+
+			</form>
+
+			<div id="forms_progress" class="hidden centeralign padvertmore martopmore ltbordertop">
+				<p class="semibold bluetext bigger">
+					<span class="fa fa-lg fa-spinner fa-spin"></span>
+					<span id="forms_progress_text">Building your download</span>
+				</p>
+				<p>
+					Large tournaments can take several minutes. Keep this page
+					open; your browser will save the file when it's ready.
+				</p>
+				<p class="semibold">
+					Elapsed <span id="forms_elapsed">0:00</span>
+				</p>
+			</div>
+
+			<div id="forms_done" class="hidden centeralign padvertmore martopmore ltbordertop">
+				<p class="semibold greentext bigger">
+					<span class="fa fa-lg fa-check"></span>
+					Your download is ready. Check your browser's downloads.
+				</p>
+			</div>
+
+			<script>
+
+				$(document).ready(function() {
+
+					let timer;
+
+					const reset = function() {
+						clearInterval(timer);
+						$("#forms_progress").addClass("hidden");
+						$("#forms_download button").not("[data-paused]").prop("disabled", false);
+					};
+
+					$(window).on("pageshow", reset);
+
+					$("#forms_download").on("submit", function(event) {
+
+						const submitter = event.originalEvent && event.originalEvent.submitter;
+						const mode = submitter ? $(submitter).val() : "csv";
+
+						const token = Date.now().toString(36) + Math.random().toString(36).slice(2);
+						$("#forms_token").val(token);
+
+						let files = 0;
+						$("#forms_download input[name=types]:checked").each(function() {
+							files += parseInt($(this).data("uploaded")) || 0;
+						});
+
+						$("#forms_progress_text").text(
+							mode === "csv"
+								? "Building the CSV"
+								: "Building a zip of " + files + " file" + (files === 1 ? "" : "s")
+						);
+
+						$("#forms_done").addClass("hidden");
+						$("#forms_progress").removeClass("hidden");
+
+						setTimeout(function() {
+							$("#forms_download button").prop("disabled", true);
+						}, 0);
+
+						const started = Date.now();
+						clearInterval(timer);
+
+						timer = setInterval(function() {
+
+							const seconds = Math.floor((Date.now() - started) / 1000);
+							$("#forms_elapsed").text(
+								Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0")
+							);
+
+							if (document.cookie.split("; ").indexOf("tabroom_forms_download=" + token) > -1) {
+								clearInterval(timer);
+								reset();
+								$("#forms_done").removeClass("hidden");
+							}
+						}, 1000);
+					});
+				});
+
+			</script>
+%		}
+	</div>

@@ -46,6 +46,16 @@
 
 				my $reply = system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/entry_release/".$school->id."/".$student->id."/".$filename;
 
+				$m->comp("/funclib/form_log.mas",
+					person  => $person->id,
+					tourn   => $tourn->id,
+					school  => $school->id,
+					form    => "Release form",
+					subject => $student->first." ".$student->last,
+					old     => $release_forms{$student->id},
+					new     => $filename
+				);
+
 				$release_forms{$student->id} = $filename;
 
 				if ($reply ne '0') {
@@ -68,6 +78,16 @@
 				my $filetemp = $upload->tempname;
 
 				my $reply = system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/eligibility/".$school->id."/".$student->id."/".$filename;
+
+				$m->comp("/funclib/form_log.mas",
+					person  => $person->id,
+					tourn   => $tourn->id,
+					school  => $school->id,
+					form    => "Eligibility form",
+					subject => $student->first." ".$student->last,
+					old     => $eligibility_forms{$student->id},
+					new     => $filename
+				);
 
 				$eligibility_forms{$student->id} = $filename;
 

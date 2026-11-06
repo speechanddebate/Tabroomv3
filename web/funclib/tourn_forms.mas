@@ -1,0 +1,279 @@
+<%args>
+	$tourn
+	$tourn_settings
+	$types => undef
+</%args>
+<%init>
+
+	my $dbh = Tab::DBI->db_Main();
+
+	my %labels = (
+		school_form   => "School Forms",
+		school_upload => "School Uploads",
+		release       => "Release Forms",
+		eligibility   => "Eligibility Docs",
+		judge         => "Judge Forms"
+	);
+
+	my %want = map { $_ => 1 } grep { $labels{$_} } @{$types || []};
+	%want = map { $_ => 1 } keys %labels unless $types;
+
+	my @records;
+
+	my %schools;
+
+	my $school_sth = $dbh->prepare("
+		select school.id, school.name, school.code
+		from school
+		where school.tourn = ?
+	");
+
+	$school_sth->execute($tourn->id);
+
+	while (my ($id, $name, $code) = $school_sth->fetchrow_array()) {
+		$schools{$id} = { name => $name, code => $code };
+	}
+
+	my $add = sub {
+		my %record = @_;
+		my $school = $schools{$record{school_id}} || {};
+		$record{label}       = $labels{$record{type}};
+		$record{school_name} = $school->{name};
+		$record{school_code} = $school->{code};
+		$record{status}      = $record{file} ? "Uploaded" : "Missing";
+		$record{name}        = join(" ", grep { $_ } ($record{first}, $record{last}));
+		$record{person_type} = "School" unless $record{person_type};
+		$record{keys}        = [ grep { $_ } @{$record{keys} || []} ];
+		push @records, \%record;
+	};
+
+	if ($want{school_form}) {
+
+		my $template_sth = $dbh->prepare("
+			select file.id, file.label from file where file.tourn = ? and file.tag = 'school_form'
+		");
+		$template_sth->execute($tourn->id);
+		my $templates = $template_sth->fetchall_hash();
+
+		my $reply_sth = $dbh->prepare("
+			select file.parent, file.school, file.filename, file.timestamp
+			from file
+			where file.tourn = ?
+				and file.tag = 'form_reply'
+			order by file.id
+		");
+		$reply_sth->execute($tourn->id);
+
+		my %replies;
+
+		while (my ($parent, $school_id, $filename, $timestamp) = $reply_sth->fetchrow_array()) {
+			push @{$replies{$parent}{$school_id}}, { file => $filename, uploaded => $timestamp };
+		}
+
+		foreach my $template (@{$templates}) {
+			foreach my $school_id (keys %schools) {
+
+				my @school_replies = @{$replies{$template->{id}}{$school_id} || [ {} ]};
+
+				foreach my $reply (@school_replies) {
+					$add->(
+						type      => "school_form",
+						school_id => $school_id,
+						form_name => $template->{label},
+						file      => $reply->{file},
+						uploaded  => $reply->{uploaded},
+						keys      => [ $reply->{file} ? "school_form/".$template->{id}."/".$school_id."/".$reply->{file} : "" ]
+					);
+				}
+			}
+		}
+	}
+
+	if ($want{school_upload} && $tourn_settings->{"school_upload"}) {
+
+		my $sth = $dbh->prepare("
+			select school.id, upload_file.value_text, upload_file_timestamp.value_date
+			from school
+				left join school_setting upload_file
+					on upload_file.school = school.id
+					and upload_file.tag = 'upload_file'
+				left join school_setting upload_file_timestamp
+					on upload_file_timestamp.school = school.id
+					and upload_file_timestamp.tag = 'upload_file_timestamp'
+			where school.tourn = ?
+		");
+
+		$sth->execute($tourn->id);
+
+		while (my ($school_id, $filename, $uploaded) = $sth->fetchrow_array()) {
+			$add->(
+				type      => "school_upload",
+				school_id => $school_id,
+				file      => $filename,
+				uploaded  => $uploaded,
+				keys      => [ $filename ? "school_upload/".$school_id."/".$filename : "" ]
+			);
+		}
+	}
+
+	if (
+		($want{release} && $tourn_settings->{"entry_release"})
+		|| ($want{eligibility} && $tourn_settings->{"entry_upload"})
+	) {
+
+		my $sth = $dbh->prepare("
+			select school.id, student.id, student.first, student.last,
+				entry.id, event.abbr, entry.dropped, entry.waitlist, skip.value,
+				release_forms.value_text, eligibility_forms.value_text
+
+			from (school, entry, entry_student es, event, student)
+
+				left join event_setting skip
+					on skip.event = event.id
+					and skip.tag = 'skip_entry_upload'
+
+				left join school_setting release_forms
+					on release_forms.tag = 'release_forms'
+					and release_forms.school = school.id
+
+				left join school_setting eligibility_forms
+					on eligibility_forms.tag = 'eligibility_forms'
+					and eligibility_forms.school = school.id
+
+			where school.tourn = ?
+				and school.id = entry.school
+				and entry.unconfirmed = 0
+				and entry.id = es.entry
+				and es.student = student.id
+				and entry.event = event.id
+			order by school.id, student.last, event.abbr
+		");
+
+		$sth->execute($tourn->id);
+
+		my %students;
+		my %forms;
+
+		while (
+			my (
+				$school_id, $student_id, $first, $last,
+				$entry_id, $event_abbr, $dropped, $waitlist, $skip,
+				$releases, $eligibility
+			) = $sth->fetchrow_array()
+		) {
+
+			unless ($forms{$school_id}) {
+				foreach my $pair (["release", $releases], ["eligibility", $eligibility]) {
+					my $decoded = $pair->[1] ? eval { JSON::decode_json($pair->[1]) } : undef;
+					$forms{$school_id}{$pair->[0]} = (ref $decoded eq "HASH") ? $decoded : {};
+				}
+			}
+
+			my $student = $students{$school_id}{$student_id} ||= {
+				first  => $first,
+				last   => $last,
+				events => []
+			};
+
+			my $entry_status = $dropped ? "dropped" : ($waitlist ? "waitlist" : "active");
+
+			unless (grep { $_ == $entry_id } @{$student->{entry_ids} || []}) {
+				push @{$student->{entry_ids}}, $entry_id;
+				push @{$student->{events}}, $event_abbr;
+			}
+
+			push @{$student->{$entry_status}}, $event_abbr
+				unless grep { $_ eq $event_abbr } @{$student->{$entry_status} || []};
+
+			$student->{needs_eligibility}++ unless $skip;
+		}
+
+		foreach my $school_id (sort keys %students) {
+			foreach my $student_id (sort keys %{$students{$school_id}}) {
+
+				my $student = $students{$school_id}{$student_id};
+
+				foreach my $type ("release", "eligibility") {
+
+					next unless $want{$type};
+					next if $type eq "release" && (not $tourn_settings->{"entry_release"});
+					next if $type eq "eligibility" && (not $tourn_settings->{"entry_upload"});
+					next if $type eq "eligibility" && (not $student->{needs_eligibility});
+
+					my $filename = $forms{$school_id}{$type}{$student_id};
+					my @keys;
+
+					if ($filename) {
+						push @keys, ($type eq "release" ? "entry_release" : "eligibility")."/".$school_id."/".$student_id."/".$filename;
+						unshift @keys, $school_id."/entry_release/".$student_id."/".$filename
+							if $type eq "release" && $tourn_settings->{"nsda_nats"};
+					}
+
+					$add->(
+						type            => $type,
+						school_id       => $school_id,
+						person_type     => "Student",
+						first           => $student->{first},
+						last            => $student->{last},
+						person_id       => $student_id,
+						events          => join(",", @{$student->{events}}),
+						entry_ids       => join(",", @{$student->{entry_ids}}),
+						dropped_events  => join(",", @{$student->{dropped} || []}),
+						waitlist_events => join(",", @{$student->{waitlist} || []}),
+						participation   => $student->{active} ? "Active" : ($student->{waitlist} ? "Waitlisted" : "Dropped"),
+						file            => $filename,
+						keys            => \@keys
+					);
+				}
+			}
+		}
+	}
+
+	if ($want{judge} && $tourn_settings->{"judge_release"}) {
+
+		my $sth = $dbh->prepare("
+			select judge.id, judge.first, judge.last, judge.school, judge.active, category.abbr,
+				judge_release.value, judge_release_at.value_date
+
+			from (judge, category)
+
+				left join judge_setting judge_release
+					on judge_release.judge = judge.id
+					and judge_release.tag = 'judge_release'
+
+				left join judge_setting judge_release_at
+					on judge_release_at.judge = judge.id
+					and judge_release_at.tag = 'judge_release_at'
+
+			where category.tourn = ?
+				and category.id = judge.category
+			group by judge.id
+		");
+
+		$sth->execute($tourn->id);
+
+		while (
+			my (
+				$judge_id, $first, $last, $school_id, $active, $category_abbr,
+				$filename, $uploaded
+			) = $sth->fetchrow_array()
+		) {
+			$add->(
+				type          => "judge",
+				school_id     => $school_id,
+				person_type   => "Judge",
+				first         => $first,
+				last          => $last,
+				person_id     => $judge_id,
+				category      => $category_abbr,
+				participation => $active ? "Active" : "Inactive",
+				file          => $filename,
+				uploaded  => $uploaded,
+				keys      => [ $filename ? "judge_release/".$judge_id."/".$filename : "" ]
+			);
+		}
+	}
+
+	return (\@records, \%labels);
+
+</%init>
