@@ -24,7 +24,8 @@
 	}
 
 	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
-	my $ip_check = crypt($ip, '$6$'.$Tab::secret);
+	my $salt = $m->comp("/funclib/generate_randomstring.mas");
+	my $ip_check = crypt($ip.$Tab::secret, '$6$'.$salt);
 
 	my $err;
 	my $ok;

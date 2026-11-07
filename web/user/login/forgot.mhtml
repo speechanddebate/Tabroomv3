@@ -5,7 +5,8 @@
 
 	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
 
-	my $key = crypt($ip, '$6$'.$Tab::string);
+	my $salt = $m->comp("/funclib/generate_randomstring.mas");
+	my $ip_check = crypt($ip.$Tab::secret, '$6$'.$salt);
 
 </%init>
 
@@ -40,7 +41,7 @@
 			<input
 				type  = "hidden"
 				name  = "origin_ip"
-				value = "<% $key %>"
+				value = "<% $ip_check %>"
 			>
 
 			<div class="row centeralign">

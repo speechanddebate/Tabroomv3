@@ -82,6 +82,14 @@
 
 	$sth->finish();
 
+	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
+	my $salt = $m->comp("/funclib/generate_randomstring.mas");
+	my $ip_check = crypt($ip.$Tab::secret, '$6$'.$salt);
+
+	Tab::debuglog("IP $ip hash $ip_check");
+
+	$edit->setting("origin_ip", $ip_check);
+
 </%init>
 
 	<script>
@@ -640,7 +648,7 @@
 					<a
 						target    = "_blank"
 						class     = "buttonwhite redtext fa fa-sm fa-retweet"
-						href      = "/user/login/forgot_send.mhtml?username=<% $edit->email %>&origin_ip=<% $ENV{HTTP_X_FORWARDED_FOR} %>"
+						href      = "/user/login/forgot_send.mhtml?username=<% $edit->email %>&origin_ip=setting"
 						target_id = "<% $edit->id %>"
 						logmsg    = "Reset Triggered"
 						title     = "Trigger Password Reset"

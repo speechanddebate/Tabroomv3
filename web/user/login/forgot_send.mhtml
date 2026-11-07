@@ -16,16 +16,22 @@
 		);
 	}
 
+	my $user_person = Tab::Person->search( email => $username )->first;
+
 	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
-	my $ip_check = crypt($ip, $ARGS{origin_ip});
+
+	if ($ARGS{origin_ip} eq "setting" && $user_person) {
+		$ARGS{origin_ip} = $user_person->setting('origin_ip');
+	}
+
+	my $ip_check = crypt($ip.$Tab::secret, $ARGS{origin_ip});
+	Tab::debuglog("Origin IP is ".$ARGS{origin_ip}." and ip check is $ip_check");
 
 	if ($ip_check ne $ARGS{'origin_ip'}) {
 		$m->comp("/funclib/abort.mas",
 			message => "Your IP address ".$ip." differs from the origin of the requested reset address.  To prevent duplicate requests, your password was not reset.  If this was in error, go back, refresh the page, and try again."
 		);
 	}
-
-	my $user_person = Tab::Person->search( email => $username )->first;
 
 	if ($user_person)  {
 
