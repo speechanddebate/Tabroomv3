@@ -18,7 +18,7 @@
 	}
 
 	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
-	my $ip_check = crypt($ip, '$6$'.$Tab::secret);
+	my $ip_check = crypt($ip, $ARGS{origin_ip});
 
 	if ($ip_check ne $ARGS{'origin_ip'}) {
 		$m->comp("/funclib/abort.mas",

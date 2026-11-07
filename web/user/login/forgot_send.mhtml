@@ -17,11 +17,11 @@
 	}
 
 	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
-	my $ip_check = crypt($ip, '$6$'.$Tab::secret);
+	my $ip_check = crypt($ip, $ARGS{origin_ip});
 
 	if ($ip_check ne $ARGS{'origin_ip'}) {
 		$m->comp("/funclib/abort.mas",
-			message => "Your IP address ".$ip." differs from the origin of the requested reset ".$ARGS{'origin_ip'}."  To prevent duplicate requests, your password was not reset.  If this was in error, go back, refresh the page, and try again."
+			message => "Your IP address ".$ip." differs from the origin of the requested reset address.  To prevent duplicate requests, your password was not reset.  If this was in error, go back, refresh the page, and try again."
 		);
 	}
 
