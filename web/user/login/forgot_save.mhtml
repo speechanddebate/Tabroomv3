@@ -17,9 +17,11 @@
 		}
 	}
 
-	if ($ENV{HTTP_X_FORWARDED_FOR} ne $ARGS{'origin_ip'}) {
+	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
+
+	if ($ip ne $ARGS{'origin_ip'}) {
 		$m->comp("/funclib/abort.mas",
-			message => "Your IP address ".$ENV{HTTP_X_FORWARDED_FOR}." differs from the origin of the requested password change ".$ARGS{'origin_ip'}.".  For security purposes, that is not permitted."
+			message => "Your IP address ".$ip." differs from the origin of the requested password change ".$ARGS{'origin_ip'}.".  For security purposes, that is not permitted."
 		);
 	}
 
@@ -109,7 +111,7 @@
 
 	my $msg = "PASSWORD CHANGE: Person ID ".$target->id." (".$target->email.") ";
 	$msg .= $target->first." ".$target->last;
-	$msg .= " password was changed from IP address ".$ENV{HTTP_X_FORWARDED_FOR};
+	$msg .= " password was changed from IP address ".$ip;
 	$msg .= " using a forgotten password link ";
 
 	$m->comp("/funclib/log.mas",
