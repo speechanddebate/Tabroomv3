@@ -5,7 +5,7 @@
 
 	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
 
-	my $key = crypt($ip, '$6$'.Tab::string);
+	my $key = crypt($ip, '$6$'.$Tab::string);
 
 </%init>
 
