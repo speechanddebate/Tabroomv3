@@ -3,6 +3,10 @@
 </%args>
 <%init>
 
+	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
+
+	my $key = crypt($ip, '$6$'.Tab::string);
+
 </%init>
 
 	<script>
@@ -36,7 +40,7 @@
 			<input
 				type  = "hidden"
 				name  = "origin_ip"
-				value = "<% $ENV{HTTP_X_FORWARDED_FOR} %>"
+				value = "<% $key %>"
 			>
 
 			<div class="row centeralign">

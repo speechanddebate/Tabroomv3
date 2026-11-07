@@ -18,8 +18,9 @@
 	}
 
 	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
+	my $ip_check = crypt($ip, '$6$'.$Tab::secret);
 
-	if ($ip ne $ARGS{'origin_ip'}) {
+	if ($ip_check ne $ARGS{'origin_ip'}) {
 		$m->comp("/funclib/abort.mas",
 			message => "Your IP address ".$ip." differs from the origin of the requested password change ".$ARGS{'origin_ip'}.".  For security purposes, that is not permitted."
 		);

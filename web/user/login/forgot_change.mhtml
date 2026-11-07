@@ -18,8 +18,13 @@
 		&& (not defined $person->site_admin)
 		&& ($person->id != $user_person->id)
 	) {
-		$m->comp("/funclib/abort.mas", message => "You may not reset the password for another user account");
+		$m->comp("/funclib/abort.mas",
+			message => "You may not reset the password for another user account"
+		);
 	}
+
+	my $ip = $ENV{"HTTP_X_FORWARDED_FOR"} || $ENV{REMOTE_ADDR};
+	my $ip_check = crypt($ip, '$6$'.$Tab::secret);
 
 	my $err;
 	my $ok;
@@ -164,7 +169,7 @@
 							<input
 								type  = "hidden"
 								name  = "origin_ip"
-								value = "<% $ip %>"
+								value = "<% $ip_check %>"
 							>
 
 							<div class="padvertmore martopmore odd flexrow">
@@ -224,7 +229,7 @@
 					<input
 						type  = "hidden"
 						name  = "origin_ip"
-						value = "<% $ENV{HTTP_X_FORWARDED_FOR} %>"
+						value = "<% $ip_check %>"
 					>
 
 					<div class="row flexrow">
