@@ -25,7 +25,6 @@
 	}
 
 	my $ip_check = crypt($ip.$Tab::secret, $ARGS{origin_ip});
-	Tab::debuglog("Origin IP is ".$ARGS{origin_ip}." and ip check is $ip_check");
 
 	if ($ip_check ne $ARGS{'origin_ip'}) {
 		$m->comp("/funclib/abort.mas",
@@ -82,7 +81,7 @@
 
 		# Generate a random authentication string to send to the user
 		my $key =  $m->comp("/funclib/generate_randomstring.mas", length => 30);
-		my $reset = substr($key, 6);
+		my $reset = substr($key, 0, 6);
 
 		my $expires = DateTime->now;
 		$expires->add(minutes => '60');
