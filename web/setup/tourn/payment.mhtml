@@ -1,18 +1,16 @@
 <%args>
+	$dbh
+	$now
 	$person
 	$tourn
 	$tourn_settings
 </%args>
 <%init>
 
-	my $now = DateTime->now();
 	my $past;
-
 	if ($now > $tourn->end) {
 		$past++;
 	}
-
-	my $dbh = Tab::DBI->db_Main();
 	my $mock_trial;
 
 	my $sth = $dbh->prepare("
@@ -508,6 +506,24 @@
 	</div>
 
 	<div class="menu">
+
+		<div class="sidenote">
+
+			<h5>Need help during your event?</h5>
+
+			<p>The Tabroom help line, <a href="mailto:help@tabroom.com" class="white bluetext">help@tabroom.com</a>,
+			is staffed during business hours (Central Time) on Monday-Thursday.</p>
+
+			<p>On Fridays, it is staffed from 8:00 AM until 8:00 PM
+			Central.</p>
+
+			<p>On Saturdays, it is staffed from 7:00 AM until 6:00 PM.</p>
+
+			<p>This coverage runs from September through April each school
+			year, with the exception of Thanksgiving weekend and the winter
+			holidays.</p>
+
+		</div>
 
 %		if ($person->site_admin) {
 
