@@ -59,7 +59,13 @@
 			paradigm.value,
 			push_notify.value,
 			first_year.value,
-			sub_only.value
+			sub_only.value,
+			judge.timestamp,
+			(select jst.timestamp
+				from judge_setting jst
+				where jst.judge = judge.id
+				order by jst.timestamp DESC limit 1
+			) setting_timestamp
 
 			from $from
 
@@ -145,7 +151,9 @@
 			$paradigm_value,
 			$push_notify_value,
 			$first_year,
-			$sub_only
+			$sub_only,
+			$timestamp,
+			$set_timestamp
 		) = $sth->fetchrow_array()
 	) {
 
@@ -170,6 +178,7 @@
 		$judges{$judge_id}{"hired"}  = $judge_hired;
 		$judges{$judge_id}{"total"}  = $judge_hired + $judge_obligation;
 		$judges{$judge_id}{"notes"} = $notes_value;
+		$judges{$judge_id}{"last_change"} = $set_timestamp || $timestamp;
 
 		if ($special) {
 			$judges{$judge_id}{"special"} = $special;
@@ -541,6 +550,10 @@
 				<th class="centeralign" title="Enabled Web Push Notifications">
 					<span class="smaller fa-sm nospace fa fa-bell bluetext"></span>
 				</th>
+
+				<th class="centeralign" title="Last Change">
+					<span class="smaller fa-sm nospace fa fa-history bluetext padleft"></span>
+				</th>
 			</tr>
 		</thead>
 
@@ -748,6 +761,17 @@
 					data-text = "<% $judges{$jid}{"push_notify"} ? "Y" : "N" %>"
 				>
 					<% $judges{$jid}{"push_notify"} ? "Y" : "" %>
+				</td>
+
+				<td
+					class     = "smaller centeralign <% $judges{$jid}{"last_change"} ? "" : "redtext" %>"
+					data-text = "<% $judges{$jid}{"last_change"} %>"
+				>
+					<& "/funclib/showdt.mas",
+						string => $judges{$jid}{"last_change"},
+						format => "shorter",
+						tz     => $tourn->tz
+					&>
 				</td>
 
 			</tr>

@@ -38,12 +38,33 @@
 			entry.active, entry.waitlist, entry.dropped, entry.created_at,
 			entry.timestamp,
 			school.id, school.name,
-			atlarge.value,
-			waitlist_rank.value,
-			video_link.value_text,
+
+			( select atlarge.value
+				from entry_setting atlarge
+				where atlarge.tag = 'atlarge'
+				and atlarge.entry = entry.id
+			) atlarge,
+
+			( select waitlist_rank.value
+				from entry_setting waitlist_rank
+				where waitlist_rank.tag = 'waitlist_rank'
+				and waitlist_rank.entry = entry.id
+			) waitlist_rank,
+
+			( select video_link.value
+				from entry_setting video_link
+				where video_link.tag = 'video_link'
+				and video_link.entry = entry.id
+			) video_link,
+
 			dropped_at.value_date,
 			dropped_by.id, dropped_by.first, dropped_by.last, dropped_by.email,
-			student.id, student.nsda, person.id, student.first, student.last
+			student.id, student.nsda, person.id, student.first, student.last,
+			(select est.timestamp
+				from entry_setting est
+				where est.entry = entry.id
+				order by est.timestamp DESC limit 1
+			) setting_timestamp
 
 		from entry
 
@@ -52,10 +73,6 @@
 			left join entry_student es on es.entry = entry.id
 			left join student on es.student = student.id
 			left join person on person.id = student.person
-
-			left join entry_setting atlarge
-				on atlarge.tag = 'atlarge'
-				and atlarge.entry = entry.id
 
 			left join entry_setting dropped_at
 				on dropped_at.tag = 'dropped_at'
@@ -68,13 +85,6 @@
 			left join person dropped_by
 				on dropped_by_es.value = dropped_by.id
 
-			left join entry_setting waitlist_rank
-				on waitlist_rank.tag = 'waitlist_rank'
-				and waitlist_rank.entry = entry.id
-
-			left join entry_setting video_link
-				on video_link.tag = 'video_link'
-				and video_link.entry = entry.id
 
 		where entry.event = ?
 			and entry.unconfirmed = 0
@@ -99,7 +109,8 @@
 			$video_link,
 			$dropped_at,
 			$dropped_by_id, $dropped_by_first, $dropped_by_last, $dropped_by_email,
-			$student_id, $student_nsda, $student_person, $student_first, $student_last
+			$student_id, $student_nsda, $student_person, $student_first, $student_last,
+			$setting_timestamp
 		) = $sth->fetchrow_array()
 	) {
 
@@ -135,14 +146,22 @@
 			if ($entry_created_at && $entry_created_at ne '0000-00-00 00:00:00') {
 				$dt = DateTime::Format::MySQL->parse_datetime($entry_created_at);
 			} else {
-				$dt = DateTime::Format::MySQL->parse_datetime($entry_timestamp);
+				$dt = DateTime::Format::MySQL->parse_datetime($setting_timestamp || $entry_timestamp);
 			}
 			$dt->set_time_zone("UTC");
 			$dt->set_time_zone($tz);
 			return $dt;
 		};
 
-		$entries{$entry_id}{"created_at_sort"}  = $entries{$entry_id}{"created_at"}->epoch;
+		$entries{$entry_id}{"timestamp"}  = eval{
+			my $dt = DateTime::Format::MySQL->parse_datetime($setting_timestamp || $entry_timestamp);
+			$dt->set_time_zone("UTC");
+			$dt->set_time_zone($tz);
+			return $dt;
+		};
+
+		$entries{$entry_id}{"created_at_sort"} = $entries{$entry_id}{"created_at"}->epoch;
+		$entries{$entry_id}{"timestamp_sort"}  = $entries{$entry_id}{"timestamp"}->epoch;
 
 		if ($dropped_at) {
 			$entries{$entry_id}{"dropped_at"}  = DateTime::Format::MySQL->parse_datetime($dropped_at);
@@ -314,6 +333,9 @@
 					</th>
 %				}
 
+				<th>
+					Last Change
+				</th>
 			</tr>
 
 			</thead>
@@ -426,10 +448,10 @@
 %					}
 
 					<td
-						class     = "nowrap"
+						class     = "nowrap padleft"
 						data-text = "<% $entries{$entry_id}{"created_at_sort"} %>"
 					>
-						<span class="twofifths">
+						<span class="half padleft">
 							<& "/funclib/showdate.mas",
 								dt => $entries{$entry_id}{"created_at"}
 							&>
@@ -444,20 +466,19 @@
 %					if ($waitlist) {
 						<td class="nospace nowrap centeralign">
 							<label
-								for="<% $entry_id %>"
-								class="full flexrow marright nospace hover"
+								for   = "<% $entry_id %>"
+								class = "full flexrow marright nospace hover"
 							>
 								<span class="threefifths">
 									Admit:
 								</span>
-
 								<span class="twofifths centeralign">
 									<input
-											type  = "checkbox"
-											name  = "<% $entry_id %>"
-											id    = "<% $entry_id %>"
-											value = 1
-										>
+										type  = "checkbox"
+										name  = "<% $entry_id %>"
+										id    = "<% $entry_id %>"
+										value = 1
+									>
 								</span>
 							</label>
 						</td>
@@ -477,10 +498,29 @@
 							</span>
 						</td>
 
-						<td class="smaller" title="<% $entries{$entry_id}{"dropped_by_email"} %>">
+						<td
+							class = "smaller"
+							title = "<% $entries{$entry_id}{"dropped_by_email"} %>"
+						>
 							by <% $entries{$entry_id}{"dropped_by_name"} %>
 						</td>
 %					}
+
+					<td
+						class     = "nowrap flexrow"
+						data-text = "<% $entries{$entry_id}{"timestamp_sort"} %>"
+					>
+						<span class="half padleft">
+							<& "/funclib/showdate.mas",
+								dt => $entries{$entry_id}{"timestamp"}
+							&>
+						</span>
+						<span class="half rightalign">
+							<& "/funclib/showtime.mas",
+								dt => $entries{$entry_id}{"timestamp"}
+							&>
+						</span>
+					</td>
 				</tr>
 %			}
 			</tbody>

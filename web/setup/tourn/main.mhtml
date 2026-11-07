@@ -14,14 +14,14 @@
 
 	<div class=" main">
 		<div class="full flexrow">
-			<span class="ninetenths nospace">
+			<span class="grow nospace">
 				<h3>
 					<% $tourn->name %>
 				</h3>
 			</span>
 			<span
-				class="tenth rightalign bluetext semibold"
-				title="Tournament Tabroom ID number"
+				class = "padleft padright rightalign bluetext semibold"
+				title = "Tournament Tabroom ID number"
 			>
 				ID <% $tourn->id %>
 			</span>
