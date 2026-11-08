@@ -183,10 +183,8 @@
 
 		if ($aq->{event} && (not defined $events{$aq->{event}})) {
 			$events{$aq->{event}} = Tab::Event->retrieve($aq->{event});
-			Tab::debuglog("Searching for event ".$aq->{event}." first stanza gave ".$events{$aq->{event}});
 		} elsif ($aq->{event_id} && (not defined $events{$aq->{event_id}})) {
 			$events{$aq->{event_id}} = Tab::Event->retrieve($aq->{event_id});
-			Tab::debuglog("Searching for event ".$aq->{event_id}." first stanza gave ".$events{$aq->{event_id}});
 		}
 
 		my $event = $events{$aq->{event_id} || $aq->{event}};
