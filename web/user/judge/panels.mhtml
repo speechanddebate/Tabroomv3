@@ -371,11 +371,7 @@
 		) = $sth->fetchrow_array()
 	) {
 
-		Tab::debuglog("Here with school $school_name and such");
-
 		if ($chapter || $contact) {
-
-			Tab::debuglog("I am here with chapter $chapter and contact $contact");
 
 			$dashboards{$school} = $tourn_name;
 
@@ -736,8 +732,6 @@
 			$online_rooms, $campus
 		) = $sth->fetchrow_array()
 	) {
-
-		Tab::debuglog("Here with $judge_id school $school_id campus $campus");
 
 		if ($school_id && $campus) {
 			$schools{$school_id}{'name'} = $m->comp("/funclib/short_name.mas", name => $school_name, return => 1);

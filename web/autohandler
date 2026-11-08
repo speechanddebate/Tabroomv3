@@ -104,10 +104,15 @@
 		}
 
 		my %checks = $m->comp("/funclib/perms/tourn_checks.mas",
-			args => \%ARGS
+			args => \%ARGS,
+			dbh  => $dbh
 		);
 
 		if ($checks{tourn}) {
+
+			if ($ARGS{tourn_id} != $checks{tourn}) {
+				Tab::debuglog("Checks tourn is ".$checks{tourn}." while args is ".$ARGS{tourn_id});
+			}
 
 			$tourn = Tab::Tourn->retrieve($checks{tourn});
 			%tourn_settings = $tourn->all_settings();
