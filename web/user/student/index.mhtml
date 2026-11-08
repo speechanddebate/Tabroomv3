@@ -11,7 +11,6 @@
 		$person = Tab::Person->retrieve($override);
 	}
 
-
 	my @students;
 	my @panels;
 	my @done_panels;
@@ -32,19 +31,23 @@
 			chapter.name as chaptername,
 			chapter.state as chapterstate,
 			tourn.id as tournid,
-			supp.value as supp,
-			no_anon_dashboard.value as no_anon_dashboard
+
+			(select supp.value as supp
+				from event_setting supp
+				where supp.event = event.id
+				and supp.tag = 'supp'
+			) supp,
+
+			( select no_anon_dashboard.value as no_anon_dashboard
+				from event_setting no_anon_dashboard
+				where no_anon_dashboard.event = event.id
+				and no_anon_dashboard.tag = 'no_anon_dashboard'
+			) non_anon_dashboard
+
 		from (entry, entry_student, student, event, tourn)
+
 			left join school on school.id = entry.school
 			left join chapter on school.chapter = chapter.id
-
-			left join event_setting supp
-				on supp.event = event.id
-				and supp.tag = 'supp'
-
-			left join event_setting no_anon_dashboard
-				on no_anon_dashboard.event = event.id
-				and no_anon_dashboard.tag = 'no_anon_dashboard'
 
 		where student.person = ?
 			and student.id = entry_student.student
@@ -69,7 +72,7 @@
 				)
 			)
 		group by entry.id
-		order by tourn.start, supp.value, event.abbr
+		order by tourn.start, supp, event.abbr
 	");
 
 	my @current_entries = Tab::Entry->search_present_by_person($person->id);
@@ -85,86 +88,96 @@
 			event.id, event.abbr, event.name,
 			entry.id,
 			entry.unconfirmed, entry.waitlist, entry.dropped, entry.active,
-			CONVERT_TZ(student_ballot_opens.value_date, '+00:00', tourn.tz),
-			CONVERT_TZ(student_ballot_closes.value_date, '+00:00', tourn.tz),
-			student_ballot_label.value,
-			category.id, prefs.value, self_prefs.value, entry_strikes.value,
-			signup_active.value,
-			CONVERT_TZ(strike_start.value_date, '+00:00', person.tz),
-			CONVERT_TZ(strike_end.value_date, '+00:00', person.tz),
-			CONVERT_TZ(signup_deadline.value_date, '+00:00', person.tz),
-			my_ballot.value_text,
+
+			(select CONVERT_TZ(student_ballot_opens.value_date, '+00:00', tourn.tz)
+				from event_setting student_ballot_opens
+				where student_ballot_opens.event = event.id
+				and student_ballot_opens.tag = 'student_ballot_opens'
+			) student_ballot_opens,
+
+			( select CONVERT_TZ(student_ballot_closes.value_date, '+00:00', tourn.tz)
+				from event_setting student_ballot_closes
+				where student_ballot_closes.event = event.id
+				and student_ballot_closes.tag = 'student_ballot_closes'
+			) student_ballot_closes,
+
+			( select student_ballot_label.value
+				from event_setting student_ballot_label
+				where student_ballot_label.event = event.id
+				and student_ballot_label.tag = 'student_ballot_label'
+			) select_ballot_label,
+
+			category.id,
+
+			( select prefs.value
+				from category_setting prefs
+				where prefs.category = category.id
+				and prefs.tag = 'prefs'
+			) prefs,
+
+			(select self_prefs.value
+				from chapter_setting self_prefs
+				where self_prefs.chapter = school.chapter
+				and self_prefs.tag = 'self_prefs'
+			) self_prefs,
+
+			(select entry_strikes.value
+				from category_setting entry_strikes
+				where entry_strikes.category = category.id
+				and entry_strikes.tag = 'entry_strikes'
+			) entry_strikes,
+
+			(select signup_active.value
+				from school_setting signup_active
+				where signup_active.school = school.id
+				and signup_active.tag = 'signup_active'
+			) signup_active,
+
+			(select CONVERT_TZ(signup_deadline.value_date, '+00:00', person.tz)
+				from school_setting signup_deadline
+				where signup_deadline.school = school.id
+				and signup_deadline.tag = 'signup_deadline'
+			) signup_deadline,
+
+			( select CONVERT_TZ(strike_start.value_date, '+00:00', person.tz)
+				from category_setting strike_start
+				where strike_start.category = category.id
+				and strike_start.tag = 'strike_start'
+			) strike_start,
+
+			( select CONVERT_TZ(strike_end.value_date, '+00:00', person.tz)
+				from category_setting strike_end
+				where strike_end.category = category.id
+				and strike_end.tag = 'strike_end'
+			) strike_end,
+
+			(select my_ballot.value_text
+				from entry_setting my_ballot
+				where my_ballot.entry = entry.id
+				and my_ballot.tag = 'student_ballot'
+			) my_ballot,
+
 			person.tz,
-			vaccines.value, vax.value,
-			supp.value supp,
-			no_anon_dashboard.value no_anon_dashboard,
-			nsda_nats.value
+
+			(	select supp.value
+				from event_setting supp
+				where supp.event = event.id
+				and supp.tag = 'supp'
+			) supp,
+
+			(select no_anon_dashboard.value
+				from event_setting no_anon_dashboard
+				where no_anon_dashboard.event = event.id
+				and no_anon_dashboard.tag = 'no_anon_dashboard'
+			) no_anon_dashboard,
+
+			( select nsda_nats.value
+				from tourn_setting nsda_nats
+				where nsda_nats.tag = 'nsda_nats'
+				and nsda_nats.tourn = tourn.id
+			) as nsda_nats
 
 		from (student, entry_student es, entry, event, school, tourn, category, person)
-
-			left join tourn_setting vaccines
-				on vaccines.tag = 'vaccines'
-				and vaccines.tourn = tourn.id
-
-			left join tourn_setting nsda_nats
-				on nsda_nats.tag = 'nsda_nats'
-				and nsda_nats.tourn = tourn.id
-
-			left join person_setting vax
-				on vax.person = student.person
-				and vax.tag = CONCAT('vaccine_', tourn.id)
-
-			left join chapter_setting self_prefs
-				on self_prefs.chapter = school.chapter
-				and self_prefs.tag = 'self_prefs'
-
-			left join school_setting signup_active
-				on signup_active.school = school.id
-				and signup_active.tag = 'signup_active'
-
-			left join school_setting signup_deadline
-				on signup_deadline.school = school.id
-				and signup_deadline.tag = 'signup_deadline'
-
-			left join category_setting prefs
-				on prefs.category = category.id
-				and prefs.tag = 'prefs'
-
-			left join category_setting entry_strikes
-				on entry_strikes.category = category.id
-				and entry_strikes.tag = 'entry_strikes'
-
-			left join category_setting strike_start
-				on strike_start.category = category.id
-				and strike_start.tag = 'strike_start'
-
-			left join category_setting strike_end
-				on strike_end.category = category.id
-				and strike_end.tag = 'strike_end'
-
-			left join entry_setting my_ballot
-				on my_ballot.entry = entry.id
-				and my_ballot.tag = 'student_ballot'
-
-			left join event_setting student_ballot_opens
-				on student_ballot_opens.event = event.id
-				and student_ballot_opens.tag = 'student_ballot_opens'
-
-			left join event_setting student_ballot_closes
-				on student_ballot_closes.event = event.id
-				and student_ballot_closes.tag = 'student_ballot_closes'
-
-			left join event_setting student_ballot_label
-				on student_ballot_label.event = event.id
-				and student_ballot_label.tag = 'student_ballot_label'
-
-			left join event_setting supp
-				on supp.event = event.id
-				and supp.tag = 'supp'
-
-			left join event_setting no_anon_dashboard
-				on no_anon_dashboard.event = event.id
-				and no_anon_dashboard.tag = 'no_anon_dashboard'
 
 		where person.id = ?
 			and student.person = person.id
@@ -192,7 +205,7 @@
 					where weekend.tourn = tourn.id
 				)
 			)
-		order by tourn.start, supp.value DESC, event.abbr
+		order by tourn.start, supp DESC, event.abbr
 	");
 
 	$upcoming_sth->execute($person->id);
@@ -214,7 +227,6 @@
 			$signup_deadline,
 			$my_ballot,
 			$person_tz,
-			$vaccines, $status,
 			$supp,
 			$no_anon_dashboard,
 			$nsda_nats
@@ -246,11 +258,9 @@
 		$upcoming{$student_id}{$entry_id}{"entry_active"}      = $entry_active;
 		$upcoming{$student_id}{$entry_id}{"category_id"}       = $category_id;
 		$upcoming{$student_id}{$entry_id}{"person_tz"}         = $person_tz;
-		$upcoming{$student_id}{$entry_id}{"status"}            = $status;
 		$upcoming{$student_id}{$entry_id}{"supp"}              = $supp;
 		$upcoming{$student_id}{$entry_id}{"no_anon_dashboard"} = $no_anon_dashboard;
 		$upcoming{$student_id}{$entry_id}{"nsda_nats"}         = $nsda_nats;
-		$upcoming{$student_id}{$entry_id}{"vaccines"}          = $vaccines;
 
 		if ($self_prefs && $prefs_value) {
 
@@ -319,16 +329,16 @@
 			tourn.id, tourn.name, tourn.city, tourn.state, tourn.country,
 			CONVERT_TZ(tourn.start, '+00:00', tourn.tz),
 			CONVERT_TZ(tourn.end, '+00:00', tourn.tz),
-			GROUP_CONCAT(distinct(event.abbr) ORDER BY event.abbr SEPARATOR ', '),
-			CONVERT_TZ(signup_deadline.value_date, '+00:00', person.tz)
+			(select GROUP_CONCAT(distinct(event.abbr) ORDER BY event.abbr SEPARATOR ', ')
+				from event where tourn.id = event.tourn
+			) as events,
+			(select CONVERT_TZ(signup_deadline.value_date, '+00:00', person.tz)
+				from school_setting signup_deadline
+				where signup_deadline.school = school.id
+				and signup_deadline.tag = 'signup_deadline'
+			) signup_deadline
 
 		from (student, chapter, school, tourn, school_setting signup_active, person)
-
-			left join event on tourn.id = event.tourn
-
-			left join school_setting signup_deadline
-				on signup_deadline.school = school.id
-				and signup_deadline.tag = 'signup_deadline'
 
 		where tourn.id = school.tourn
 			and student.chapter = school.chapter
@@ -614,17 +624,6 @@
 %									} elsif ($entry->{"entry_active"}) {
 										<span class="full marno greentext semibold padleft">
 											Confirmed
-%										if ($entry->{"vaccines"}) {
-											<div class="full padleft padvertless <% $entry->{"status"} eq "confirmed" ? "" : "redtext" %>">
-												VaccineCheck:
-%											if ($entry->{"status"}) {
-												<% ucfirst($entry->{"status"}) %>
-%											} else {
-												Not Started
-%											}
-											</div>
-%										}
-
 										</span>
 %									}
 								</td>
