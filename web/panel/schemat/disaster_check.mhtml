@@ -1582,7 +1582,7 @@
 			my ($id, $first, $last)
 			= $time_strikes_sth->fetchrow_array()
 		) {
-			$problems{"judge_timestrike"}.= '<p class="warning padless marno">
+			$problems{"judge_timestrike"} .= '<p class="warning padless marno">
 				Judge '. $first." ".$last." is unavailable for this round! ". $round_realname ."</p>";
 		}
 
@@ -1605,8 +1605,40 @@
 			");
 
 			foreach my $conflict (Tab::JudgeHire->search_hires_judging_me($round_id)) {
-				$problems{"hired_judging_me"} = $conflict->judge->first." ".$conflict->judge->last."
+				$problems{"hired_judging_me"} .= $conflict->judge->first." ".$conflict->judge->last."
 					is judging ".$conflict->school->name." who has hired them.";
+			}
+		}
+
+		# ALSTON
+		my $alston_sth = $dbh->prepare("
+			select
+				judge.id, judge.first, judge.last, panel.id panel_id, panel.letter, round.name round_name,
+				panel.flight, event.abbr
+			from round, panel, ballot, judge, event
+			where 1=1
+				and judge.person = 3160
+				and judge.id     = ballot.judge
+				and ballot.panel = panel.id
+				and panel.round  = round.id
+				and round.id     = ?
+				and panel.flight > 1
+				and round.event = event.id
+			group by judge.id
+		");
+
+		$alston_sth->execute($round->id);
+		my $alstons = $alston_sth->fetchall_hash();
+
+		if ($alstons && @{$alstons}) {
+
+			$tags{"alston"} = "Lengthy Deliberation Alert";
+
+			foreach my $ja (@{$alstons}) {
+				$problems{alston} .= '<p class="warning padless marno">';
+				$problems{alston} .= "You have assigned Jonathan Alston to a flight ".$ja->{flight};
+				$problems{alston} .= " in <a href='/panel/schemat/panel_view.mhtml?panel_id=".$ja->{panel_id}."' class='padleftless yellowhover padright inline white bluetext'>Section ".$ja->{letter}." Round ".$ja->{round_name}."</a>";
+				$problems{alston} .= "</p>";
 			}
 		}
 
