@@ -33,7 +33,6 @@
 			id         => 1000,
 			name       => "Test Tournament Chapter",
 			state      => "XX",
-			coaches    => "tabroom.com test",
 			country    => "XX",
 			self_prefs => 0
 		});
