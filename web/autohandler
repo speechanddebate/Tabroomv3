@@ -30,6 +30,7 @@
 		%{$person_settings} = $person->all_settings();
 
 		if ($r->hostname eq "www.tabroom.com" ) {
+
 			if ($ARGS{"fabulous"}) {
 				if (not defined $defaults->{"fabulous"}) {
 					$defaults->{"fabulous"}++;
@@ -1127,6 +1128,7 @@
 								><% $tourn ? $tourn->id : 0 %></span>
 							</div>
 %						}
+
 						<div class='flexrow smallish'>
 							<span class="half rightalign" >
 								Host
@@ -1141,6 +1143,15 @@
 								onClick = "copyToClipboard('<% $Tab::dockerhost %>_dockerhost');"
 							><% $Tab::dockerhost ne $Tab::localhost ? $Tab::dockerhost : "" %></span>
 						</div>
+
+%						if ($person && $person->id == 1) {
+						<div class='flexrow smallish whitetext'>
+							<pre class="whitetext">
+<% print Dumper($defaults) %>
+							</pre>
+						</div>
+%						}
+
 					</span>
 %				}
 
