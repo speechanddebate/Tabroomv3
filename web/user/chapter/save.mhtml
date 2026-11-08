@@ -248,8 +248,6 @@
 				);
 			}
 
-			Tab::debuglog(scalar @chapters." duplicate chapters found with chapter name $chapter_name and search name $search_name.");
-
 			if (@chapters) {
         		$m->redirect("create.mhtml?name=$chapter_name&state=$state&naudl=$naudl&level=$level&country=$country&ipeds=$ipeds&nces=$nces&ceeb=$ceeb&search=1");
 			}

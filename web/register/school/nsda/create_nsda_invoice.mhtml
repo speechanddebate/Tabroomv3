@@ -26,8 +26,6 @@
 		admin         => $admin
     );
 
-	Tab::debuglog("Message back is $msg");
-
 	if ($msg) {
 		$m->clear_buffer();
 		$r->content_type('application/json');

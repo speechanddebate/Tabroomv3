@@ -84,9 +84,11 @@
 	if (
 		$r->uri =~ /user\/chapter\/tourn_register.mhtml/
 		|| $r->uri =~ /setup.mhtml/
+		|| $r->uri =~ /panel\/schemat\/flip_status.mhtml/
 	) {
 
-	} elsif ( $person && (
+	} elsif ( $person
+		&& (
 			$r->uri =~ /\/setup\//
 			|| $r->uri =~ /\/register\//
 			|| $r->uri =~ /\/panel\//
@@ -110,10 +112,6 @@
 		);
 
 		if ($checks{tourn}) {
-
-			if ($ARGS{tourn_id} != $checks{tourn}) {
-				Tab::debuglog("Checks tourn is ".$checks{tourn}." while args is ".$ARGS{tourn_id});
-			}
 
 			$tourn = Tab::Tourn->retrieve($checks{tourn});
 			%tourn_settings = $tourn->all_settings();

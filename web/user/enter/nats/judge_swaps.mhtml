@@ -302,7 +302,6 @@
 					my $jpool_id = $judges{$judge_id}{"day"}{$day};
 					my $no_swaps = $jpools{$jpool_id}{"no_swaps"};
 
-					Tab::debuglog("Jpool $jpool_id is $day");
 					next unless $day;
 					next unless $jpool_id;
 </%perl>

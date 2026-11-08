@@ -86,8 +86,6 @@
 	my $salt = $m->comp("/funclib/generate_randomstring.mas");
 	my $ip_check = crypt($ip.$Tab::secret, '$6$'.$salt);
 
-	Tab::debuglog("IP $ip hash $ip_check");
-
 	$edit->setting("origin_ip", $ip_check);
 
 </%init>

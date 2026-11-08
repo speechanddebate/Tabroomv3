@@ -85,8 +85,6 @@
 				description => $desc
 			);
 
-			Tab::debuglog("Log message $log created");
-
 			$target->site_admin($property_value);
 			$target->update();
 
