@@ -1142,14 +1142,6 @@
 							><% $Tab::dockerhost ne $Tab::localhost ? $Tab::dockerhost : "" %></span>
 						</div>
 
-%						if ($person && $person->id == 1) {
-						<div class='flexrow smallish whitetext'>
-							<pre class="whitetext">
-<% print Dumper($defaults) %>
-							</pre>
-						</div>
-%						}
-
 					</span>
 %				}
 
