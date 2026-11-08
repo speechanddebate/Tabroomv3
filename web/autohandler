@@ -50,7 +50,6 @@
 		}
 	}
 
-
 	if (
 		$Tab::hostname eq "www.tabroom.com"
 		&& $r->hostname ne "www.tabroom.com"
@@ -96,9 +95,11 @@
 		)
 	) {
 
-		if ($defaults->{tourn}
-			&& (not defined $ARGS{'tourn_id'})
-		) {
+		if ($ARGS{tourn_id} && $defaults->{tourn} != $ARGS{tourn_id}) {
+			$defaults->{tourn} = $ARGS{tourn_id};
+			$session->default($defaults);
+			$session->update();
+		} elsif ($defaults->{tourn} && (not defined $ARGS{'tourn_id'})) {
 			$ARGS{tourn_id} = $defaults->{tourn};
 		}
 

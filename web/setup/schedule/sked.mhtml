@@ -506,22 +506,20 @@
 				method="post"
 			>
 
-			<div class="ltyellow full">
+			<div class="ltyellow full flexrow">
 
-				<span class="quarter">
+				<span class="quarter grow padleft padright">
 					<input
 						type        = "text"
 						name        = "name"
-						size        = "20"
 						placeholder = "Add new..."
 					>
 				</span>
 
 %				if (scalar @{$all_days} > 1) {
-					<span class="sixth centeralign">
+					<span class="sixth centeralign padleft padright">
 						<select
 							name  = "new_start_day"
-							class = "fixedsmallest"
 						>
 %							foreach my $day (@{$all_days}) {
 								<option
@@ -532,11 +530,14 @@
 						</select>
 					</span>
 %				} else {
-
-					<input type="hidden" name="new_start_day" value="<% $today->mdy('/') %>">
+					<input
+						type  = "hidden"
+						name  = "new_start_day"
+						value = "<% $today->mdy('/') %>"
+					>
 %				}
 
-				<span class="sixth">
+				<span class="sixth padleft padright">
 					<&
 						"/funclib/timepicker.mas",
 						name => "new_start"
@@ -544,10 +545,9 @@
 				</span>
 
 %				if ((scalar @{$all_days} > 1) && $async) {
-					<span class="sixth centeralign">
+					<span class="sixth centeralign padleft padright">
 						<select
 							name  = "new_end_day"
-							class = "fixedsmallest"
 						>
 %							foreach my $day (@{$all_days}) {
 								<option
@@ -559,14 +559,14 @@
 					</span>
 %				}
 
-				<span class="sixth">
+				<span class="sixth padleft padright">
 					<&
 						"/funclib/timepicker.mas",
 						name => "new_end"
 					&>
 				</span>
 
-				<span class="tenth rightalign nospace">
+				<span class="eighth centeralign nospace">
 					<input
 						type  = "submit"
 						value = "Add"
