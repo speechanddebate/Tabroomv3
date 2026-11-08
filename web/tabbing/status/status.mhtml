@@ -1,5 +1,4 @@
 <%args>
-	$dbh
 	$tourn
 	$tourn_settings
 	$perms
@@ -8,7 +7,6 @@
 	$defaults    => undef
 	$checker     => undef
 	$round_id    => undef
-	$event_id    => undef
 	$timeslot_id => undef
 </%args>
 <%init>
@@ -39,97 +37,80 @@
 	my %categories = map {$_->id => $_} @categories;
 
 	my %timeslots = $m->comp("/funclib/perms/timeslots.mas",
-		tourn   => $tourn,
-		perms   => $perms,
+		tourn => $tourn,
+		perms => $perms,
 		checker => 1,
 		by_both => 1
 	);
 
-	my $timeslot_label;
-	my $timeslot_limit;
-	my %selected;
+	my @timeslot_ids = sort {
+		$timeslots{$a}{"start"}{'epoch'} <=> $timeslots{$b}{"start"}{'epoch'}
+		|| $timeslots{$a}{"end"}{'epoch'} <=> $timeslots{$b}{"end"}{'epoch'}
+		|| $timeslots{$a}{"name"} cmp $timeslots{$b}{'name'}
+	} keys %timeslots;
 
-	my @timeslots = eval {
-
-		if (int($timeslot_id) eq $timeslot_id) {
-
-			if ($timeslots{$timeslot_id}) {
-				my @ts = ($timeslot_id);
-				$timeslot_label .= ", " if $timeslot_label;
-				$timeslot_label .= $timeslots{$timeslot_id}{"name"};
-				$timeslot_limit .= "," if $timeslot_limit;
-				$timeslot_limit .= $timeslot_id;
-				$selected{ts}{$timeslot_id}++;
-				return @ts;
-			}
-
-		} elsif ($timeslot_id && @{$timeslot_id}) {
-
-			my @ts;
-
-			foreach my $tid (@{$timeslot_id}) {
-				if ($timeslots{$tid}) {
-					$timeslot_label .= ", " if $timeslot_label;
-					$timeslot_label .= $timeslots{$tid}{"name"};
-					push @ts, $tid;
-					$timeslot_limit .= "," if $timeslot_limit;
-					$timeslot_limit .= $tid;
-					$selected{ts}{$tid}++;
-				}
-			}
-			return @ts;
-		}
-	};
-
-	my $event_label;
-	my $event_limit;
-	my $event;
-
-	my @events = eval {
-
-		if (int($event_id) eq $event_id) {
-
-			if ($events{$event_id}) {
-				my @ts = ($event_id);
-				$event_label .= ", " if $event_label;
-				$event_label .= $events{$event_id}{"abbr"};
-				$event_limit .= "," if $event_limit;
-				$event_limit .= $event_id;
-				$selected{ev}{$event_id}++;
-				return @ts;
-			}
-
-		} elsif ($event_id && @{$event_id}) {
-			my @ts;
-			foreach my $tid (@{$event_id}) {
-				if ($events{$tid}) {
-					$event_label .= ", " if $event_label;
-					$event_label .= $events{$tid}{"abbr"};
-					push @ts, $tid;
-					$event_limit .= "," if $event_limit;
-					$event_limit .= $tid;
-					$selected{ev}{$tid}++;
-				}
-			}
-			return @ts;
-		}
-	};
-
-	if (scalar @events == 1) {
-		$event = $events[0];
+	my $timeslot;
+	if ($timeslot_id) {
+		$timeslot = Tab::Timeslot->retrieve($timeslot_id);
 	}
 
-	my $limit;
+	my $dbh = Tab::DBI->db_Main();
+	my $longest_code;
+
+	my $campus_sth = $dbh->prepare("
+		select event.id
+			from event
+		where event.tourn = ?
+			and not exists (
+				select es.id
+					from event_setting es
+				where es.event = event.id
+				and es.tag = 'online_mode'
+				and es.value = 'async'
+			)
+	");
+
+	my %ok;
+	$campus_sth->execute($tourn->id);
+
+	while (
+		my ($event_id) = $campus_sth->fetchrow_array()
+	) {
+		$ok{$event_id}++;
+	}
+
+	foreach my $key (keys %events) {
+		next if $ok{$key};
+		delete $events{$key};
+	}
+
+	my $event;
+
+	if ($ARGS{timeslot_id}) {
+
+	} elsif ($ARGS{event_id} && $events{$ARGS{"event_id"}}) {
+		$event = $events{$ARGS{"event_id"}};
+	} elsif ($defaults->{tourns}{$tourn}{event} && $events{$defaults->{tourns}{$tourn}{event}}) {
+		$event = $events{$defaults->{tourns}{$tourn}{event}};
+	} elsif (scalar (keys %events) == 1) {
+		my @events = keys %events;
+		$event = $events{$events[0]};
+	}
+
+	if ($event) {
+		$defaults->{tourns}{$tourn}{event} = $event->{id};
+		$session->default($defaults);
+	}
 
 	my %rounds;
 	my %judges;
+	my $limit;
 
-	if ($timeslot_limit) {
-		$limit = " and round.timeslot IN (".$timeslot_limit.") ";
-	}
-
-	if ($event_limit) {
-		$limit = " and round.event IN (".$event_limit.") ";
+	if ($timeslot_id) {
+		$timeslot_id = int($timeslot_id);
+		$limit = " where round.timeslot = ".$timeslot_id;
+	} elsif ($event) {
+		$limit = "where round.event = ".$event->{id};
 	}
 
 	my $round_sth = $dbh->prepare("
@@ -140,34 +121,28 @@
 			ballot.audit, ballot.judge_started, ballot.bye, ballot.forfeit,
 			ballot.chair,
 			event.id, event.abbr,
-
-			(select dont_poke.value
-				from event_setting dont_poke
-				where dont_poke.event = event.id
-				and dont_poke.tag = 'dont_poke_entries'
-			) dont_poke,
-
-			( select online_hybrid.value
-				from event_setting online_hybrid
-				where online_hybrid.event = event.id
-				and online_hybrid.tag = 'online_hybrid'
-			) online_hybrid,
-
-			( select online_mode.value
-				from event_setting online_mode
-				where online_mode.event = event.id
-				and online_mode.tag = 'online_mode'
-			) online_mode,
-
-			( select status_by_entry.value
-				from event_setting status_by_entry
-				where status_by_entry.event = event.id
-				and status_by_entry.tag = 'status_by_entry'
-			) status_by_entry
+			dont_poke.value,
+			online_hybrid.value,
+			online_mode.value,
+			status_by_entry.value
 
 		from (round, panel, ballot, event)
 
-		where 1=1
+			left join event_setting dont_poke
+				on dont_poke.event = event.id
+				and dont_poke.tag = 'dont_poke_entries'
+
+			left join event_setting online_hybrid
+				on online_hybrid.event = event.id
+				and online_hybrid.tag = 'online_hybrid'
+
+			left join event_setting online_mode
+				on online_mode.event = event.id
+				and online_mode.tag = 'online_mode'
+
+			left join event_setting status_by_entry
+				on status_by_entry.event = event.id
+				and status_by_entry.tag = 'status_by_entry'
 
 		$limit
 			and round.id = panel.round
@@ -180,7 +155,7 @@
 	my $dont_poke;
 	my $online_hybrid;
 
-	if ($limit) {
+	if ($event || $timeslot_id) {
 
 		$round_sth->execute();
 
@@ -224,12 +199,17 @@
 				|| $ballot_forfeit
 				|| $panel_bye
 			) {
+
 				$rounds{$rid}{"audited"}++;
 				$rounds{$rid}{"started"}++;
+
 			} elsif ($ballot_judge_started) {
+
 				$rounds{$rid}{"started"}++;
 				undef $rounds{$rid}{"done"};
+
 			} else {
+
 				undef $rounds{$rid}{"started"};
 				undef $rounds{$rid}{"done"};
 			}
@@ -242,6 +222,16 @@
 
 	if ($round_id || $timeslot_id) {
 
+		my $limit;
+
+		if ($round_id) {
+			$round_id = int($round_id);
+			$limit = "where round.id = ".$round_id;
+		} elsif ($timeslot_id) {
+			$timeslot_id = int($timeslot_id);
+			$limit = "where round.timeslot = ".$timeslot_id;
+		}
+
 		my $entries_sth = $dbh->prepare("
 			select
 				panel.id, panel.letter, panel.bye, panel.flight, panel.round,
@@ -252,8 +242,7 @@
 				student.id, student.first, student.last, student.person,
 				room.name,
 				event.abbr, event.type,
-				max_entry.value,
-				round.name
+				max_entry.value
 
 			from (panel, ballot, entry, entry_student es, student, round, event)
 
@@ -269,7 +258,6 @@
 
 				left join school on entry.school = school.id
 
-			where 1=1
 			$limit
 				and round.id = panel.round
 				and panel.id = ballot.panel
@@ -277,7 +265,6 @@
 				and entry.id = es.entry
 				and es.student = student.id
 				and round.event = event.id
-			order by round.name, panel.flight
 		");
 
 		$entries_sth->execute();
@@ -293,8 +280,7 @@
 				$student_id, $student_first, $student_last, $student_person,
 				$room_name,
 				$event_abbr, $event_type,
-				$max_entry,
-				$round_name
+				$max_entry
 			) = $entries_sth->fetchrow_array()
 		) {
 
@@ -310,7 +296,6 @@
 			$panels{$panel_id}{"room"}      = $room_name;
 			$panels{$panel_id}{"type"}      = $event_type;
 			$panels{$panel_id}{"max_entry"} = $max_entry || 1;
-			$panels{$panel_id}{"round"}     = $round_name;
 
 			if ($panel_bye) {
 				$panels{$panel_id}{"bye"} = $panel_bye;
@@ -322,6 +307,10 @@
 
 			$panels{$panel_id}{"entries"}{$entry_id}{"code"} = $entry_code;
 			$panels{$panel_id}{"entries"}{$entry_id}{"entry_name"} = $entry_name;
+
+			if (length($entry_code) > $longest_code) {
+				$longest_code = length($entry_code);
+			}
 
 			if ($school_code) {
 				$panels{$panel_id}{"entries"}{$entry_id}{"school"} = $school_code;
@@ -377,7 +366,6 @@
 				left join person started_by on started_by.id = ballot.started_by
 				left join judge_setting online_hybrid on online_hybrid.judge = judge.id and online_hybrid.tag = 'online_hybrid'
 
-			where 1=1
 			$limit
 				and round.id = panel.round
 				and panel.id = ballot.panel
@@ -448,8 +436,13 @@
 
 			$judges{$judge_id}++;
 		}
-
 		$judges_sth->finish();
+	}
+
+	if ($longest_code  > 20) {
+		$longest_code = 20;
+	} elsif ($longest_code  < 5) {
+		$longest_code = 7;
 	}
 
 	my $get_url = $Tab::indexcards_url."/tab/".$tourn->id;
@@ -765,6 +758,7 @@
 		function updateView() {
 
 			var tags = ['attendance', 'panelstart'];
+
 			// Someday I'll use react and have real browser state
 
 			for (let tag of tags) {
@@ -823,29 +817,24 @@
 	<div class="menu">
 		<div class="sidenote">
 
-			<h4>Show Timeslots</h4>
+			<h4>Whole Timeslot</h4>
 
 			<form
 				action = "status.mhtml"
 				method = "post"
 			>
+
 				<span class="row full marbottom centeralign">
 					<select
 						name     = "timeslot_id"
 						onchange = 'this.form.submit()'
-						multiple
+						class    = "fixedmed notfirst"
 					>
 						<option value="">Choose timeslot:</option>
-<%perl>
-						foreach my $timeslot_id (
-							sort {
-								$timeslots{$a}{startsort} <=> $timeslots{$b}{startsort}
-							} keys %timeslots
-						) {
-</%perl>
+%						foreach my $timeslot_id (@timeslot_ids) {
 							<option
-								value ="<% $timeslot_id %>"
-								<% $selected{ts}{$timeslot_id}
+								value="<% $timeslot_id %>"
+								<% ($timeslot_id == $ARGS{"timeslot_id"})
 									? "selected"
 									: "" %>
 							><% $timeslots{$timeslot_id}{name} %></option>
@@ -853,51 +842,65 @@
 					</select>
 				</span>
 
-				<h4>Show Events</h4>
+			</form>
+
+			<h4>Or, By Event</h4>
+
+			<form
+				action = "status.mhtml"
+				method = "post"
+			>
 
 				<span class="row full marbottom centeralign">
 					<select
 						name     = "event_id"
 						onchange = 'this.form.submit()'
-						multiple
+						class    = "fixedmed notfirst"
 					>
 						<option value="">Choose event:</option>
 <%perl>
-						foreach my $event_id (
-							sort {
-								$events{$a}{supp} cmp $events{$b}{supp}
-								|| $events{$a}{type} cmp $events{$b}{type}
-								|| $events{$a}{abbr} cmp $events{$b}{abbr}
+						foreach my $other_id (sort {
+							$events{$a}{supp} cmp $events{$b}{supp}
+							|| $events{$a}{type} cmp $events{$b}{type}
+							|| $events{$a}{abbr} cmp $events{$b}{abbr}
 						} keys %events) {
 </%perl>
 							<option
-								value="<% $event_id %>"
-								<% $selected{ev}{$event_id}
+								value="<% $other_id %>"
+								<% ($event && $other_id == $event->{id})
 									? "selected"
 									: "" %>
-							><% $events{$event_id}{abbr} %></option>
+							><% $events{$other_id}{abbr} %></option>
 %						}
 					</select>
 				</span>
 			</form>
 
-%			if ($event_label || $timeslot_label) {
+%			if ($event || $timeslot_id) {
 
 				<div class="flexrow">
-					<span class="fivesixth martopless grow flexrow">
-						<span class="half nospace">
-							<h4 class="nospace marbottomless">Rounds</h4>
-						</span>
-						<span class="sixth centeralign nospace tiny">
-							Start
-						</span>
-						<span class="sixth centeralign nospace tiny">
-							Done
-						</span>
-						<span class="sixth centeralign nospace tiny">
-							Total
-						</span>
+
+				<span class="fivesixth martopless grow flexrow">
+					<span class="half nospace">
+						<h4 class="nospace marbottomless">Rounds</h4>
 					</span>
+					<span class="sixth centeralign nospace tiny">
+						Start
+					</span>
+					<span class="sixth centeralign nospace tiny">
+						Done
+					</span>
+					<span class="sixth centeralign nospace tiny">
+						Total
+					</span>
+				</span>
+
+%				unless ($checker) {
+					<span class="sixth centeralign nospace tiny">
+						<% $perms->{'details'}{$event} %>
+						Schem
+					</span>
+%				}
 				</div>
 <%perl>
 				foreach my $rid (
@@ -976,7 +979,7 @@
 							<& "/funclib/bool_switch.mas",
 								tag     => "dont_poke_entries",
 								value   => $dont_poke,
-								target  => $event,
+								target  => $event->{id},
 								url     => "/setup/events/setting_switch.mhtml",
 								smaller => 1,
 
@@ -1062,10 +1065,10 @@
 
 				<div class="full flexrow padtop">
 
-					<span class="quarter nospace">
+					<span class="quarter">
 						<h5 class="nospace nowrap">
 							<% $round ? $round->realname : "" %>
-							<% scalar @timeslots == 1 ? $timeslot_label : scalar @timeslots." Timeslots" %>
+							<% $timeslot ? $timeslot->name : "" %>
 						</h5>
 					</span>
 
@@ -1122,15 +1125,7 @@
 				</div>
 
 				<div class="full flexrow centeralign">
-					<span class="semibold half grow leftalign">
-						<div class="full flexrow nospace">
-							<% $timeslot_label %>
-						</div>
-						<div class="full flexrow nospace padtopless">
-							<% $event_label %>
-						</div>
-					</span>
-					<span class="bluetext italic half grow rightalign">
+					<span class="bluetext italic threefifths">
 						Click on a competitor or judge to change their status
 					</span>
 				</div>
@@ -1152,6 +1147,7 @@
 					<p class="semibold bluetext biggish">
 						<% ucfirst($type) %> Events
 					</p>
+
 %				}
 
 				<table id="campus_<% $type %>" class="padbottom unfixed">
@@ -1165,12 +1161,6 @@
 							<th class="smallhide">
 								Sct
 							</th>
-
-%							if (scalar @timeslots > 1) {
-								<th class="smallhide">
-									Rnd
-								</th>
-%							}
 
 %							if ($max_flight > 1) {
 								<th class="smallhide">
@@ -1235,8 +1225,7 @@
 <%perl>
 						foreach my $panel_id (
 							sort {
-								$panels{$a}{"round"} cmp $panels{$b}{"round"}
-								|| $panels{$a}{"event"} cmp $panels{$b}{"event"}
+								$panels{$a}{"event"} cmp $panels{$b}{"event"}
 								|| $panels{$a}{"bye"} cmp $panels{$b}{"bye"}
 								|| $panels{$a}{"flight"} cmp $panels{$b}{"flight"}
 								|| length($panels{$a}{"room"}) <=> length($panels{$b}{"room"})
@@ -1283,12 +1272,6 @@
 										: $panels{$panel_id}{"letter"}
 									%></a>
 								</td>
-
-%								if (scalar @timeslots > 1) {
-									<td class="centeralign nospace limittiny smallhide">
-										<% $panels{$panel_id}{"round"} %>
-									</td>
-%								}
 
 %								if ($max_flight > 1) {
 									<td class="centeralign nospace limittiny smallhide">
@@ -1706,10 +1689,11 @@
 									></span>
 								</td>
 
-								<td
-									id    = "<% $panel_id %>_donecount"
-									class = "nospace"
-								>
+								<td class="nospace">
+									<span
+										id    = "<% $panel_id %>_donecount"
+										class = "hidden"
+									></span>
 <%perl>
 									if ($panels{$panel_id}{"judges"}) {
 
@@ -1737,9 +1721,7 @@
 												>&nbsp;</span>
 											</span>
 %										}
-
 %									} elsif ($panels{$panel_id}{'bye'}) {
-
 										<span
 											class         = "bye_done centeralign full"
 											panel         = "<% $panel_id %>"
