@@ -624,8 +624,6 @@
 
 			my $raw_hash = JSON::decode_json($raw);
 
-			Tab::debuglog("Points post: $raw");
-
 			if ($raw_hash
 				&& $raw_hash->{"message"} eq "Invalid person_ids"
 				&& $raw_hash->{"invalidIds"}
