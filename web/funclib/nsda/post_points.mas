@@ -1,4 +1,5 @@
 <%args>
+	$dbh    => undef
 	$tourn  => undef
 	$event  => undef
 	$person => undef
@@ -6,8 +7,11 @@
 </%args>
 <%init>
 
-	my $dbh = Tab::DBI->db_Main();
 	use Math::Round qw(nearest);
+
+	unless ($dbh) {
+		$dbh = Tab::DBI->db_Main();
+	}
 
 	my @events;
 
@@ -620,12 +624,12 @@
 
 			my $raw_hash = JSON::decode_json($raw);
 
+			Tab::debuglog("Points post: $raw");
+
 			if ($raw_hash
 				&& $raw_hash->{"message"} eq "Invalid person_ids"
 				&& $raw_hash->{"invalidIds"}
 			) {
-
-				my $dbh = Tab::DBI->db_Main();
 
 				my $sth = $dbh->prepare("
 					update student set student.nsda = NULL where student.nsda = ?

@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$person
 	$person_settings
 	$perms
@@ -105,6 +106,7 @@
 	$download++ if $ARGS{"related_thing"} eq "download";
 
 	my $return = $m->comp("/funclib/nsda/post_points.mas",
+		dbh   => $dbh,
 		event => $event,
 		debug => $download
 	);

@@ -169,8 +169,9 @@
 						</td>
 
 						<td
-							id    = "button_<% $event_id %>"
-							class = "centeralign"
+							id        = "button_<% $event_id %>"
+							class     = "centeralign"
+							data-text = "<% $posted_at %>"
 						>
 
 %							if ($panel_count > 0) {
@@ -181,12 +182,14 @@
 
 %							} elsif ($posted) {
 
-								<span class="hidden"><% $posted_at %></span>
 								<div class="nospace smallish">
 									Posted On <br/>
-									<& "/funclib/showdt.mas", string => $posted_at, length => "short", at => 1  &>
+									<& "/funclib/showdt.mas",
+										string => $posted_at,
+										length => "short",
+										at     => 1
+									&>
 								</div>
-
 %							} else {
 
 								<a
@@ -198,9 +201,7 @@
 									related_thing = "<% $ARGS{"repost"} ? "repost" : "" %>"
 									onClick       = "postSwitch(this, '/funclib/nsda/post_event.mhtml');"
 								></a>
-
 %							}
-
 						</td>
 
 %						if ($person->site_admin || $person_settings->{"nsda_admin"}) {
@@ -224,10 +225,8 @@
 %						}
 					</tr>
 %				}
-
 			</tbody>
 		</table>
-
 	</div>
 
 	<div class="menu">
