@@ -100,7 +100,7 @@
 			$event->setting("nsda_points_posted", 1);
 			$event->setting("nsda_point_codefail", 0);
 			$results .= $event->name." was already posted.  Skipped \n";
-			next EVENT;
+			next EVENT unless $debug;
 		}
 
 		my $nsda_category = $event->nsda_category;
@@ -115,7 +115,7 @@
 		unless ($nsda_category) {
 			$results .= $event->name." category code undetermined. Skipped and flagged for review.\n";
 			$event->setting("nsda_point_codefail", 1);
-			next EVENT;
+			next EVENT unless $debug;
 		}
 
 		unless ($nsda_category eq $event->nsda_category) {
@@ -173,12 +173,10 @@
 			$entry_students{$ref->{entry_id}}{$ref->{round_name}}{$ref->{student_nsda}}++;
 			$entry_students{$ref->{entry_id}}{all}{$ref->{student_nsda}}++;
 
-			if ($ref->{coach_id} || $ref->{coach_points}) {
-				$students{$ref->{student_nsda}} = ({
-					coach_id  => ($ref->{coach_id} || $ref->{coach_points}),
-					school_id => $ref->{chapter_nsda},
-				});
-			}
+			$students{$ref->{student_nsda}} = ({
+				coach_id  => ($ref->{coach_id} || $ref->{coach_points} || 0),
+				school_id => $ref->{chapter_nsda},
+			});
 		}
 
 		my $sth = $dbh->prepare("
@@ -507,10 +505,10 @@
 							my $result = {
 								person_id => int($student_id),
 								entry_id  => int($entry_id),
-								school_id => int($students{$student_id}{"school"}),
+								school_id => int($students{$student_id}{"school_id"}),
 								event_id  => int($event->id),
 								round     => int($round_name),
-								coach_id  => int($students{$student_id}{"coach"}),
+								coach_id  => int($students{$student_id}{"coach_id"}),
 								result    => $place
 							};
 
@@ -580,10 +578,10 @@
 							my $result = {
 								person_id => int($student_id),
 								entry_id  => int($entry_id),
-								school_id => int($students{$student_id}{"school"}),
+								school_id => int($students{$student_id}{"school_id"}),
 								event_id  => int($event->id),
 								round     => int($round_name),
-								coach_id  => int($students{$student_id}{"coach"}),
+								coach_id  => int($students{$student_id}{"coach_id"}),
 								result    => $place
 							};
 
