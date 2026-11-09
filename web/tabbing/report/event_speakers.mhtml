@@ -35,8 +35,10 @@
 
 	if ($event_id eq "all") {
 		$name = $tourn->name
-	} else {
+	} elsif ($event) {
 		$name = $event->name;
+	} else {
+		$name = 'SomeEvents';
 	}
 
     $name =~ s/[\W_]//g;
