@@ -422,7 +422,7 @@
 								entry_id  => int($entry_id),
 								school_id => int($students{$student_id}{school_id}),
 								event_id  => int($event->id),
-								school_id => int($students{$student_id}{coach_id} || 0),
+								coach_id  => int($students{$student_id}{coach_id} || 0),
 								round     => int($round_name),
 								result    => $round_total,
 								points    => $round_total,
