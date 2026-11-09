@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$tourn
 	$event_id => undef
 	$publish  => undef
@@ -7,9 +8,7 @@
 <%init>
 
 	use POSIX;
-
 	my $event = Tab::Event->retrieve($event_id);
-	my $dbh = Tab::DBI->db_Main();
 
 	$m->abort unless $event;
 	$m->abort unless $event->tourn->id == $tourn->id;
@@ -104,9 +103,7 @@
 	undef %used;
 
 	if ($final) {
-
 		foreach my $entry_id (@{$in_round{$final->id}}) {
-
 			if ($final_ballots{$entry_id} > ($final_ballots{total} / 2)) {
 				$round_multiplier{$entry_id} = 2.3;
 			} else {
@@ -114,7 +111,6 @@
 			}
 			$used{$entry_id}++;
 		}
-
 	}
 
 	my $mult = "1.6";

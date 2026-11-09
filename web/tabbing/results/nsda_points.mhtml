@@ -48,30 +48,29 @@
 
 	<div class="main">
 
-		<span class="fivesixths nospace">
+		<div class="flexrow full">
+			<span class="fivesixths nospace">
+				<h4>Post NSDA Merit Points</h4>
+				<p class="biggish semibold">
+					Please remember, posting autopoints to the NSDA
+						<span class="inline redtext">makes results public</span>
+					to NSDA member coaches.
+				</p>
+			</span>
 
-			<h4>Post NSDA Merit Points</h4>
-
-			<p class="biggish semibold">
-				Please remember, posting autopoints to the NSDA
-					<span class="inline redtext">makes results public</span>
-				to NSDA member coaches.
-			</p>
-		</span>
-
-		<span
-			class = "sixth rightalign nospace"
-			id    = "autopoint_buttonarea"
-		>
-%			if ($person->site_admin || $person_settings->{"nsda_admin"}) {
-				<a
-					class = "fa fa-file-code-o fa-sm buttonwhite greentext"
-					href  = "/funclib/nsda/post_tourn.mhtml?related_thing=download"
-					title = "Whole Tournament JSON"
-				></a>
-%			}
-		</span>
-
+			<span
+				class = "sixth rightalign nospace"
+				id    = "autopoint_buttonarea"
+			>
+%				if ($person->site_admin || $person_settings->{"nsda_admin"}) {
+					<a
+						class = "fa fa-file-code-o fa-sm buttonwhite bluetext"
+						href  = "/funclib/nsda/post_tourn.mhtml?related_thing=download"
+						title = "Whole Tournament JSON"
+					></a>
+%				}
+			</span>
+		</div>
 
 		<& "/funclib/tablesorter.mas", table => "autopoint" &>
 
@@ -110,7 +109,6 @@
 			</thead>
 
 			<tbody>
-
 <%perl>
 				while (
 					my (

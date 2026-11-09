@@ -32,6 +32,7 @@
 		if ($r->hostname eq "www.tabroom.com" ) {
 
 			if ($ARGS{"fabulous"}) {
+
 				if (not defined $defaults->{"fabulous"}) {
 					$defaults->{"fabulous"}++;
 					$session->default($defaults);
@@ -84,7 +85,6 @@
 	if (
 		$r->uri =~ /user\/chapter\/tourn_register.mhtml/
 		|| $r->uri =~ /setup.mhtml/
-		|| $r->uri =~ /panel\/schemat\/flip_status.mhtml/
 	) {
 
 	} elsif ( $person
@@ -97,6 +97,23 @@
 			|| $r->uri =~ /user\/tourn\/select.mhtml/
 		)
 	) {
+
+		if ($r->uri =~ /panel\/schemat\/flip_status.mhtml/) {
+
+			if ($ARGS{round_id}) {
+				my $sth = $dbh->prepare("
+					select
+						event.tourn tourn
+					from event, round
+						where round.id = ?
+						and round.event = event.id
+				");
+
+				$sth->execute($ARGS{round_id});
+				my $ts = $sth->fetch_hash();
+				$ARGS{tourn_id} = $ts->{tourn};
+			}
+		}
 
 		if ($ARGS{tourn_id} && $defaults->{tourn} != $ARGS{tourn_id}) {
 			$defaults->{tourn} = $ARGS{tourn_id};

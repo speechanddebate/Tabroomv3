@@ -19,7 +19,9 @@
 	my $round = Tab::Round->retrieve($round_id) if $round_id;
 
 	if ($perms->{'by_event'} && $perms->{'details'}{$event} eq "entry") {
-		$m->comp("/funclib/abort.mas", message => "You do not have access to the administrator pairing");
+		$m->comp("/funclib/abort.mas",
+			message => "You do not have access to the administrator pairing"
+		);
 	}
 
 	$event = $round->event() if $round && not defined $event;
@@ -313,7 +315,7 @@
 	my $round_url = $Tab::indexcards_url."/tab/".$tourn->id."/round/".$round->id;
 	my $stat_url  = $round_url."/status";
 	my $blast_url = $round_url."/blastStatus";
-	my $flip_url = "/panel/schemat/flip_status?round_id=".$round->id."&whole=1";
+	my $flip_url = "/panel/schemat/flip_status.mhtml?round_id=".$round->id."&whole=1";
 	my $side_url  = $round_url."/sidecount";
 
 	my $online_flips;
