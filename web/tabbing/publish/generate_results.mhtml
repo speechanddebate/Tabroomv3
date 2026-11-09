@@ -70,6 +70,7 @@
 
 			my @entries = $m->comp(
 				"/funclib/event_entries.mas",
+				dbh      => $dbh,
 				event    => $event,
 				perms    => $perms,
 				breakout => $key
@@ -123,6 +124,7 @@
 			) {
 
 				$m->comp("/tabbing/report/ndca/points.mhtml",
+					dbh      => $dbh,
 					event_id => $event->id,
 					publish  => $publish,
 					perms    => $perms,
@@ -822,6 +824,7 @@
 						$tier_dir, $long_desc_ref, $novice_ref, $name_ref,
 						$code_ref, $school_ref, $entry_ref
 					) = $m->comp("/tabbing/results/order_speakers.mas",
+						dbh   => $dbh,
 						perms => $perms,
 						round => $last_prelim
 					);
@@ -920,6 +923,7 @@
 
 				if ($last_prelim) {
 					@results = $m->comp("/tabbing/results/order_entries.mas",
+						dbh    => $dbh,
 						round  => $last_prelim,
 						perms  => $perms,
 						return => $ARGS{"return"}
@@ -927,7 +931,8 @@
 				} elsif ($final) {
 					$last_prelim = $final;
 					@results = $m->comp("/tabbing/results/order_entries.mas",
-						round => $final,
+						dbh    => $dbh,
+						round  => $final,
 						perms  => $perms,
 						return => $ARGS{"return"}
 					);
@@ -939,7 +944,8 @@
 
 				my %entry_ballots = $m->comp(
 					"/funclib/round_ballot_strings.mas",
-					round => $last_prelim);
+					round => $last_prelim
+				);
 
 				my $counter = 1;
 
@@ -1050,6 +1056,7 @@
 						my $label = substr($round->label, 0, 8);
 
 						my @results = $m->comp("/tabbing/results/order_entries.mas",
+							dbh    => $dbh,
 							round  => $round,
 							perms  => $perms,
 							return => $ARGS{"return"}
