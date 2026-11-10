@@ -320,15 +320,24 @@
 	foreach my $category ($old_tourn->categories) {
 
 		my $abbr = $category->abbr;
+		my $new_abbr = $abbr;
 
-		if ($taken_abbr{$abbr}++) {
-			$abbr .= '-'.scalar(keys %taken_abbr) + 1;
+		if ($taken_abbr{$new_abbr}) {
+
+			my $key = 1;
+
+			while ($taken_abbr{$abbr."-".$key}) {
+				$key++;
+			}
+
+			$new_abbr = $abbr."-".$key;
+			$taken_abbr{$new_abbr}++;
 		}
 
 		my $ncategory = eval {
 			return $category->copy({
 				tourn => $tourn->id,
-				abbr  => $abbr
+				abbr  => $new_abbr
 			});
 		};
 
@@ -377,7 +386,6 @@
 			}
 
 			foreach my $shift ($category->shifts) {
-
 				my $nshift = $shift->copy;
 				$nshift->category($ncategory->id);
 
@@ -398,6 +406,7 @@
 	foreach my $event ($old_tourn->events) {
 
 		my $pattern = $event->pattern->id if $event->pattern;
+		next unless $translator{"category"}{$event->category->id},
 
 		my $nevent = eval {
 			return $event->copy({

@@ -18,6 +18,9 @@
 	my $tourn = $school->tourn;
 	my $chapter_id = $school->chapter->id;
 
+	my $tz = $tourn->tz;
+	$tz = "UTC" unless $tz;
+
 	my $category = eval {
 		if ($category_id) {
 			return Tab::Category->retrieve($category_id);
@@ -32,6 +35,7 @@
 
 	my %category_settings = $category->all_settings;
 
+	#Refresh the account based conflicts just in case.
 	foreach my $student ($entry->students) {
 		if ($student->person > 0) {
 			$m->comp("/funclib/person_conflict.mas",
@@ -42,96 +46,18 @@
 		}
 	}
 
-	my $limit;
-
-	if ($category_settings{"pref_jpool"}) {
-		$limit = " and exists (
-			select jpj.id
-			from jpool_judge jpj
-			where jpj.judge = judge.id
-			and jpj.jpool = ".$category_settings{'pref_jpool'}." ) ";
-	} else {
-		$limit = " and judge.category = ".$category->id." ";
-	}
-
-	my $sth = $dbh->prepare("
-		select
-			judge.id, judge.code, judge.first, judge.middle, judge.last, judge.school,
-			judgeschool.name schoolname,
-			judge.obligation, judge.hired,
-			neutral.value neutral,
-			online_hybrid.value online_hybrid,
-			diverse.value diverse,
-			free_strike.value free_strike,
-			first_year.value first_year,
-			person.id person, paradigm.id paradigm,
-			judge_hire.id hire,
-			crt.name coach_rating,
-			rating.id rating, rating.ordinal, rating.percentile,
-			aff_rating.id aff_rating, aff_rating.ordinal aff_ordinal, aff_rating.percentile aff_percentile,
-			neg_rating.id neg_rating, neg_rating.ordinal neg_ordinal, neg_rating.percentile neg_percentile
-		from (judge, entry, school, category)
-			left join school judgeschool on judge.school = judgeschool.id
-			left join person on judge.person = person.id
-			left join person_setting paradigm on paradigm.person = person.id and paradigm.tag = 'paradigm'
-			left join judge_setting neutral on neutral.tag = 'neutral' and neutral.judge = judge.id
-			left join judge_setting online_hybrid on online_hybrid.tag = 'online_hybrid' and online_hybrid.judge = judge.id
-			left join judge_setting diverse on diverse.tag = 'diverse' and diverse.judge = judge.id
-			left join judge_setting free_strike on free_strike.tag = 'free_strike' and free_strike.judge = judge.id
-			left join judge_setting first_year on first_year.tag = 'first_year' and first_year.judge = judge.id
-			left join rating on rating.judge = judge.id and rating.entry = entry.id and (rating.side IS NULL or rating.side = 0)
-			left join rating aff_rating on aff_rating.judge = judge.id and aff_rating.entry = entry.id and aff_rating.side = 1
-			left join rating neg_rating on neg_rating.judge = judge.id and neg_rating.entry = entry.id and neg_rating.side = 2
-
-			left join judge_hire on judge_hire.judge = judge.id and judge_hire.school = school.id
-
-			left join rating_tier crt
-				on crt.category = category.id
-				and exists (
-				select cr.id from rating cr
-					where cr.type = 'coach'
-					and cr.judge = judge.id
-					and cr.rating_tier = crt.id
-			)
-
-		where judge.active = 1
-			$limit
-			and judge.category = category.id
-			and entry.id = ?
-			and school.id = entry.school
-			and school.tourn = category.tourn
-			and not exists (
-				select strike.id from strike
-				where strike.judge = judge.id
-				and (strike.entry = entry.id
-					OR strike.school = entry.school
-				)
-				and strike.registrant = 1
-				and strike.conflict = 1
-			)
-			and not exists (
-				select strike.id
-				from strike
-				where strike.judge = judge.id
-				and strike.event = entry.event
-			)
-			group by judge.id
-			order by judge.last
-	");
-
-	$sth->execute($entry->id);
-
-	my $results = $sth->fetchall_hash();
-
-	my $tz = $tourn->tz;
-	$tz = "UTC" unless $tz;
+	my $results = $m->comp("pref_judges.mas",
+		dbh               => $dbh,
+		entry             => $entry,
+		category          => $category,
+		category_settings => \%category_settings
+	);
 
 	my $strike_end = $category_settings{"strike_end"};
 	my $read_only++ if $strike_end < $now;
 
 	my $strike_start = $category_settings{"strike_start"};
 	$read_only++ if $strike_start > $now;
-
 
 	$strike_end->set_time_zone($tz) if $strike_end;
 	$strike_start->set_time_zone($tz) if $strike_start;
@@ -467,86 +393,29 @@
 							</td>
 %						}
 
-%						if ($category_settings{"side_based_prefs"}) {
-
-							<td class="smallish padless centeralign">
-								<span class="hiddencsv">
-									<% $judge_ref->{'aff_ordinal'} %>
-								</span>
+						<td class="smallish padless centeralign">
+							<span class="hiddencsv">
+								<% $judge_ref->{'ordinal'} %>
+							</span>
 
 %								if ($read_only) {
-									<% $judge_ref->{'aff_ordinal'} %>
+								<% $judge_ref->{'ordinal'} %>
 %								} else {
-									<input
-										type  = "number"
-										min   = "0"
-										max   = "<% 2 * (scalar @{$results}) %>"
-										name  = "aff_rating_<% $judge_ref->{"id"} %>"
-										size  = "5"
-										value = "<% $judge_ref->{'aff_ordinal'} %>"
-									>
+								<input
+									type  = "number"
+									min   = "0"
+									max   = "<% 2 * (scalar @{$results}) %>"
+									name  = "rating_<% $judge_ref->{"id"} %>"
+									size  = "5"
+									value = "<% $judge_ref->{'ordinal'} %>"
+								>
 %								}
 
-							</td>
+						</td>
 
-							<td class="smallish padless centeralign neg">
-								<% $judge_ref->{'aff_percentile'}
-									? sprintf("%.2f", $judge_ref->{'aff_percentile'})
-									: "" %>
-							</td>
-
-							<td class="smallish padless centeralign neg">
-								<span class="hiddencsv">
-									<% $judge_ref->{'neg_ordinal'} %>
-								</span>
-
-%								if ($read_only) {
-									<% $judge_ref->{'neg_ordinal'} %>
-%								} else {
-									<input
-										type  = "number"
-										min   = "0"
-										max   = "<% 2 * (scalar @{$results}) %>"
-										name  = "neg_rating_<% $judge_ref->{"id"} %>"
-										size  = "5"
-										value = "<% $judge_ref->{'neg_ordinal'} %>"
-									>
-%								}
-
-							</td>
-
-							<td class="smallish padless centeralign">
-								<% $judge_ref->{'neg_percentile'}
-									? sprintf("%.2f", $judge_ref->{'neg_percentile'})
-									: "" %>
-							</td>
-
-%						} else {
-
-							<td class="smallish padless centeralign">
-								<span class="hiddencsv">
-									<% $judge_ref->{'ordinal'} %>
-								</span>
-
-%								if ($read_only) {
-									<% $judge_ref->{'ordinal'} %>
-%								} else {
-									<input
-										type  = "number"
-										min   = "0"
-										max   = "<% 2 * (scalar @{$results}) %>"
-										name  = "rating_<% $judge_ref->{"id"} %>"
-										size  = "5"
-										value = "<% $judge_ref->{'ordinal'} %>"
-									>
-%								}
-
-							</td>
-
-							<td class="smallish padless centeralign">
-								<% $judge_ref->{'percentile'} ? sprintf("%.2f", $judge_ref->{'percentile'}) : "" %>
-							</td>
-%						}
+						<td class="smallish padless centeralign">
+							<% $judge_ref->{'percentile'} ? sprintf("%.2f", $judge_ref->{'percentile'}) : "" %>
+						</td>
 					</tr>
 %				}
 				</tbody>
@@ -622,7 +491,7 @@
 										chapter.name,
 										chapter.id chapter_id,
 									(select e2.code
-										from entry e2, event
+										from entry e2
 										where 1=1
 										and e2.active   = 1
 										and e2.event    = entry.event

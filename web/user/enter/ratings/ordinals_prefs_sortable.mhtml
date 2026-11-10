@@ -54,45 +54,19 @@
 	my $strike_start = $category_settings{"strike_start"};
 	$read_only++ if $strike_start > $now;
 
-	my $switch;
-    my %rating_name = ();
-    foreach my $tier ($category->rating_tiers) {
-        $rating_name{$tier->id} = $tier->name;
-    }
-
-	my $coach_ratings = $category_settings{"coach_ratings"};
-    my %coach_rating_by_judge = ();
-
-    foreach my $rating (
-		$m->comp(
-			"/funclib/category_ratings.mas",
-			category => $category,
-			type     => "coach"
-		)
-	) {
-
-		next unless $rating->rating_tier;
-        $coach_rating_by_judge{$rating->judge->id} = $rating_name{$rating->rating_tier->id};
-    }
-
 	undef($read_only) if $entry->setting("open_prefs");
 
-	if ($read_only) {
+	my $results = $m->comp("pref_judges.mas",
+		dbh               => $dbh,
+		entry             => $entry,
+		category          => $category,
+		category_settings => \%category_settings
+	);
 
+	if ($read_only) {
 		my $msg = "Prefs can no longer be edited; the deadline has passed";
 		$m->redirect("ordinals_prefs.mhtml?entry_id=$entry_id&msg=$msg#");
 	}
-
-	my %freebie = $m->comp("/funclib/free_strikes.mas", category => $category);
-
-	my %neutrals =
-		map {$_->judge->id => 1}
-		$m->comp(
-			"/funclib/category_judge_settings.mas",
-			category => $category,
-			tag => "neutral"
-		)
-	if $category_settings{"neutrals"};
 
 </%init>
 
@@ -116,33 +90,6 @@
 			<p>Choose an entry at right to continue</p>
 <%perl>
 		} else {
-
-			@judges = $m->comp("judges.mas", category => $category, active => 1);
-			@judges = sort {$a->last cmp $b->last} @judges;
-			@judges = sort {$a->short_name cmp $b->short_name} @judges;
-
-			foreach my $conflict ($entry->strikes( registrant => 1, conflict => 1)) {
-				$conflicts_by_id{$conflict->judge->id} = $conflict;
-			}
-
-			foreach my $conflict ($entry->school->strikes( registrant => 1, conflict => 1)) {
-				$conflicts_by_id{$conflict->judge->id} = $conflict;
-			}
-
-			my %event_struck =
-				map {$_->judge->id => 1}
-				Tab::Strike->search(type => "event", event => $entry->event->id);
-
-			my %ordinal_by_judge = ();
-
-			my @ratings = Tab::Rating->search( entry => $entry->id, type => "entry");
-
-			foreach my $rating (@ratings) {
-				$ratings_by_judge{$rating->judge->id} = $rating;
-				$ordinal_by_judge{$rating->judge->id} = $rating->ordinal if $rating;
-			}
-
-			@judges = sort { $ordinal_by_judge{$a->id} <=> $ordinal_by_judge{$b->id} } @judges;
 
 </%perl>
 			<script>
@@ -188,11 +135,9 @@
 				</span>
 			</div>
 
-%			if (%freebie) {
-				<p class="semibold greentext biggish nospace centeralign padvert">
-					Judges marked in green are free strikes; they do not count against rating quotas.
-				</p>
-%			}
+			<p class="semibold greentext biggish nospace centeralign padvert">
+				Judges marked in green are free strikes; they do not count against rating quotas.
+			</p>
 
 			<form action="ordinals_sort_save.mhtml" method="post">
 
@@ -222,42 +167,43 @@
 					style = "margin: auto;"
 				>
 <%perl>
-					foreach my $judge (@judges) {
+					foreach my $judge (sort {$a->{ordinal} <=> $b->{ordinal}} @{$results}) {
 
-						next if ($judge->school && $judge->school->id == $school->id)
-						&& (not defined $neutrals{$judge->id});
-
-						next if $conflicts_by_id{$judge->id};
-						next if $event_struck{$judge->id};
+						next if ($judge->{school_id} == $school->id && (not defined $judge->{neutral}));
 </%perl>
-						<li class = "leftalign ltyellowhover flexrow ui-state-default border full semibold <% $freebie{$judge->id} ? "greentext greenborder" : "" %>"
-							id    = "judge_<% $judge->id %>"
+						<li class = "leftalign ltyellowhover flexrow ui-state-default border full semibold <% $judge->{free_strike} ? "greentext greenborder" : "" %>"
+							id    = "judge_<% $judge->{id} %>"
 							style = "font-size: 105%;"
 						>
 							<span class="twenty marno">
-								<%  $ordinal_by_judge{$judge->id} ? $ordinal_by_judge{$judge->id} : "0" %>
+								<%  $judge->{ordinal} %>
 							</span>
 
-							<span class="quarter marno nowrap">
-								<% $judge->first." ".$judge->last %>
+							<span class="quarter marno nowrap blacktext">
+%								if ($judge->{online_hybrid}) {
+									<span class="fa fa-sm redtext fa-laptop" title="Judge is judging remotely/online">
+									</span>
+%								}
+								<% $judge->{first}." ".$judge->{last} %>
 							</span>
 
 							<span class="tenth marno">
-%								if ($coach_ratings) {
-									<% $coach_rating_by_judge{$judge->id} %>
-%								}
-								<% $freebie{$judge->id} ? "FREE" : "" %>
+								<% $judge->{coach_rating} %>
+								<% $judge->{free_strike} %>
 							</span>
 
-							<span class="twofifths marno nowrap">
-								<% ($judge->school && $judge->school->id)
-									? $judge->school->short_name.", ".$judge->school->chapter->state
-									: "Unaffilated "%>
+							<span class="twofifths marno nowrap blacktext">
+								<% $judge->{schoolname} || "Unaffiliated" %>
 							</span>
 
 %							if ($rounds_per) {
-								<span class="tenth marno padleft">
-									<% ($judge->obligation + $judge->hired) ? ($judge->obligation + $judge->hired) : "0" %> rds
+								<span class="tenth marno padleft blacktext">
+									<% ($judge->{obligation} + $judge->{hired}) || 0 %> rounds
+								</span>
+%							}
+%							if ($judge->{percentile}) {
+								<span class="twenty marno padleft <% $judge->{percentile} > 50 ? "redtext" : "greentext" %>" >
+									<% $judge->{percentile} %>%
 								</span>
 %							}
 						</li>
@@ -344,7 +290,7 @@
 										chapter.name,
 										chapter.id chapter_id,
 									(select e2.code
-										from entry e2, event
+										from entry e2
 										where 1=1
 										and e2.active   = 1
 										and e2.event    = entry.event

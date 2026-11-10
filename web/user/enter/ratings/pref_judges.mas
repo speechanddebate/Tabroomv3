@@ -1,0 +1,124 @@
+<%args>
+	$dbh
+	$category_settings
+	$category
+	$entry
+</%args>
+<%init>
+
+	my $limit;
+
+	if ($category_settings->{"pref_jpool"}) {
+		$limit = " and exists (
+			select jpj.id
+			from jpool_judge jpj
+			where jpj.judge = judge.id
+			and jpj.jpool = ".$category_settings->{'pref_jpool'}." ) ";
+	} else {
+		$limit = " and judge.category = ".$category->id." ";
+	}
+
+	my $sth = $dbh->prepare("
+		select
+			judge.id, judge.code, judge.first, judge.middle, judge.last, judge.school,
+
+			(
+				select judgeschool.name schoolname
+				from school judgeschool
+				where judge.school = judgeschool.id
+			) schoolname,
+
+			(select paradigm.id paradigm
+				from person_setting paradigm
+					where paradigm.person = person.id
+					and paradigm.tag = 'paradigm'
+			) paradigm,
+
+			(select neutral.value neutral
+				from judge_setting neutral
+					where neutral.tag = 'neutral'
+					and neutral.judge = judge.id
+			) neutral,
+
+			(select online_hybrid.value online_hybrid
+				from judge_setting online_hybrid
+					where online_hybrid.tag = 'online_hybrid'
+					and online_hybrid.judge = judge.id
+			) online_hybrid,
+
+			(select diverse.value diverse
+				from judge_setting diverse
+					where diverse.tag = 'diverse'
+					and diverse.judge = judge.id
+			) diverse,
+
+			(select free_strike.value free_strike
+				from judge_setting free_strike
+					where free_strike.tag = 'free_strike'
+					and free_strike.judge = judge.id
+			) free_strike,
+
+			(select first_year.value first_year
+				from judge_setting first_year
+					where first_year.tag = 'first_year'
+					and first_year.judge = judge.id
+			) first_year,
+
+			judge.obligation, judge.hired,
+			person.id person,
+
+			(select judge_hire.id
+				from judge_hire where judge_hire.judge = judge.id and judge_hire.school = school.id
+			) hire,
+
+			(select
+				crt.name
+				from rating_tier crt
+				where crt.category = category.id
+				and exists (
+				select cr.id from rating cr
+					where cr.type = 'coach'
+					and cr.judge = judge.id
+					and cr.rating_tier = crt.id
+				)
+			) coach_rating,
+
+			rating.id rating, rating.ordinal, rating.percentile
+
+		from (judge, entry, school, category)
+			left join person on judge.person = person.id
+			left join rating on rating.judge = judge.id and rating.entry = entry.id
+
+		where 1=1
+			and judge.active = 1
+			$limit
+			and judge.category = category.id
+			and entry.id = ?
+			and school.id = entry.school
+			and school.tourn = category.tourn
+			and not exists (
+				select strike.id from strike
+				where strike.judge = judge.id
+				and (strike.entry = entry.id
+					OR strike.school = entry.school
+				)
+				and strike.registrant = 1
+				and strike.conflict = 1
+			)
+			and not exists (
+				select strike.id
+				from strike
+				where strike.judge = judge.id
+				and strike.event = entry.event
+			)
+			group by judge.id
+			order by judge.last
+	");
+
+	$sth->execute($entry->id);
+	return $sth->fetchall_hash();
+
+</%init>
+
+
+

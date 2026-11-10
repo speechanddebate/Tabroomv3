@@ -8,6 +8,9 @@
 </%args>
 <%init>
 
+	Tab::debuglog("I am called with entry $entry_id");
+	Tab::debuglog($sortorder);
+
 	return unless $entry_id && $sortorder;
 
 	my @ordering = split (/&judge\[\]=/, $sortorder);
@@ -20,8 +23,9 @@
 		$ord++;
 	}
 
-	my $err;
+	Tab::debuglog("Hello sweetie");
 
+	my $err;
 	my $entry = Tab::Entry->retrieve($entry_id);
 	my $category = $entry->event->category;
 	my $tourn = $category->tourn;
@@ -48,125 +52,115 @@
 		$m->comp("/funclib/abort.mas", message => "No prefs are offered in this division");
 	}
 
-	my %freebie = $m->comp("/funclib/free_strikes.mas", category => $category);
+	Tab::debuglog("Hello II");
 
-	my $find_sth = $dbh->prepare("select id from rating where entry = ?");
-	$find_sth->execute($entry_id);
-	my $results = $find_sth->fetchall_hash();
+	my $results = $m->comp("pref_judges.mas",
+		dbh               => $dbh,
+		entry             => $entry,
+		category          => $category,
+		category_settings => \%category_settings
+	);
 
-	my $id_string;
-	my $id_count;
-
-	foreach my $ref (@{$results}) {
-		$id_string .= "," if $id_string;
-		$id_string .= $ref->{id};
-		if ($id_count++ > 4) {
-			my $del_sth = $dbh->prepare("delete from rating where id IN ($id_string)");
-			$del_sth->execute();
-			undef $id_string;
-			undef $id_count;
-		}
-	}
-
-	if ($id_string) {
-		my $del_sth = $dbh->prepare("delete from rating where id IN ($id_string)");
-		$del_sth->execute();
-	}
-
-
-	my $rounds_per++ if $category->setting("rounds_per");
-	my %conflicts_by_id = ();
-
-	foreach my $conflict ($entry->strikes( registrant => 1, conflict => 1)) {
-		$conflicts_by_id{$conflict->judge->id} = $conflict;
-	}
-
-	foreach my $conflict ($entry->school->strikes( registrant => 1, conflict => 1)) {
-		$conflicts_by_id{$conflict->judge->id} = $conflict;
-	}
-
-	my @all_judges = $m->comp("judges.mas", category => $category);
-	@all_judges = sort {$a->last cmp $b->last} @all_judges;
-
-	my %rating_by_judge = ();
-	my %ordinal_by_judge = ();
-	my %judges_at_rating = ();
+	my $update_sth = $dbh->prepare("update rating set ordinal = ?, percentile = ? where entry = ".$entry->id." and judge = ?");
+	my $create_sth = $dbh->prepare("insert into rating (type, entered, ordinal, percentile, entry, judge, side) VALUES ('entry', NOW(), ?, ?, ".$entry->id.", ?, ?)");
+	my $delete_sth = $dbh->prepare("delete from rating where entry = ".$entry->id." and judge = ?");
+	my $all_sth = $dbh->prepare("select distinct rating.judge from rating where rating.entry = ?");
 
 	my $total_rounds;
-	my $total_judges;
+	my %rating_by_judge;
+	my %ordinal_by_judge;
+	my %judges_at_rating;
 
-	@all_judges = sort {$id_order{$a->id} <=> $id_order{$b->id}} @all_judges;
-	my $count = 1;
-
-	my %done;
+	my $counter;
 
     JUDGE:
-    foreach my $judge (@all_judges) {
-
-		my $school = int($judge->school);
-
-        next if $school == int($entry->school);
-		next JUDGE if $conflicts_by_id{$judge->id};
-		next if $rating_by_judge{$judge->id};
-
-		unless ($freebie{$judge->id}) {
-
-            if ($rounds_per > 0) {
-                $total_rounds += $judge->obligation;
-                $total_rounds += $judge->hired;
-            } else {
-                $total_rounds++;
-            }
-			$total_judges++;
-		}
-
-		my $rating = eval {
-			return Tab::Rating->create({
-				type    => "entry",
-				judge   => $judge->id,
-				entry   => $entry->id,
-				ordinal => $count++,
-				side    => 0,
-				entered => $now
-			});
-		};
-
-		if ($rating) {
-			$rating_by_judge{$judge->id} = $rating;
-			$ordinal_by_judge{$judge->id} = $id_order{$judge->id};
-			push (@{$judges_at_rating{$id_order{$judge->id}}}, $judge );
-		}
-    }
-
-	my $rounds_before;
-
-	foreach my $ordinal (sort {$a <=> $b} keys %judges_at_rating ) {
-
-		foreach my $judge (@{$judges_at_rating{$ordinal}}) {
-
-			next if $conflicts_by_id{$judge->id};
-			next if $freebie{$judge->id};
-
-            if ($rounds_per > 0) {
-				$rounds_before += $judge->obligation;
-				$rounds_before += $judge->hired;
+    foreach my $judge_ref (
+		sort {
+			$id_order{$a->{id}} <=> $id_order{$b->{id}}
+		} @{$results}
+	) {
+		unless (
+			($category_settings{"free_strikes_dont_count"}  && $judge_ref->{"free_strike"})
+			|| ($category_settings{"fyo_free_strikes"} && $judge_ref->{"first_year"})
+		) {
+			if ($category_settings{'rounds_per'}) {
+				$total_rounds += $judge_ref->{obligation};
+				$total_rounds += $judge_ref->{hired};
 			} else {
-				$rounds_before++;
+				$total_rounds++;
 			}
 		}
 
-		foreach my $judge (@{$judges_at_rating{$ordinal}}) {
-
-			my $percentile = ( $rounds_before  / $total_rounds) * 100;
-			my $rating = $rating_by_judge{$judge->id};
-			$rating->percentile($percentile);
-			$rating->update;
-
-		}
-
+		$counter++;
+		$ordinal_by_judge{$judge_ref->{"id"}} = $counter;
+		push (@{$judges_at_rating{$counter}}, $judge_ref );
 	}
 
-	my $msg = $entry->code." prefs saved in ".$category->abbr." to $rounds_before rounds";
+	$total_rounds = scalar @{$results} unless $total_rounds;
+	my $count = 1;
+
+	my %done_judges;
+	undef $counter;
+	my $rounds_before = 1;
+
+	foreach my $ordinal (sort {$a <=> $b} keys %judges_at_rating ) {
+
+		next unless $ordinal > 0;
+		my $rounds_add;
+		my $judge_count;
+
+		foreach my $judge_ref (@{$judges_at_rating{$ordinal}}) {
+
+			unless (
+				($category_settings{"free_strikes_dont_count"}  && $judge_ref->{"free_strike"})
+				|| ($category_settings{"fyo_free_strikes"} && $judge_ref->{"first_year"})
+			) {
+
+				$judge_count++;
+
+				if ($category_settings{'rounds_per'}) {
+					$rounds_add += $judge_ref->{obligation};
+					$rounds_add += $judge_ref->{hired};
+				} else {
+					$rounds_add++;
+				}
+			}
+		}
+
+		foreach my $judge_ref (@{$judges_at_rating{$ordinal}}) {
+
+			my $percentile = 0;
+			$percentile = ( ($rounds_before) / $total_rounds) * 100 if $rounds_before;
+			$percentile = 100 if $percentile > 100;
+
+			$counter++;
+			$ordinal = $counter;
+
+			unless ($judge_ref->{ordinal}) {
+				eval {
+					$create_sth->execute($ordinal, $percentile, $judge_ref->{"id"}, 0);
+				};
+			} elsif ($judge_ref->{ordinal} != $ordinal || $judge_ref->{"percentile"} != $percentile) {
+				$update_sth->execute($ordinal, $percentile, $judge_ref->{"id"});
+			}
+
+			$done_judges{$judge_ref->{id}}++;
+		}
+
+		$rounds_before += $rounds_add;
+		$rounds_before += $judge_count if (not defined $rounds_add);
+	}
+
+	$all_sth->execute($entry->id);
+	my $all = $all_sth->fetchall_hash();
+
+	#Clean the unrated out
+    foreach my $judge_ref (@{$all}) {
+		next if $done_judges{$judge_ref->{judge}};
+		$delete_sth->execute($judge_ref->{judge});
+	}
+
+	my $msg = $entry->code." prefs saved in ".$category->abbr." to $total_rounds rounds";
 
 	$m->comp("/funclib/log.mas",
 		tag         => 'prefs',
