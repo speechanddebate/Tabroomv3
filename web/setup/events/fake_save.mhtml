@@ -34,7 +34,6 @@
 			name       => "Test Tournament Chapter",
 			state      => "XX",
 			country    => "XX",
-			self_prefs => 0
 		});
 
 	}
