@@ -738,6 +738,7 @@
 
 			} else {
 
+				Tab::debuglog($raw);
 				$results .= $event->name." points not posted with error ".$raw_hash->{"message"};
 				next EVENT;
 			}
