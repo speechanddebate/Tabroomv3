@@ -17,7 +17,6 @@
 
 	@students = Tab::Student->search(
 		person  => $person->id,
-		retired => 0
 	);
 
 	Tab::Entry->columns( TEMP => "studentid");
