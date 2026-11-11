@@ -33,6 +33,7 @@
 		$m->comp("/funclib/abort.mas", message => "No prefs are offered in this division");
 	}
 
+	my $online_hybrid = $event->setting("online_hybrid");
 	my %category_settings = $category->all_settings;
 
 	#Refresh the account based conflicts just in case.
@@ -236,7 +237,7 @@
 								School
 							</th>
 
-%							if ($event->setting("online_hybrid")) {
+%							if ($online_hybrid) {
 								<th>
 									Online
 								</th>
@@ -375,7 +376,7 @@
 %							}
 						</td>
 
-%						if ($event->setting("online_hybrid")) {
+%						if ($online_hybrid) {
 							<td class="smallish padless centeralign">
 								<% $judge_ref->{online_hybrid} ? "ONL" : "" %>
 							</td>
