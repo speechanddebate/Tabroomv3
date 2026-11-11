@@ -1,10 +1,13 @@
 <%args>
+	$dbh => undef
 	$category => undef
 	$digits => .1
 </%args>
 <%init>
 
-	my $dbh = Tab::DBI->db_Main();
+	unless ($dbh) {
+		$dbh = Tab::DBI->db_Main();
+	}
 
 	my $select;
 	my $left;

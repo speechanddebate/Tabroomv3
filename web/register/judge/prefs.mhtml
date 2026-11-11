@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$tourn
 	$tourn_settings
 	$judge_id   => undef
@@ -47,9 +48,11 @@
 	my %rating_by_entry = map {$_->entry->id => $_} @ratings;
 	my $school_id = $judge->school->id if $judge->school;
 
+	my $style = $category->setting('prefs');
+
 	my @conflicts = Tab::Strike->search(
 		judge => $judge->id,
-		type  => "conflict"
+		type  => "conflict",
 	);
 
 	push @conflicts, Tab::Strike->search(
@@ -72,7 +75,9 @@
 	my %school_conflict_by_id = map {$_->school->id => $_} @school_conflicts;
 
 	my %rating = $m->comp("/funclib/judge_averages.mas",
-		category => $category
+		dbh      => $dbh,
+		category => $category,
+		prefs => $style,
 	);
 
 </%init>
@@ -104,25 +109,27 @@
 
 %	}
 
-		<span class="quarter nospace">
-			<h5 class="nospace">
-				<% $judge->first %> <% $judge->last %>
-			</h5>
-		</span>
-		<span class="quarter nospace">
-			<h5 class="nospace">
-				Pref Sheet in <% $category->abbr %>
-			</h5>
-		</span>
+		<div class='full flexrow padvertless martop'>
+			<span class="quarter nospace padleft">
+				<h5 class="nospace">
+					<% $judge->first %> <% $judge->last %>
+				</h5>
+			</span>
+			<span class="quarter nospace">
+				<h5 class="nospace">
+					<% $category->abbr %> Pref Sheet
+				</h5>
+			</span>
 
-		<span class="quarter rightalign semibold bluetext padtop">
-			Avg Rating: <% $rating{$judge->id} %>
-		</span>
+			<span class="quarter rightalign semibold bluetext padtop">
+				Avg Rating: <% $rating{$judge->id} %>
+			</span>
 
-		<span
-			class = "quarter rightalign"
-			id    = "prefjudge_buttonarea"
-		></span>
+			<span
+				class = "quarter rightalign padright"
+				id    = "prefjudge_buttonarea"
+			></span>
+		</div>
 
 		<form action="prefs_save.mhtml" method="post">
 
@@ -220,8 +227,10 @@
 %						my $rating_value;
 %						if ($conflict_by_id{$entry->id}) {
 							CONFLICT
+							</td><td>
 %						} elsif ($school_conflict_by_id{$entry->school->id}) {
-							SCHOOL CONFL.
+							SCHOOL CONFLICT
+							</td><td>
 %						} else {
 
 %							if ($prefs eq "ordinals") {
