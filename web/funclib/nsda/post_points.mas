@@ -429,8 +429,6 @@
 			next EVENT;
 		}
 
-		Tab::debuglog("I should make it here");
-
 		if ($event_type eq "congress") {
 
 			foreach my $entry_id (keys %scores) {
@@ -444,8 +442,6 @@
 					foreach my $speech (
 						keys %{$scores{$entry_id}{$round_name}{"speech"}}
 					) {
-
-						Tab::debuglog("Speech $speech");
 
 						my $speech_total;
 						my $judge_count;
@@ -467,8 +463,6 @@
 					my $student_ref = $entry_students{$entry_id}{$round_name} || $entry_students{$entry_id}{"all"};
 
 					if ($round_total && $student_ref) {
-
-						Tab::debuglog("Here with round_total $round_total");
 
 						foreach my $student_id (keys %{$student_ref}) {
 
@@ -499,8 +493,6 @@
 
 				my $counter;
 				my $delayed_count;
-
-				Tab::debuglog("SEction $section_id");
 
 				foreach my $entry_id (
 					sort {
@@ -738,7 +730,6 @@
 
 			} else {
 
-				Tab::debuglog($raw);
 				$results .= $event->name." points not posted with error ".$raw_hash->{"message"};
 				next EVENT;
 			}
