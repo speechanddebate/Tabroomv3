@@ -610,7 +610,17 @@
 				and message.tag = 'message'
 			) as message,
 
-			GROUP_CONCAT( CONCAT(event.abbr, ' ', round.name) SEPARATOR ', ') as rounds,
+			(select
+				GROUP_CONCAT( CONCAT(event.abbr, ' ', round.name) SEPARATOR ', ') as rounds
+				from jpool_round jpr, round, event, timeslot
+				where 1=1
+					and jpr.jpool = jpool.id
+					and jpr.round = round.id
+					and round.event = event.id
+					and round.timeslot = timeslot.id
+					and timeslot.end   > NOW()
+					and tourn.end      > NOW()
+			) rounds,
 
 			category.abbr category,
 			tourn.name tourn,
@@ -623,13 +633,7 @@
 				and judge_sheet_notice.tag = 'judge_sheet_notice'
 			) as judge_sheet_notice,
 
-			(select
-				standby.value
-				from jpool_setting standby
-				where standby.jpool = jpool.id
-				and standby.tag = 'standby'
-			) as standby,
-
+			standby_timeslot.id standby,
 			stimeslot.name timeslot_name,
 			stimeslot.start timeslot_start,
 			stimeslot.end timeslot_end,
@@ -639,10 +643,14 @@
 			tourn.tz tz
 
 		from (judge, jpool, jpool_judge, jpool_setting show_judges,
-			category, tourn, jpool_round jpr, round, timeslot, event)
+			category, tourn)
+
 			left join jpool_setting standby_timeslot
 				on standby_timeslot.jpool = jpool.id
 				and standby_timeslot.tag = 'standby_timeslot'
+				and exists (
+					select t2.id from timeslot t2 where t2.end > NOW() and t2.id = standby_timeslot.value
+				)
 
 			left join timeslot stimeslot on stimeslot.id = standby_timeslot.value
 
@@ -654,14 +662,8 @@
 			and show_judges.tag   = 'show_judges'
 			and jpool.category    = category.id
 			and category.tourn    = tourn.id
-
-
-			and jpr.jpool      = jpool.id
-			and jpr.round      = round.id
-			and round.timeslot = timeslot.id
-			and round.event    = event.id
-			and timeslot.end < NOW()
-			and tourn.end > now()
+			and tourn.start < NOW()
+			and tourn.end > NOW()
 
 		group by jpool.id
 		order by jpool.name
@@ -675,11 +677,17 @@
 	my %standbys;
 
 	foreach my $id (keys %jpools) {
+
+		Tab::debuglog("ID $id, Rounds is ".$jpools{$id}{rounds}." and standby is ".$jpools{$id}{standby});
 		if ($jpools{$id}{"standby"}) {
-			if ($jpools{$id}{"timeslot_end"} < $jpools{$id}{"now"}) {
-				$standbys{$id} = $jpools{$id};
-				delete $jpools{$id};
-			}
+			Tab::debuglog("Deleting jpool $id and moving to standbys");
+			$standbys{$id} = $jpools{$id};
+			delete $jpools{$id};
+		} elsif (not defined $jpools{$id}{"rounds"}) {
+			Tab::debuglog("ELIMINATE");
+			delete $jpools{$id};
+		} else {
+			Tab::debuglog("I kept judge pool $id because rounds is ".$jpools{$id}{rounds}." and standby is ".$jpools{$id}{standby});
 		}
 	}
 
@@ -969,25 +977,15 @@
 					} keys %standbys
 				) {
 </%perl>
-
-					<div class = "bluebordertop odd marbottom <% $notfirst++ ? "martopless" : "" %>"
+					<div class = "smallish bluebordertop odd marbottom <% $notfirst++ ? "martopless" : "" %>"
 						id     = "<% $jpool_id %>"
 					>
-						<div class='full padvert flexrow'>
-							<span class='quarter semibold padleft'>
-								Standby
-							</span>
-							<span class="threequarters nospace">
-								<span class='fourfifths true nospace padvertless'>
-									<% $standbys{$jpool_id}{"name"} %>
-								</span>
-								<span class='fifth rightalign padvertless'>
-								</span>
-							</span>
+						<div class='full padvert padleft semibold bluetext'>
+							<% $standbys{$jpool_id}{"name"} %>
 						</div>
 
 						<div class='full ltbordertop flexrow'>
-							<span class='quarter semibold padvert padleft'>
+							<span class='quarter semibold padvertless padleft'>
 								Round
 							</span>
 
@@ -997,7 +995,7 @@
 						</div>
 
 						<div class='full ltbordertop flexrow'>
-							<span class='quarter semibold padvert padleft'>
+							<span class='quarter semibold padvertless padleft'>
 								Time
 							</span>
 							<span class='threequarters nospace'>
@@ -1005,13 +1003,17 @@
 									string => $standbys{$jpool_id}{"timeslot_start"},
 									tz     => $standbys{$jpool_id}{"tz"},
 									format => "day"
+								&> &ndash;
+								<& "/funclib/showtime.mas",
+									string => $standbys{$jpool_id}{"timeslot_end"},
+									tz     => $standbys{$jpool_id}{"tz"},
 								&>
 							</span>
 						</div>
 
 % 						if ($standbys{$jpool_id}{"site"}) {
 							<div class='full ltbordertop flexrow'>
-								<span class='quarter semibold padvert padleft'>
+								<span class='quarter semibold padvertless padleft'>
 									Location
 								</span>
 								<span class='threequarters nospace'>
@@ -1021,11 +1023,11 @@
 %						}
 % 						if ($standbys{$jpool_id}{"message"}) {
 							<div class='full ltbordertop flexrow'>
-								<span class='quarter semibold padvert'>
+								<span class='quarter semibold padvert padleft'>
 									Instructions
 								</span>
-								<span class='threequarters nospace'>
-									<p class="smallish">
+								<span class='threequarters nospace padvertless'>
+									<p class="smallish nospace">
 										<% $standbys{$jpool_id}{"message"} %>
 									</p>
 								</span>
