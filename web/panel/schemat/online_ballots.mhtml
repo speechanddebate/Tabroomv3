@@ -69,7 +69,8 @@
 				ballot.id,
 				judge.id, judge.first, judge.last,
 				entry.id, entry.code, entry.name, entry.active,
-				panel.id, panel.letter,
+				panel.id, panel.letter, panel.flight,
+				round.flighted,
 				reviewed.value,
 				CONVERT_TZ(reviewed.timestamp, '+00:00', tourn.tz) reviewed_at,
 				reviewed_by.email,
@@ -110,7 +111,8 @@
 				$ballot_id,
 				$judge_id, $judge_first, $judge_last,
 				$entry_id, $entry_code, $entry_name, $entry_active,
-				$panel_id, $panel_letter,
+				$panel_id, $panel_letter, $panel_flight,
+				$flighted,
 				$reviewed,
 				$reviewed_at,
 				$reviewed_by,
@@ -119,7 +121,11 @@
 		){
 
 			$panels{$panel_id}{"letter"} = $panel_letter;
-			$panels{$panel_id}{"room"} = $room;
+			$panels{$panel_id}{"room"}   = $room;
+
+			if ($flighted > 1) {
+				$panels{$panel_id}{"flight"} = $panel_flight;
+			}
 
 			if ($reviewed && not defined $panels{$panel_id}{"reviewed"}) {
 				$panels{$panel_id}{"reviewed"} = $reviewed;
@@ -304,22 +310,30 @@
 
 		</div>
 
-%		if (%panels) {
-%		foreach my $panel_id (sort keys %panels) {
+<%perl>
+		if (%panels) {
 
-%			%done = ();
+		foreach my $panel_id ( sort {
+			$panels{$a}{room} cmp $panels{$b}{room}
+			|| $panels{$a}{letter} cmp $panels{$b}{letter}
+			|| $panels{$a}{flight} cmp $panels{$b}{flight}
+		} keys %panels) {
+
+			%done = ();
+</%perl>
 
 			<div class="even flexrow wrap martop">
 
 				<div class="full flexrow bordertop borderleft nospace padvertless">
 
-					<span class="half padleft grow">
+					<span class="twofifths padleft grow">
 						<h5 class="nospace">
 							<% $panels{$panel_id}{"entry_marker"} %>
 						</h5>
 					</span>
-					<span class="quarter semibold centeralign">
+					<span class="third semibold centeralign">
 						<% $panels{$panel_id}{"room"} || "Section ".$panels{$panel_id}{"letter"} %>
+						<% $panels{$panel_id}{"flight"} ? "<span class='padleft'>Flight ".$panels{$panel_id}{"flight"}."</span>" : "" %>
 					</span>
 
 					<span class="twenty rightalign">
