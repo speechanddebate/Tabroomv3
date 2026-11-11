@@ -408,14 +408,12 @@
 		my $pattern = $event->pattern->id if $event->pattern;
 		next unless $translator{"category"}{$event->category->id},
 
-		my $nevent = eval {
-			return $event->copy({
-				tourn         => $tourn->id,
-				category      => $translator{"category"}{$event->category->id},
-				pattern       => $translator{"pattern"}{$pattern},
-				rating_subset => $translator{"rating_subset"}{$event->rating_subset}
-			});
-		};
+		my $nevent = $event->copy({
+			tourn         => $tourn->id,
+			category      => $translator{"category"}{$event->category->id},
+			pattern       => $translator{"pattern"}{$pattern},
+			rating_subset => $translator{"rating_subset"}{$event->rating_subset}
+		});
 
 		next unless $nevent;
 		$translator{"event"}{$event->id} = $nevent;
