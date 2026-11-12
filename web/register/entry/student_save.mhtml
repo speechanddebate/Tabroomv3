@@ -193,11 +193,46 @@
 		my $req = Apache2::Request->new($r);
 		my $filename;
 		my $filetemp;
+		my $upload = $req->upload("entry_release_".$student->id);
 
-		if ($req) {
-			my $upload = $req->upload("entry_release_".$student->id);
-			$filename = $m->comp("/funclib/upload_test.mas", upload => $upload);
-			$filetemp = $upload->tempname();
+		if ($upload && $upload->filename) {
+
+			my $filename = $m->comp("/funclib/upload_test.mas", upload => $upload);
+
+			if ($filename) {
+
+				my $filetemp = $upload->tempname;
+
+				my $stored = $m->comp("/funclib/s3_put.mas",
+					source => $filetemp,
+					key    => "tourns/".$tourn->id."/entry_release/".$school->id."/".$student->id."/".$filename
+				);
+
+				if ($stored) {
+
+					$m->comp("/funclib/form_log.mas",
+						person  => $person->id,
+						tourn   => $tourn->id,
+						school  => $school->id,
+						form    => "Release form",
+						subject => $student->first." ".$student->last,
+						old     => $release_forms{$student->id},
+						new     => $filename
+					);
+
+					$release_forms{$student->id} = $filename;
+
+					$school->setting(
+						"release_forms",
+						"text",
+						JSON::encode_json(\%release_forms)
+					);
+
+				} else {
+					$err .= "<br />" if $err;
+					$err .= "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again.";
+				}
+			}
 		}
 
 		if ($filename) {
@@ -232,14 +267,36 @@
 			if ($filename) {
 
 				my $filetemp = $upload->tempname;
-				system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/eligibility/".$school->id."/".$student->id."/".$filename;
-				$eligibility_forms{$student->id} = $filename;
 
-				$school->setting(
-					"eligibility_forms",
-					"text",
-					JSON::encode_json(\%eligibility_forms)
+				my $stored = $m->comp("/funclib/s3_put.mas",
+					source => $filetemp,
+					key    => "tourns/".$tourn->id."/eligibility/".$school->id."/".$student->id."/".$filename
 				);
+
+				if ($stored) {
+
+					$m->comp("/funclib/form_log.mas",
+						person  => $person->id,
+						tourn   => $tourn->id,
+						school  => $school->id,
+						form    => "Eligibility form",
+						subject => $student->first." ".$student->last,
+						old     => $eligibility_forms{$student->id},
+						new     => $filename
+					);
+
+					$eligibility_forms{$student->id} = $filename;
+
+					$school->setting(
+						"eligibility_forms",
+						"text",
+						JSON::encode_json(\%eligibility_forms)
+					);
+
+				} else {
+					$err .= "<br />" if $err;
+					$err .= "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again.";
+				}
 			}
 		}
 	}

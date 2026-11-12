@@ -33,11 +33,20 @@
 	my $filetemp = $upload->tempname;
 	my $existing = $judge->setting("judge_release");
 
+	unless (
+		$m->comp("/funclib/s3_put.mas",
+			source => $filetemp,
+			key    => "tourns/".$tourn->id."/judge_release/".$judge->id."/".$filename
+		)
+	) {
+		$m->comp("/funclib/abort.mas",
+			message => "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again."
+		);
+	}
+
 	if ($existing && $existing ne $filename) {
 		system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$judge->id."/".$existing;
 	}
-
-	system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$judge->id."/".$filename;
 
 	$judge->setting("judge_release", $filename);
 	$judge->setting("judge_release_at", "date", DateTime->now());

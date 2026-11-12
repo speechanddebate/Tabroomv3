@@ -44,16 +44,34 @@
 				my $filename = $m->comp("/funclib/upload_test.mas", upload => $upload);
 				my $filetemp = $upload->tempname;
 
-				my $reply = system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/entry_release/".$school->id."/".$student->id."/".$filename;
+				if ($filename) {
 
-				$release_forms{$student->id} = $filename;
+					my $success = $m->comp("/funclib/s3_put.mas",
+						source => $filetemp,
+						key    => "tourns/".$tourn->id."/entry_release/".$school->id."/".$student->id."/".$filename
+					);
 
-				if ($reply ne '0') {
-					$err .= "<br />" if $err;
-					$err .= "Possible error: $reply";
+					if ($success) {
+
+						$m->comp("/funclib/form_log.mas",
+							person  => $person->id,
+							tourn   => $tourn->id,
+							school  => $school->id,
+							form    => "Release form",
+							subject => $student->first." ".$student->last,
+							old     => $release_forms{$student->id},
+							new     => $filename
+						);
+
+						$release_forms{$student->id} = $filename;
+
+						$msg .= "<br />" if $msg;
+						$msg .= $student->first." ".$student->last."'s forms are uploaded";
+					} else {
+						$err .= "<br />" if $err;
+						$err .= "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again.";
+					}
 				}
-				$msg .= "<br />" if $msg;
-				$msg .= $student->first." ".$student->last."'s forms are uploaded: $reply";
 			}
 		}
 
@@ -67,18 +85,35 @@
 				my $filename = $m->comp("/funclib/upload_test.mas", upload => $upload);
 				my $filetemp = $upload->tempname;
 
-				my $reply = system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/eligibility/".$school->id."/".$student->id."/".$filename;
+				if ($filename)
 
-				$eligibility_forms{$student->id} = $filename;
+					my $sucess = $m->comp("/funclib/s3_put.mas",
+						source => $filetemp,
+						key    => "tourns/".$tourn->id."/eligibility/".$school->id."/".$student->id."/".$filename
+					);
 
-				if ($reply ne '0') {
-					$err .= "<br />" if $err;
-					$err .= "Possible error: $reply";
+					if ($success) {
+
+						$m->comp("/funclib/form_log.mas",
+							person  => $person->id,
+							tourn   => $tourn->id,
+							school  => $school->id,
+							form    => "Eligibility form",
+							subject => $student->first." ".$student->last,
+							old     => $eligibility_forms{$student->id},
+							new     => $filename
+						);
+
+						$eligibility_forms{$student->id} = $filename;
+
+						$msg .= "<br />" if $msg;
+						$msg .= $student->first." ".$student->last."'s forms are uploaded";
+
+					} else {
+						$err .= "<br />" if $err;
+						$err .= "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again.";
+					}
 				}
-
-				$msg .= "<br />" if $msg;
-				$msg .= $student->first." ".$student->last."'s forms are uploaded";
-
 			}
 		}
 	}

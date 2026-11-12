@@ -1,0 +1,16 @@
+<%args>
+	$source => undef
+	$key    => undef
+</%args>
+<%init>
+
+	# Copies an uploaded file into file storage. Returns 1 only when the copy
+	# succeeded, so callers record a form only once its file is really there.
+
+	return unless $source && -r $source && $key;
+
+	system $Tab::s3_cmd." put ".$source." ".$Tab::s3_bucket."/".$key;
+
+	return ($? == 0) ? 1 : undef;
+
+</%init>

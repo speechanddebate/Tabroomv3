@@ -34,7 +34,16 @@
 			});
 		}
 
-		system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$form->id."/".$filename;
+		unless ($form && $m->comp("/funclib/s3_put.mas",
+			source => $filetemp,
+			key    => "tourns/".$tourn->id."/school_form/".$form->id."/".$filename
+		)) {
+			$form->delete if $form;
+			$m->comp("/funclib/abort.mas",
+				message => "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again."
+			);
+		}
+
 		$msg = "Form ".$form->label." created for schools to download &amp; re-upload";
 
 	} elsif ($entry_release_form) {
@@ -51,7 +60,15 @@
 
 		my $filetemp = $upload->tempname;
 
-		system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/entry_release/".$filename;
+		unless ($m->comp("/funclib/s3_put.mas",
+			source => $filetemp,
+			key    => "tourns/".$tourn->id."/entry_release/".$filename
+		)) {
+			$m->comp("/funclib/abort.mas",
+				message => "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again."
+			);
+		}
+
 		$tourn->setting("entry_release", $filename);
 		$msg = "Entry release form template has been uploaded";
 
@@ -69,7 +86,15 @@
 		my $filetemp = $upload->tempname;
 
 		if ($filename && $filetemp) {
-			system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$filename;
+			unless ($m->comp("/funclib/s3_put.mas",
+				source => $filetemp,
+				key    => "tourns/".$tourn->id."/judge_release/".$filename
+			)) {
+				$m->comp("/funclib/abort.mas",
+					message => "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again."
+				);
+			}
+
 			$tourn->setting("judge_release", $filename);
 			$msg = "Judge form template has been uploaded";
 		}
