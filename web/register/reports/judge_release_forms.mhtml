@@ -13,7 +13,7 @@
 			person.email,
 
 			(select
-				judge_release.value form,
+				judge_release.value form
 				from judge_setting judge_release
 				where judge_release.judge = judge.id
 				and judge_release.tag = 'judge_release'

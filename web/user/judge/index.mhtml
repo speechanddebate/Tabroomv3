@@ -758,7 +758,7 @@
 						Additional Information for <% $judge->{"tourn_name"} %>
 					</h6>
 
-%					if ($judge->{"diversity_selfie"} || $judge->{"quizzes"} || $judge->{"judge_release_template"}
+%					if ($judge->{"diversity_selfie"} || $judge->{"quizzes"} || $judge->{"judge_release_template"}) {
 
 						<span class="pagehalf marno">
 %							if ($judge->{"diversity_selfie"}) {

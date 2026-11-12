@@ -27,7 +27,7 @@
 		$m->comp("/funclib/log.mas",
 			type        => "registration",
 			tourn       => $tourn->id,
-			category    => $judge->category->id
+			category    => $judge->category->id,
 			person      => $person->id,
 			description => "Judge form ".$filename." deleted for ".$judge->first." ".$judge->last
 		);
