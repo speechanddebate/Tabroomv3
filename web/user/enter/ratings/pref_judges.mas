@@ -116,7 +116,36 @@
 	");
 
 	$sth->execute($entry->id);
-	return $sth->fetchall_hash();
+
+	my $results = $sth->fetchall_hash();
+
+	my $judges;
+
+	foreach my $judge_ref (@{$results}) {
+		if ($category_settings->{"free_strikes_no_pref"}) {
+			next if $judge_ref->{"free_strike"};
+			if ($category_settings->{"fyo_free_strikes"}) {
+				next if $judge_ref->{"first_year"};
+			}
+		}
+
+		if ($judge_ref->{'school'} == $entry->school) {
+			unless ($category_settings->{"neutrals"} && $judge_ref->{"neutral"}) {
+				next;
+			}
+		}
+
+		if ($category_settings->{"auto_conflict_hires"} && $judge_ref->{"hire"}) {
+			next;
+		}
+
+		$judge_ref->{last} =~ s/- ONLINE//g;
+		$judge_ref->{last} =~ s/ ONLINE//g;
+
+		push @{$judges}, $judge_ref;
+	}
+
+	return $judges;
 
 </%init>
 

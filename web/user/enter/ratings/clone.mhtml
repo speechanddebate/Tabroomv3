@@ -3,15 +3,13 @@
 	$now
 	$session
 	$person
-	$entry_id => undef
-	$target_id  => undef
+	$entry_id  => undef
+	$target_id => undef
 	$style     => undef
 </%args>
 <%init>
 
 	my $source = Tab::Entry->retrieve($entry_id);
-
-	$m->abort();
 
 	unless ($source) {
 		$m->print('<div class="blankfull warning centeralign"><h4>');
@@ -24,9 +22,16 @@
 
 	if ($target_id eq int($target_id)) {
 		$limit = " and entry.id = ".int($target_id);
+	} elsif ($target_id eq "all") {
+
+	} else {
+		$m->comp("/funclib/abort.mas",
+			message => "You did not select a target for your prefs to copy onto."
+		);
 	}
 
 	my $sth = $dbh->prepare("
+
 		select entry.id, entry.name, entry.code
 			from entry, event
 		where entry.school     = ?
@@ -34,6 +39,8 @@
 			and entry.active   = 1
 			and entry.event    = event.id
 			and event.category = ?
+
+			$limit
 
 			and not exists (
 				select es.id
@@ -46,13 +53,13 @@
 	my $category = $source->event->category;
 
 	$sth->execute($source->school->id, $category->id);
+
 	my $targets = $sth->fetchall_hash();
 
 	unless ($targets && scalar @{$targets}) {
 		$m->print('<div class="blankfull warning centeralign"><h4>');
 		$m->print("No target debater found.  Please select a debater onto whom to copy prefs from your school.");
 		$m->print('</h4></div>');
-		$m->abort;
 	}
 
 	my @ratings = $source->ratings;
@@ -74,7 +81,6 @@
 	my $count;
 
 	foreach my $rating (@ratings) {
-
 		foreach my $target (@{$targets}) {
 
 			$count++;
@@ -101,7 +107,7 @@
 	$type = "tiered" if $type eq "caps";
 	$type = $style if $style;
 
-	$m->redirect($type."_prefs.mhtml&entry_id=".$source->id."&msg=".$msg);
+	$m->redirect($type."_prefs.mhtml?entry_id=".$source->id."&msg=".$msg);
 
 </%init>
 

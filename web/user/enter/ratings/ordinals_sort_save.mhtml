@@ -8,9 +8,6 @@
 </%args>
 <%init>
 
-	Tab::debuglog("I am called with entry $entry_id");
-	Tab::debuglog($sortorder);
-
 	return unless $entry_id && $sortorder;
 
 	my @ordering = split (/&judge\[\]=/, $sortorder);
@@ -22,8 +19,6 @@
 		$id_order{$order} = $ord;
 		$ord++;
 	}
-
-	Tab::debuglog("Hello sweetie");
 
 	my $err;
 	my $entry = Tab::Entry->retrieve($entry_id);
@@ -51,8 +46,6 @@
 	if ($entry->event->setting("no_prefs")) {
 		$m->comp("/funclib/abort.mas", message => "No prefs are offered in this division");
 	}
-
-	Tab::debuglog("Hello II");
 
 	my $results = $m->comp("pref_judges.mas",
 		dbh               => $dbh,
@@ -170,7 +163,7 @@
 		description => $msg,
 	);
 
-	$m->redirect("ordinals_prefs_sortable.mhtml?entry_id=".$entry->id."&msg=".$msg."&err=".$err."#yo");
+	$m->redirect("ordinals_sort.mhtml?entry_id=".$entry->id."&msg=".$msg."&err=".$err."#yo");
 
 </%init>
 

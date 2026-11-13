@@ -108,7 +108,7 @@
 %					unless ($read_only || $category_settings{"side_based_prefs"}) {
 						<a
 							class="bluetext buttonwhite invert"
-							href="ordinals_prefs_sortable.mhtml?entry_id=<% $entry_id %>#yo"
+							href="ordinals_sort.mhtml?entry_id=<% $entry_id %>#yo"
 						>Drag & Drop</a>
 %					}
 
@@ -288,8 +288,6 @@
 					</thead>
 				<tbody>
 <%perl>
-				my $total;
-
 				foreach my $judge_ref (
 					sort {
 						$a->{"ordinal"} <=> $b->{"ordinal"}
@@ -297,23 +295,6 @@
 						|| $a->{"neg_ordinal"} <=> $b->{"neg_ordinal"}
 					} @{$results}
 				) {
-
-					if ($category_settings{"free_strikes_no_pref"}) {
-						next if $judge_ref->{"free_strike"};
-						if ($category_settings{"fyo_free_strikes"}) {
-							next if $judge_ref->{"first_year"};
-						}
-					}
-
-					if ($judge_ref->{'school'} == $school) {
-						unless ($category_settings{"neutrals"} && $judge_ref->{"neutral"}) {
-							next;
-						}
-					}
-
-					if ($category_settings{"auto_conflict_hires"} && $judge_ref->{"hire"}) {
-						next;
-					}
 
 					my $free_strike;
 
@@ -323,7 +304,6 @@
 						$free_strike++;
 					}
 
-					$total++;
 					$judge_ref->{last} =~ s/- ONLINE//g;
 					$judge_ref->{last} =~ s/ ONLINE//g;
 
