@@ -30,24 +30,17 @@
 
 	my $sth = $dbh->prepare("
 		select school.id, school.name,
-			COALESCE(NULLIF(school.state, ''), chapter.state),
+			school.state, chapter.state cstate,
 			chapter.country,
-			contact_name.value,
-			contact_email.value,
-			contact_number.value,
-			second_contact_name.value,
-			second_contact_email.value,
-			second_contact_number.value
+
+			CONCAT(contact.first,' ',contact.last) contact_name,
+			contact.email contact_email,
+			contact.phone contact_phone,
 
 		from school
 			left join chapter on chapter.id = school.chapter
-			left join school_setting contact_name on contact_name.school = school.id and contact_name.tag='contact_name'
-			left join school_setting contact_email on contact_email.school = school.id and contact_email.tag='contact_email'
-			left join school_setting contact_number on contact_number.school = school.id and contact_number.tag='contact_number'
-			left join school_setting second_contact_name on second_contact_name.school = school.id and second_contact_name.tag='second_contact_name'
-			left join school_setting second_contact_email on second_contact_email.school = school.id and second_contact_email.tag='second_contact_email'
-			left join school_setting second_contact_number on second_contact_number.school = school.id and second_contact_number.tag='second_contact_number'
-
+			left join contact sc on sc.school = school.id and sc.official = 1
+			left join person contact on contact.id = sc.person
 		where school.tourn = ?
 
 		and exists (
@@ -63,24 +56,37 @@
 
 	while (
 		my (
-			$id, $name, $state, $country,
-			$contact, $email, $number,
-			$contact2, $email2, $number2
+			$id, $name, $state, $cstate, $country,
+			$contact, $email, $number
 		) = $sth->fetchrow_array()
 	) {
 
-		my %school = (
-			"id"       => $id,
-			"name"     => $name,
-			"state"    => $state,
-			"country"  => $country,
-			"contact"  => $contact,
-			"email"    => $email,
-			"number"   => $number,
-			"contact2" => $contact2,
-			"email2"   => $email2,
-			"number2"  => $number2
-		);
+		if ($school{$id}) {
+
+			push @{$school->{contacts}}, {
+				name => $contact,
+				email => $email,
+				phone => $number
+			};
+
+		} else {
+
+			my @contacts = ();
+
+			push @contacts, {
+				name => $contact,
+				email => $email,
+				phone => $number
+			};
+
+			my %school = (
+				"id"       => $id,
+				"name"     => $name,
+				"state"    => $state || $cstate,
+				"country"  => $country,
+				"contacts" => \@contacts
+			);
+		}
 
 		push @output, \%school;
 	}
