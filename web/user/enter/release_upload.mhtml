@@ -13,14 +13,40 @@
 	my $school = Tab::School->retrieve($school_id);
 	my $student = Tab::Student->retrieve($student_id);
 
+	my @entries = $m->comp(
+		"/funclib/student_entries.mas",
+			student => $student,
+			tourn   => $tourn
+	) if $student;
+
+	unless (
+		$school && $student
+		&& ($student->chapter == $school->chapter || grep { $_->school == $school->id } @entries)
+	) {
+		$m->comp("/funclib/abort.mas",
+			message => "That competitor is not part of this school"
+		);
+	}
+
 	my $req = Apache2::Request->new($r);
 	my $upload = $req->upload("release_form");
+
+	my $release_deadline = $m->comp("/funclib/release_deadline.mas",
+		tourn   => $tourn,
+		entries => [ $m->comp("/funclib/student_entries.mas", student => $student, tourn => $tourn) ]
+	) if $student;
+
+	if ($release_deadline && DateTime->now() > $release_deadline) {
+		$m->comp("/funclib/abort.mas",
+			warning => "The deadline for release form and eligibility uploads has passed"
+		);
+	}
 
     my %release_forms = eval {
         return %{JSON::decode_json($school->setting("release_forms"))};
     };
 
-	if ($upload) {
+	if ($upload && $upload->filename) {
 
 		my $filename = $m->comp("/funclib/upload_test.mas", upload => $upload);
 		my $filetemp = $upload->tempname;
@@ -55,6 +81,48 @@
 		"text",
 		JSON::encode_json(\%release_forms)
 	);
+
+	my $eligibility = $req->upload("eligibility_form");
+
+	if ($eligibility && $eligibility->filename && $tourn->setting("entry_upload")) {
+
+		my %eligibility_forms = eval {
+			return %{JSON::decode_json($school->setting("eligibility_forms"))};
+		};
+
+		my $filename = $m->comp("/funclib/upload_test.mas", upload => $eligibility);
+		my $filetemp = $eligibility->tempname;
+
+		my $success = $m->comp("/funclib/s3_put.mas",
+			source => $filetemp,
+			key    => "tourns/".$tourn->id."/eligibility/".$school->id."/".$student->id."/".$filename,
+		);
+
+		if ($success) {
+
+			$eligibility_forms{$student->id} = $filename;
+			$msg .= "<br />" if $msg;
+			$msg .= $student->first." ".$student->last."'s eligibility docs are uploaded";
+
+			$m->comp("/funclib/log.mas",
+				tag         => "registration",
+				person      => $person->id,
+				tourn       => $tourn->id,
+				school      => $school->id,
+				description => "Eligibility doc $filename has been uploaded for student ".$student->first." ".$student->last,
+			);
+
+			$school->setting(
+				"eligibility_forms",
+				"text",
+				JSON::encode_json(\%eligibility_forms)
+			);
+
+		} else {
+			$err .= "<br />" if $err;
+			$err .= "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again.";
+		}
+	}
 
 	$err = $err || $msg || "No valid upload processed";
 	$m->redirect("by_person_edit.mhtml?school_id=".$school->id."&student_id=".$student->id."&err=$err&msg=$msg");
