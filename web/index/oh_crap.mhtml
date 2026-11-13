@@ -50,7 +50,6 @@
 %	} else {
 
 %		if ($r->hostname eq "www.tabroom.com") {
-
 			<h2 title="Dagnabit">
 				Well, that's just unfortunate
 			</h2>
@@ -99,6 +98,7 @@
 	use MIME::Lite;
 	use UNIVERSAL::can;
 
+	my $dbh = Tab::DBI->db_Main();
 	my $error = $r->pnotes('error');
 	my $stack = UNIVERSAL::can( $error, 'as_text' ) ? $error->as_text : $error;
 
@@ -137,6 +137,7 @@
 	}
 	$error_text .= "\n";
 
+	$error_text .= "Host is ".$r->hostname."\n\n";
 	$error_text .= "Page is " . $r->parsed_uri->unparse . "\n\n";
 
 	my %cookies = eval {
@@ -175,8 +176,6 @@
 	} elsif ($cookies{$Tab::cookie_name}) {
 
 		my $userdata = eval {
-
-			my $dbh = Tab::DBI->db_Main();
 
 			my $sth = $dbh->prepare("
 				select
@@ -228,9 +227,8 @@
 	$error_text .= $stack;
 	$r->log_error($error_text);
 
-	if ( index($stack, 'Internal apreq error') == -1) {
-
-		if ($r->hostname eq "www.tabroom.com") {
+	if ($r->hostname eq "www.tabroom.com" || $r->hostname eq 'staging_tabroom.com') {
+		if ( index($stack, 'Internal apreq error') == -1) {
 			my $mail = MIME::Lite->new(
 				From    => 'error-handler@tabroom.com',
 				To      => 'errors@debatefail.com',
