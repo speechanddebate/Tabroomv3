@@ -78,13 +78,13 @@
 				phone => $number
 			};
 
-			$schools{$id} = (
+			$schools{$id} = {
 				"id"       => $id,
 				"name"     => $name,
 				"state"    => $state || $cstate,
 				"country"  => $country,
 				"contacts" => \@contacts
-			);
+			};
 		}
 	}
 
