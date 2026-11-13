@@ -227,7 +227,7 @@
 	$error_text .= $stack;
 	$r->log_error($error_text);
 
-	if ($r->hostname eq "www.tabroom.com" || $r->hostname eq 'staging_tabroom.com') {
+	if ($r->hostname eq "www.tabroom.com" || $r->hostname eq 'staging.tabroom.com') {
 		if ( index($stack, 'Internal apreq error') == -1) {
 			my $mail = MIME::Lite->new(
 				From    => 'error-handler@tabroom.com',
