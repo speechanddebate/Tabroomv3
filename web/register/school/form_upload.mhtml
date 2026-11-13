@@ -1,4 +1,5 @@
 <%args>
+	$person
 	$tourn
 	$school_id => undef
 	$parent_id => undef

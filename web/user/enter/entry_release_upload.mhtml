@@ -84,7 +84,7 @@
 
 				if ($filename)
 
-					my $sucess = $m->comp("/funclib/s3_put.mas",
+					my $success = $m->comp("/funclib/s3_put.mas",
 						source => $filetemp,
 						key    => "tourns/".$tourn->id."/eligibility/".$school->id."/".$student->id."/".$filename
 					);

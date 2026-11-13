@@ -27,20 +27,21 @@
 
 		my $success = $m->comp("/funclib/s3_put.mas",
 			source => $filetemp,
-			key    => "tourns/".$tourn->id."/".$folder."/".$school->id."/".$student->id."/".$filename
+			key    => "tourns/".$tourn->id."/entry_release/".$school->id."/".$student->id."/".$filename,
 		);
 
 		if ($success) {
+
 			$release_forms{$student->id} = $filename;
 			$msg .= "<br />" if $msg;
-			$msg .= $student->first." ".$student->last."'s forms are uploaded: $reply";
+			$msg .= $student->first." ".$student->last."'s forms are uploaded";
 
 			$m->comp("/funclib/log.mas",
 				tag         => "registration",
 				person      => $person->id,
 				tourn       => $tourn->id,
 				school      => $school->id,
-				description => ucfirst($type)." form reply $filename has been uploaded for student ".$student->first." ".$student->last,
+				description => "Release form $filename has been uploaded for student ".$student->first." ".$student->last,
 			);
 
 		} else {

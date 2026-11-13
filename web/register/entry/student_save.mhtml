@@ -264,7 +264,7 @@
 						person      => $person->id,
 						tourn       => $tourn->id,
 						school      => $school->id,
-						description => "Release form $filename uploaded for ".$student->first." ".$student->last,
+						description => "Eligibility docs $filename uploaded for ".$student->first." ".$student->last,
 					);
 
 					$school->setting(

@@ -35,7 +35,7 @@
 
 			CONCAT(contact.first,' ',contact.last) contact_name,
 			contact.email contact_email,
-			contact.phone contact_phone,
+			contact.phone contact_phone
 
 		from school
 			left join chapter on chapter.id = school.chapter
@@ -62,7 +62,6 @@
 	) {
 
 		if ($school{$id}) {
-
 			push @{$school->{contacts}}, {
 				name => $contact,
 				email => $email,
