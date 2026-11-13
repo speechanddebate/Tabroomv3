@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$person
 	$tourn
 	$school_id  => undef
@@ -19,6 +20,24 @@
     my %release_forms = eval {
         return %{JSON::decode_json($school->setting("release_forms"))};
     };
+
+	my $verify_sth = $dbh->prepare("
+		select
+			entry.id
+		from entry, entry_student es
+		where entry.school = ?
+		and entry.id = es.entry
+		and es.student = ?
+	");
+
+	$verify_sth->execute($school->id, $student->id);
+	my $ok = $verify_sth->fetch_hash();
+
+	unless ($ok && (keys %{$ok})) {
+		$m->comp("/funclib/abort.mas",
+			message => "No such student found on your roster."
+		);
+	}
 
 	if ($upload) {
 
