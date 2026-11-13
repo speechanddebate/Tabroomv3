@@ -31,6 +31,17 @@
 	my $req = Apache2::Request->new($r);
 	my $upload = $req->upload("release_form");
 
+	my $release_deadline = $m->comp("/funclib/release_deadline.mas",
+		tourn   => $tourn,
+		entries => [ $m->comp("/funclib/student_entries.mas", student => $student, tourn => $tourn) ]
+	) if $student;
+
+	if ($release_deadline && DateTime->now() > $release_deadline) {
+		$m->comp("/funclib/abort.mas",
+			warning => "The deadline for release form and eligibility uploads has passed"
+		);
+	}
+
     my %release_forms = eval {
         return %{JSON::decode_json($school->setting("release_forms"))};
     };

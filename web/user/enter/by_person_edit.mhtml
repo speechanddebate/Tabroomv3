@@ -110,6 +110,11 @@
 			my %release_forms = eval {
 				return %{JSON::decode_json($school->setting("release_forms"))};
 			};
+
+			my $release_deadline = $m->comp("/funclib/release_deadline.mas",
+				tourn   => $tourn,
+				entries => \@entries
+			);
 </%perl>
 			<div class="sidenote">
 
@@ -157,6 +162,7 @@
 					</div>
 %				}
 
+%				if ((not defined $release_deadline) || $now < $release_deadline) {
 				<form
 					action  = "release_upload.mhtml"
 					enctype = "multipart/form-data"
@@ -206,6 +212,11 @@
 					</div>
 
 				</form>
+%				} else {
+					<p class="semibold redtext centeralign">
+						The deadline for release form uploads has passed.
+					</p>
+%				}
 				</span>
 			</div>
 %		}
