@@ -23,6 +23,12 @@
 			tourn   => $tourn
 	);
 
+	unless ($student->chapter == $school->chapter || grep { $_->school == $school->id } @entries) {
+		$m->comp("/funclib/abort.mas",
+			message => "That competitor is not part of this school"
+		);
+	}
+
 	my %ok_events = $m->comp(
 		"/funclib/student_clear_events.mas",
 			student => $student,

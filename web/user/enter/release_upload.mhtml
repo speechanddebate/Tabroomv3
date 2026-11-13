@@ -13,6 +13,21 @@
 	my $school = Tab::School->retrieve($school_id);
 	my $student = Tab::Student->retrieve($student_id);
 
+	my @entries = $m->comp(
+		"/funclib/student_entries.mas",
+			student => $student,
+			tourn   => $tourn
+	) if $student;
+
+	unless (
+		$school && $student
+		&& ($student->chapter == $school->chapter || grep { $_->school == $school->id } @entries)
+	) {
+		$m->comp("/funclib/abort.mas",
+			message => "That competitor is not part of this school"
+		);
+	}
+
 	my $req = Apache2::Request->new($r);
 	my $upload = $req->upload("release_form");
 
