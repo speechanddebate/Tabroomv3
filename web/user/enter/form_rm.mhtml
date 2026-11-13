@@ -11,24 +11,28 @@
 	if ($file_id) {
 
 		my $reply_form = Tab::File->retrieve($file_id);
-		my $filename = $reply_form->filename;
 
-		if ($reply_form && $reply_form->school == $school->id && $filename) {
+		if ($reply_form) {
 
-			system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$reply_form->parent->id."/".$school->id."/".$filename;
+			my $filename = $reply_form->filename;
 
-			$msg = "Form ".$filename." has been deleted";
+			if ($reply_form && $reply_form->school == $school->id && $filename) {
 
-			$m->comp("/funclib/log.mas",
-				tag         => "tabbing",
-				person      => $person->id,
-				tourn       => $tourn->id,
-				description => "Form ".$reply_form->label." $filename deleted",
-			);
+				system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$reply_form->parent->id."/".$school->id."/".$filename;
 
-			eval {
-				$reply_form->delete();
-			};
+				$msg = "Form ".$filename." has been deleted";
+
+				$m->comp("/funclib/log.mas",
+					tag         => "tabbing",
+					person      => $person->id,
+					tourn       => $tourn->id,
+					description => "Form ".$reply_form->label." $filename deleted",
+				);
+
+				eval {
+					$reply_form->delete();
+				};
+			}
 
 		} else {
 
