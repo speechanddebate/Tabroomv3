@@ -11,6 +11,8 @@
 
 	my $source = Tab::Entry->retrieve($entry_id);
 
+	$m->abort();
+
 	unless ($source) {
 		$m->print('<div class="blankfull warning centeralign"><h4>');
 		$m->print("No source debater selected.  Please select a debater from whom to copy prefs");
