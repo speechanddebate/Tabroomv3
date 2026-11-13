@@ -1221,6 +1221,7 @@
 	if ($entry_fees) {
 
 		if ($schools->{"entry_fee_percent_off"}{$school_id}) {
+
 			my $discount = $only_entry_fees * ($schools->{"entry_fee_percent_off"}{$school_id} / 100);
 			$discount = nearest(.01, $discount);
 			$only_entry_fees -= $discount;
@@ -1228,7 +1229,7 @@
 			$total -= $discount;
 
 			my %discount_line = ();
-			$discount_line{"name"} = $schools->{"entry_fee_percent_off"}{$school_id}."% discount to entry fees";
+			$discount_line{"name"} = $schools->{"entry_fee_percent_off"}{$school_id}."% discount off entry fees";
 			$discount_line{"short_name"} = $schools->{"entry_fee_percent_off"}{$school_id}."% off entry fees";
 			$discount_line{"quantity"} = 1;
 			$discount_line{"per_unit"} = $discount;
@@ -1243,8 +1244,8 @@
 			$total -= $discount;
 
 			my %discount_line = ();
-			$discount_line{"name"} = $schools->{"all_fee_discount"}{$school_id}."% discount to all fees";
-			$discount_line{"short_name"} = $schools->{"all_fee_discount"}{$school_id}."% off fees";
+			$discount_line{"name"} = "Charge ".$schools->{"all_fee_discount"}{$school_id}."% of fees";
+			$discount_line{"short_name"} = $schools->{"all_fee_discount"}{$school_id}."% of fees";
 			$discount_line{"quantity"} = 1;
 			$discount_line{"per_unit"} = $discount;
 			$discount_line{"fee"} = -1 * $discount;
