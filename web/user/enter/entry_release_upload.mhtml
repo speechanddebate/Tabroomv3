@@ -53,14 +53,11 @@
 
 					if ($success) {
 
-						$m->comp("/funclib/form_log.mas",
-							person  => $person->id,
-							tourn   => $tourn->id,
-							school  => $school->id,
-							form    => "Release form",
-							subject => $student->first." ".$student->last,
-							old     => $release_forms{$student->id},
-							new     => $filename
+						$m->comp("/funclib/log.mas",
+							person      => $person->id,
+							tourn       => $tourn->id,
+							school      => $school->id,
+							description => "Entry release $filename uploaded for student ".$student->first." ".$student->last
 						);
 
 						$release_forms{$student->id} = $filename;
@@ -94,14 +91,11 @@
 
 					if ($success) {
 
-						$m->comp("/funclib/form_log.mas",
-							person  => $person->id,
-							tourn   => $tourn->id,
-							school  => $school->id,
-							form    => "Eligibility form",
-							subject => $student->first." ".$student->last,
-							old     => $eligibility_forms{$student->id},
-							new     => $filename
+						$m->comp("/funclib/log.mas",
+							person      => $person->id,
+							tourn       => $tourn->id,
+							school      => $school->id,
+							description => "Eligibility doc $filename uploaded for student ".$student->first." ".$student->last
 						);
 
 						$eligibility_forms{$student->id} = $filename;

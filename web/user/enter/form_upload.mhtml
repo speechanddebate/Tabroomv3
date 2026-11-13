@@ -37,6 +37,7 @@
 			);
 
 			if ($stored) {
+
 				$reply_form = Tab::File->create({
 					tourn    => $tourn->id,
 					school   => $school->id,
@@ -47,12 +48,11 @@
 
 				});
 
-				$m->comp("/funclib/form_log.mas",
-					person => $person->id,
-					tourn  => $tourn->id,
-					school => $school->id,
-					form   => "School form ".$reply_form->parent->label,
-					new    => $filename
+				$m->comp("/funclib/log.mas",
+					person      => $person->id,
+					tourn       => $tourn->id,
+					school      => $school->id,
+					description => "School form ".$reply_form->parent->label." $filename uploaded",
 				);
 
 				$msg = "Form ".$reply_form->filename." uploaded for ".$school->name;

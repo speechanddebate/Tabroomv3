@@ -10,7 +10,9 @@
 	};
 
 	unless ($student) {
-		$m->comp("/funclib/abort.mas", message => "No student found for id $student_id");
+		$m->comp("/funclib/abort.mas",
+			message => "No student found for id $student_id"
+		);
 	}
 
 	my $school = eval {
@@ -18,7 +20,9 @@
 	};
 
 	unless ($school) {
-		$m->comp("/funclib/abort.mas", message => "No school found for student in this tournament");
+		$m->comp("/funclib/abort.mas",
+			message => "No school found for student in this tournament"
+		);
 	}
 
 	my $msg;
@@ -49,6 +53,14 @@
 
 		$msg = "Release form deleted for ".$student->first." ".$student->last;
 	}
+
+	$m->comp("/funclib/log.mas",
+		tag         => "registration",
+		person      => $person->id,
+		tourn       => $tourn->id,
+		school      => $school->id,
+		description => $msg,
+	);
 
 	$m->comp("/funclib/nsda/status_check.mas",
 		school  => $school,

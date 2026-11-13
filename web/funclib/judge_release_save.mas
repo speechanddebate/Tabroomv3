@@ -32,31 +32,40 @@
 
 	my $filetemp = $upload->tempname;
 	my $existing = $judge->setting("judge_release");
+	my $description;
 
 	unless (
-		$m->comp("/funclib/s3_put.mas",
-			source => $filetemp,
-			key    => "tourns/".$tourn->id."/judge_release/".$judge->id."/".$filename
-		)
-	) {
+
+	my $success = $m->comp("/funclib/s3_put.mas",
+		source => $filetemp,
+		key    => "tourns/".$tourn->id."/judge_release/".$judge->id."/".$filename
+	);
+
+	if ($success) {
+
+		$description = "Judge form ".$filename." uploaded for judge ".$judge->first." ".$judge->last;
+
+		if ($existing && $existing ne $filename) {
+			system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$judge->id."/".$existing;
+			$description = "Judge form ".$filename." replaced $existing for judge ".$judge->first." ".$judge->last;
+		}
+
+		$judge->setting("judge_release", $filename);
+		$judge->setting("judge_release_at", "date", DateTime->now());
+		$judge->setting("judge_release_by", $person->id);
+
+	} else {
 		$m->comp("/funclib/abort.mas",
 			message => "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again."
 		);
 	}
 
-	if ($existing && $existing ne $filename) {
-		system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$judge->id."/".$existing;
-	}
-
-	$judge->setting("judge_release", $filename);
-	$judge->setting("judge_release_at", "date", DateTime->now());
-	$judge->setting("judge_release_by", $person->id);
-
 	$m->comp("/funclib/log.mas",
-		type        => "registration",
+		tag         => "registration",
 		tourn       => $tourn->id,
+		judge       => $judge->id,
 		person      => $person->id,
-		description => "Judge form ".$filename." uploaded for ".$judge->first." ".$judge->last
+		description => $description,
 	);
 
 	return $filename;

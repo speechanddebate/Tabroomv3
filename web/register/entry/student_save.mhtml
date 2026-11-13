@@ -208,17 +208,16 @@
 
 				if ($stored) {
 
-					$m->comp("/funclib/form_log.mas",
-						person  => $person->id,
-						tourn   => $tourn->id,
-						school  => $school->id,
-						form    => "Release form",
-						subject => $student->first." ".$student->last,
-						old     => $release_forms{$student->id},
-						new     => $filename
+					$release_forms{$student->id} = $filename;
+
+					$m->comp("/funclib/log.mas",
+						tag         => "registration",
+						person      => $person->id,
+						tourn       => $tourn->id,
+						school      => $school->id,
+						description => "Release form $filename uploaded for ".$student->first." ".$student->last,
 					);
 
-					$release_forms{$student->id} = $filename;
 
 					$school->setting(
 						"release_forms",
@@ -258,17 +257,15 @@
 
 				if ($stored) {
 
-					$m->comp("/funclib/form_log.mas",
-						person  => $person->id,
-						tourn   => $tourn->id,
-						school  => $school->id,
-						form    => "Eligibility form",
-						subject => $student->first." ".$student->last,
-						old     => $eligibility_forms{$student->id},
-						new     => $filename
-					);
-
 					$eligibility_forms{$student->id} = $filename;
+
+					$m->comp("/funclib/log.mas",
+						tag         => "registration",
+						person      => $person->id,
+						tourn       => $tourn->id,
+						school      => $school->id,
+						description => "Release form $filename uploaded for ".$student->first." ".$student->last,
+					);
 
 					$school->setting(
 						"eligibility_forms",

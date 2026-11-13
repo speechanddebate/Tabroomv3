@@ -36,6 +36,7 @@
 			);
 
 			if ($stored) {
+
 				$reply_form = Tab::File->create({
 					tourn    => $tourn->id,
 					school   => $school->id,
@@ -46,14 +47,15 @@
 
 				});
 
-				$m->comp("/funclib/form_log.mas",
-					person => $person->id,
-					tourn  => $tourn->id,
-					school => $school->id,
-					form   => "School form ".$reply_form->parent->label,
-					new    => $filename
+				$msg = "School Form $filename uploaded for ".$school->name;
+
+				$m->comp("/funclib/log.mas",
+					tag         => "registration",
+					person      => $person->id,
+					tourn       => $tourn->id,
+					school      => $school->id,
+					description => $msg,
 				);
-				$msg = "Form ".$reply_form->filename." uploaded for ".$school->name;
 
 			} else {
 				$err .= "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again.";

@@ -1,4 +1,5 @@
 <%args>
+	$person
 	$tourn
 	$school_id  => undef
 	$student_id => undef
@@ -33,6 +34,15 @@
 			$release_forms{$student->id} = $filename;
 			$msg .= "<br />" if $msg;
 			$msg .= $student->first." ".$student->last."'s forms are uploaded: $reply";
+
+			$m->comp("/funclib/log.mas",
+				tag         => "registration",
+				person      => $person->id,
+				tourn       => $tourn->id,
+				school      => $school->id,
+				description => ucfirst($type)." form reply $filename has been uploaded for student ".$student->first." ".$student->last,
+			);
+
 		} else {
 			$err .= "<br />" if $err;
 			$err .= "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again.";
