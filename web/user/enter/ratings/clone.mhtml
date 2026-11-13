@@ -15,7 +15,7 @@
 		$m->print('<div class="blankfull warning centeralign"><h4>');
 		$m->print("No source debater selected.  Please select a debater from whom to copy prefs");
 		$m->print('<h4></div>');
-		$m->abort;
+		$m->abort();
 	}
 
 	my $limit;
