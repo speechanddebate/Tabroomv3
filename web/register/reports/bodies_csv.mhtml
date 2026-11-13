@@ -23,7 +23,7 @@
 
 	my $student_sth = $dbh->prepare('
 		select student.id, student.first, student.last, student.nsda,
-			event.abbr, supp.abbr,
+			event.abbr event, supp.value supp,
 			chapter.id, chapter.nsda, school.name, school.state,
 				chapter.formal,
 				chapter.name, chapter.state,
@@ -35,22 +35,15 @@
 
 		from (student, entry_student, school, entry)
 
-		left join region on region.id        = school.region
-		left join chapter on student.chapter = chapter.id
-		left join district on district.id    = school.district
-		left join event
-			on entry.event = event.id
-			and NOT EXISTS (
-				select es.id from event_setting es where es.tag = "supp" and es.event = event.id
-			)
+			left join region on region.id        = school.region
+			left join chapter on student.chapter = chapter.id
+			left join district on district.id    = school.district
 
-		left join event supp
-			on entry.event = supp.id
-			and EXISTS (
-				select es.id from event_setting es where es.tag = "supp" and es.event = supp.id
-			)
+			left join event on entry.event = event.id and entry.active = 1
 
-		left join chapter otherchapter on school.chapter = otherchapter.id
+			left join event_setting supp on supp.event = entry.event and supp.tag = "supp"
+
+			left join chapter otherchapter on school.chapter = otherchapter.id
 
 		where school.tourn = ?
 			and school.id             = entry.school
@@ -58,7 +51,7 @@
 			and entry_student.student = student.id
 			and entry.active          = 1
 		group by entry_student.id
-		order by school.id, entry.event, entry.timestamp
+		order by school.id, entry.event, entry.timestamp, student.id
 	');
 
 	$student_sth->execute($tourn->id);
@@ -72,7 +65,7 @@
 		my (
 			$student_id,
 			$student_first, $student_last, $nsda,
-			$event_code, $supp_code,
+			$event_code, $supp,
 			$chapter_id, $chapter_nsda, $school_name, $school_state,
 			$chapter_formal,
 			$chapter_name, $chapter_state,
@@ -85,17 +78,16 @@
 		= $student_sth->fetchrow_array()
 	) {
 
-		$supp_code =~ s/^A //g;
-		$supp_code =~ s/^B //g;
-
 		if ($done{$student_id}) {
 
-			unless($done{$student_id}{"event"}) {
-				$done{$student_id}{"event"} = $event_code;
-			}
+			Tab::debuglog("student ID is $student_id event $event_code");
 
-			unless($done{$student_id}{"supp"}) {
-				$done{$student_id}{"supp"} = $supp_code;
+			if ($supp) {
+				$done{$student_id}{"supp"} .= "\n" if $done{$student_id}{"supp"};
+				$done{$student_id}{"supp"} .= $event_code;
+			} else {
+				$done{$student_id}{"event"} .= "\n" if $done{$student_id}{"event"};
+				$done{$student_id}{"event"} .= $event_code;
 			}
 
 		} else {
@@ -106,12 +98,11 @@
 			}
 
 			my $person = ({
+				student_id  => $student_id,
 				first       => $student_first,
 				last        => $student_last,
 				nsda        => $nsda,
 				type        => "competitor",
-				event       => $event_code,
-				supp        => $supp_code,
 				school_nsda => $chapter_nsda,
 				school_id   => $chapter_id,
 				school      => $chapter_formal || $chapter_name,
@@ -122,6 +113,12 @@
 				timestamp   => $entry_timestamp,
 				active      => $active
 			});
+
+			if ($supp) {
+				$person->{supp} = $event_code;
+			} else {
+				$person->{event} = $event_code;
+			}
 
 			push @{$chapters{$chapter_id}{"students"}}, $person;
 
@@ -137,7 +134,7 @@
 	}
 
 	my $judge_sth = $dbh->prepare('
-		select judge.first, judge.last, nsda.value,
+		select judge.id, judge.first, judge.last, nsda.value,
 			category.abbr,
 			diamonds.value,
 			chapter.id, chapter.nsda, school.name, school.state,
@@ -169,7 +166,7 @@
 
     while(
 		my (
-			$judge_first, $judge_last, $nsda,
+			$judge_id, $judge_first, $judge_last, $nsda,
 			$event_code,
 			$diamonds,
 			$chapter_id, $chapter_nsda, $chapter_name, $chapter_state,
@@ -184,6 +181,7 @@
 		$chapter_name =~ s/Hired //g;
 
 		my $person = ({
+			judge_id    => $judge_id,
 			first       => $judge_first,
 			last        => $judge_last,
 			nsda        => $nsda,
@@ -211,7 +209,7 @@
 		push @{$chapters{$chapter_id}{"judges"}}, $person;
 	}
 
-	$m->print("First,Last,Merit,Diamonds,School,SchoolID,State,Type,Event,Active,Region,District,DCode,Timestamp\n");
+	$m->print("First,Last,Merit,Diamonds,School,SchoolID,State,Type,Events,Active,Region,District,DCode,Timestamp,StudentID,JudgeID\n");
 
 	foreach my $chapter_id (
 		sort {
@@ -271,6 +269,10 @@
 			$m->print('"'.$person->{"dcode"}.'"');
 			$m->print(',');
 			$m->print('"'.$person->{"timestamp"}.'"');
+			$m->print(',');
+			$m->print('"'.$person->{"student_id"}.'"');
+			$m->print(',');
+			$m->print('"'.$person->{"judge_id"}.'"');
 			$m->print("\n");
 
 		}

@@ -1,4 +1,5 @@
 <%args>
+	$person
 	$tourn
 	$label              => undef
 	$new_form           => undef
@@ -34,8 +35,19 @@
 			});
 		}
 
-		system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$form->id."/".$filename;
-		$msg = "Form ".$form->label." created for schools to download &amp; re-upload";
+		my $success = $m->comp("/funclib/s3_put.mas",
+			source => $filetemp,
+			key    => "tourns/".$tourn->id."/school_form/".$form->id."/".$filename
+		);
+
+		unless ($form && $success) {
+			$form->delete if $form;
+			$m->comp("/funclib/abort.mas",
+				message => "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again."
+			);
+		}
+
+		$msg = "Form ".$form->label." $filename created for schools to download &amp; re-upload";
 
 	} elsif ($entry_release_form) {
 
@@ -51,9 +63,19 @@
 
 		my $filetemp = $upload->tempname;
 
-		system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/entry_release/".$filename;
+		my $success = $m->comp("/funclib/s3_put.mas",
+			source => $filetemp,
+			key    => "tourns/".$tourn->id."/entry_release/".$filename
+		)
+
+		unless ($success) {
+			$m->comp("/funclib/abort.mas",
+				message => "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again."
+			);
+		}
+
 		$tourn->setting("entry_release", $filename);
-		$msg = "Entry release form template has been uploaded";
+		$msg = "Entry release form template $filename has been uploaded";
 
 	} elsif ($judge_release_form) {
 
@@ -69,14 +91,29 @@
 		my $filetemp = $upload->tempname;
 
 		if ($filename && $filetemp) {
-			system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/judge_release/".$filename;
+			unless ($m->comp("/funclib/s3_put.mas",
+				source => $filetemp,
+				key    => "tourns/".$tourn->id."/judge_release/".$filename
+			)) {
+				$m->comp("/funclib/abort.mas",
+					message => "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again."
+				);
+			}
+
 			$tourn->setting("judge_release", $filename);
-			$msg = "Judge form template has been uploaded";
+			$msg = "Judge form template $filename has been uploaded";
 		}
 	}
 
 	# Da fuq even is this?
 	# $tourn->setting("instructions_url", "text", $ARGS{"instructions_url"});
+
+	$m->comp('/funclib/log.mas',
+		person      => $person,
+		tag         => "registration",
+		tourn       => $tourn,
+		description => $msg
+	);
 
 	$m->redirect("messages.mhtml?msg=$msg");
 

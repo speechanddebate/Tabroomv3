@@ -8,7 +8,7 @@
 
 	my $msg;
 	my $school = Tab::School->retrieve($school_id);
-	my $upload_error;
+	my $err;
 
 	if ($ARGS{"file_".$parent_id}) {
 
@@ -30,7 +30,13 @@
 			$filename =~ s/^\s+//;
 			$filename =~ s/\s+$//;
 
-			if ($filetemp) {
+			my $stored = $m->comp("/funclib/s3_put.mas",
+				source => $filetemp,
+				key    => "tourns/".$tourn->id."/school_form/".$parent_id."/".$school->id."/".$filename
+			);
+
+			if ($stored) {
+
 				$reply_form = Tab::File->create({
 					tourn    => $tourn->id,
 					school   => $school->id,
@@ -40,17 +46,21 @@
 					filename => $filename,
 
 				});
+
+				$msg = "School Form $filename uploaded for ".$school->name;
+
+				$m->comp("/funclib/log.mas",
+					tag         => "registration",
+					person      => $person->id,
+					tourn       => $tourn->id,
+					school      => $school->id,
+					description => $msg,
+				);
+
+			} else {
+				$err .= "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again.";
 			}
-
-			system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$reply_form->parent->id."/".$school->id."/".$filename;
-			$msg = "Form ".$reply_form->filename." uploaded for ".$school->name;
 		}
-	}
-
-	my $err = "No valid upload processed" unless $msg;
-
-	if ($upload_error) {
-		$err = $upload_error;
 	}
 
 	$m->redirect("edit.mhtml?school_id=".$school->id."&msg=$msg&err=$err");

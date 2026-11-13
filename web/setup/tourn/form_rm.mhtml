@@ -39,7 +39,13 @@
 		}
 
 		$message = "School form ".$form->label." deleted";
-		system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_forms/".$form->id."/".$form->filename;
+
+		foreach my $reply ($form->children) {
+			system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$form->id."/".$reply->school."/".$reply->filename;
+			$reply->delete;
+		}
+
+		system $Tab::s3_cmd." rm ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_form/".$form->id."/".$form->filename;
 		$form->delete;
 	}
 
