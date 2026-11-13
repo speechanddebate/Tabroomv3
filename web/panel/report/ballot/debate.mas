@@ -197,7 +197,7 @@
 				$first_row .= " & \\begin{minipage}[c]{.4in}\n";
 				$first_row .= "\\vspace{.05in}\n";
 				$first_row .= "{\\bf \\scriptsize POINTS}\n\n";
-				$first_row .= "{\\scriptsize ( $rounds->{min_points} - $rounds->{max_points} )}\n";
+				$first_row .= "{\\scriptsize ($rounds->{min_points} - $rounds->{max_points})}\n";
 				$first_row .= "\\vspace{.02in}\n";
 				$first_row .= "\\end{minipage}\n";
 			}

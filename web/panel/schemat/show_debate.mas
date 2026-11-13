@@ -246,15 +246,17 @@
 	}
 
 	my $sth = $dbh->prepare("
-
         select panel.id, panel.letter, panel.bracket,
 			room.name, room.url,
 			school.name, school.code,
 			entry.id, entry.name, entry.code, entry.dropped,
 			seed.value, ballot.side,
             judge.id, judge.code, judge.first, judge.last, judge_school.name, judge_school.code,
+			judge.person judge_person,
 			judge_hybrid.value,
-			tab_rating.value tab_rating, ROUND(prefs.percentile, 1) percentile, prefs_tier.name tier, coach_tier.name coach_rating,
+			tab_rating.value tab_rating,
+			ROUND(prefs.percentile, 1) percentile,
+			prefs_tier.name tier, coach_tier.name coach_rating,
 			panel.bye panel_bye, pod.value pod,
 			ballot.audit, ballot.bye, ballot.forfeit, ballot.chair,
 				ballot.judge_started start,
@@ -344,6 +346,7 @@
 			$entry_id, $entry_name, $entry_code, $dropped,
 			$entry_seed, $side,
 			$judge_id, $judge_code, $judge_first, $judge_last, $judge_school, $judge_school_code,
+			$judge_person,
 			$judge_hybrid,
 			$tab_rating, $percentile, $tier, $coach_rating,
 			$bye, $pod,
@@ -489,11 +492,11 @@
 			$judges{$judge_id}{"school_code"} = $judge_school_code;
 		}
 
-		$judges{$judge_id}{"online"}        = $judge_hybrid;
-		$judges{$judge_id}{"tab"}           = $tab_rating;
-		$judges{$judge_id}{"person"}        = $person;
-		$judges{$judge_id}{"diverse"}       = $diverse;
-		$judges{$judge_id}{"chair"}         = $chair;
+		$judges{$judge_id}{"online"}  = $judge_hybrid;
+		$judges{$judge_id}{"tab"}     = $tab_rating;
+		$judges{$judge_id}{"person"}  = $judge_person;
+		$judges{$judge_id}{"diverse"} = $diverse;
+		$judges{$judge_id}{"chair"}   = $chair;
 	}
 
 	if ($tourn_settings->{nsda_nats}) {
