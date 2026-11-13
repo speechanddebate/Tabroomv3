@@ -34,8 +34,6 @@
 	my $existing = $judge->setting("judge_release");
 	my $description;
 
-	unless (
-
 	my $success = $m->comp("/funclib/s3_put.mas",
 		source => $filetemp,
 		key    => "tourns/".$tourn->id."/judge_release/".$judge->id."/".$filename

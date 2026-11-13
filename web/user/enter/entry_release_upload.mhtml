@@ -82,7 +82,7 @@
 				my $filename = $m->comp("/funclib/upload_test.mas", upload => $upload);
 				my $filetemp = $upload->tempname;
 
-				if ($filename)
+				if ($filename) {
 
 					my $success = $m->comp("/funclib/s3_put.mas",
 						source => $filetemp,

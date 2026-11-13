@@ -52,7 +52,7 @@
 
 	$sth->execute($tourn->id);
 
-	my @output;
+	my %schools;
 
 	while (
 		my (
@@ -61,8 +61,8 @@
 		) = $sth->fetchrow_array()
 	) {
 
-		if ($school{$id}) {
-			push @{$school->{contacts}}, {
+		if ($schools{$id}) {
+			push @{$schools{$id}{contacts}}, {
 				name => $contact,
 				email => $email,
 				phone => $number
@@ -78,7 +78,7 @@
 				phone => $number
 			};
 
-			my %school = (
+			$schools{$id} = (
 				"id"       => $id,
 				"name"     => $name,
 				"state"    => $state || $cstate,
@@ -86,8 +86,11 @@
 				"contacts" => \@contacts
 			);
 		}
+	}
 
-		push @output, \%school;
+	my @output;
+	foreach my $key (keys %schools) {
+		push @output, $schools{$key};
 	}
 
 	$m->print(JSON::encode_json(\@output));
