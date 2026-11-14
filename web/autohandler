@@ -10,6 +10,7 @@
 	if ($ARGS{"accept_redirect"}) {
 		$m->abort();
 	}
+
 	my $dbh = Tab::DBI->db_Main();
 
 	my $debug = $Tab::debug;
@@ -23,6 +24,11 @@
 	my %perms;
 	my $person_settings;
 	my $defaults;
+
+	foreach my $tag (keys %ARGS) {
+		$ARGS{$tag} =~ s/<script>//g;
+		$ARGS{$tag} =~ s/<\/script>//g;
+	}
 
 	if ($person) {
 
@@ -1060,18 +1066,19 @@
 %			}
 
 <%perl>
-			$m->call_next(
-				debug           => $debug,
-				session         => $session,
-				defaults        => $defaults,
-				now             => $now,
-				person          => $person,
-				tourn           => $tourn,
-				dbh             => $dbh,
-				tourn_settings  => \%tourn_settings,
-				person_settings => $person_settings,
-				perms           => \%perms
-			);
+
+			$ARGS{debug} = $debug;
+			$ARGS{session} = $session;
+			$ARGS{defaults} = $defaults;
+			$ARGS{now} = $now;
+			$ARGS{person} = $person;
+			$ARGS{tourn} = $tourn;
+			$ARGS{dbh } = $dbh;
+			$ARGS{tourn_settings} = \%tourn_settings;
+			$ARGS{person_settings} = $person_settings;
+			$ARGS{perms} = \%perms;
+
+			$m->call_next(%ARGS);
 </%perl>
 			<div id="footer" class="flexrow top centeralign">
 
@@ -1161,16 +1168,13 @@
 
 					</span>
 %				}
-
 			</div>
 		</div>
-
 	</body>
-
 </html>
 
 % 	}	else {
-%		$m->call_next();
+%		$m->call_next(%ARGS);
 %	}
 
 %	$dbh->disconnect();

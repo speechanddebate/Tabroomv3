@@ -1,4 +1,5 @@
 <%args>
+	$now
 	$dbh
 	$person
 	$country    => undef
@@ -32,7 +33,6 @@
 	my $tz = $person->tz if $person;
 	$tz = "UTC" unless $tz;
 
-	my $now = DateTime->now;
 	my $start = $now->clone;
 
 	my $limit;
@@ -814,7 +814,6 @@
 %			$sth->finish();
 %			$cth->finish();
 %			$circuit_th->finish();
-%			;
 
 		</div>
 	</div>
@@ -832,7 +831,6 @@
 						Upcoming Tournaments
 %					}
 				</h1>
-
 			</span>
 
 %			if ($state || $country || $year || $circuit) {
