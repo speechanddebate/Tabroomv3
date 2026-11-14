@@ -1066,7 +1066,6 @@
 %			}
 
 <%perl>
-
 			$ARGS{debug} = $debug;
 			$ARGS{session} = $session;
 			$ARGS{defaults} = $defaults;
