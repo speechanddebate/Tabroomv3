@@ -13,7 +13,7 @@
 	my $left;
 	my $round;
 
-	if($ARGS{"prefs"} eq "ordinals") {
+	if ($ARGS{"prefs"} eq "ordinals") {
 		$select = "AVG(percentile) rating";
 		$round = 1;
 	} else {
