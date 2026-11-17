@@ -186,6 +186,7 @@
 				from region_setting area
 				where area.region = region.id
 				and area.tag = 'area'
+				limit 1
 			) area,
 
 			district.id, district.name, district.code,
@@ -195,6 +196,7 @@
                 from judge_setting as tab_rating
                 where tab_rating.judge = judge.id
                 and tab_rating.tag = 'tab_rating'
+				limit 1
             ) as tab_rating,
 
             ( select
@@ -202,6 +204,7 @@
                 from judge_setting as parli
                 where parli.judge = judge.id
                 and parli.tag = 'parli'
+				limit 1
             ) as parli,
 
             ( select
@@ -209,6 +212,7 @@
                 from judge_setting as diverse
                 where diverse.judge = judge.id
                 and diverse.tag = 'diverse'
+				limit 1
             ) as diverse,
 
             ( select
@@ -216,6 +220,7 @@
                 from person_setting as diamonds
                 where diamonds.person = judge.person
                 and diamonds.tag = 'diamonds'
+				limit 1
             ) as diamonds,
 
             ( select
@@ -223,6 +228,7 @@
                 from judge_setting as online_hybrid
                 where online_hybrid.judge = judge.id
                 and online_hybrid.tag = 'online_hybrid'
+				limit 1
             ) as online_hybrid
 
 		from (judge, panel, event, round, timeslot, tourn $jpool_select)
