@@ -30,9 +30,8 @@
 
 	#Save new information if it is a circuit that exists
 
-	if ($circuit_id) {
+	if ($circuit && $circuit->id) {
 
-		$circuit = Tab::Circuit->retrieve($circuit_id);
 		$circuit->name($name);
 		$circuit->abbr($abbr);
 		$circuit->state($state);
