@@ -417,7 +417,7 @@
 			};
 
 			if ($translator{"rating_subset"}{$event->rating_subset}) {
-				$copy{rating_subset} = $translator{"rating_subset"}{$event->rating_subset};
+				$copy->{rating_subset} = $translator{"rating_subset"}{$event->rating_subset};
 			}
 
 			return $event->copy($copy);
