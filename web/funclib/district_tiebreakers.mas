@@ -49,6 +49,14 @@
 
 	my $tz = $tourn->tz || "America/Chicago";
 
+	unless ($tourn->webname) {
+		my $webname = lc($district->name);
+		$webname =~ s/\([^)]*\)//;
+		$webname =~ s/[\W_]//g;
+		$tourn->(webname) = $webname;
+		$tourn->update();
+	}
+
 	# Yeah you're so doing this
 	$tourn->setting('require_disaster_check', 1);
 
