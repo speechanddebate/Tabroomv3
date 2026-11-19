@@ -22,9 +22,31 @@
 	<script>
 
 		$(document).ready(function () {
-			youveGotMail();
+			checkCacheCount();
 			setInterval(youveGotMail, 30000);
 		});
+
+		function checkCacheCount() {
+
+			const mailCount = localStorage.getItem('unreadCount');
+			const mailTimestamp = new Date(localStorage.getItem('mailTimeStamp'));
+			const now = new Date();
+			const difference = Math.abs(now - mailTimestamp) / 1000;
+
+			if (difference < 30) {
+
+				if (mailCount > 0) {
+					$(`#tabroom_inbox`).addClass('orangetext');
+					$(`#inbox_count`).removeClass('hidden');
+					$(`#inbox_count`).html(mailCount);
+				} else {
+					$(`#tabroom_inbox`).removeClass('orangetext');
+					$(`#inbox_count`).addClass('hidden');
+				}
+			} else {
+				youveGotMail();
+			}
+		}
 
 		function youveGotMail() {
 
@@ -47,6 +69,10 @@
 						$(`#tabroom_inbox`).removeClass('orangetext');
 						$(`#inbox_count`).addClass('hidden');
 					}
+
+					localStorage.setItem('unreadCount', data);
+					const now = new Date();
+					localStorage.setItem('mailTimeStamp', now);
 				}
 			});
 		}
