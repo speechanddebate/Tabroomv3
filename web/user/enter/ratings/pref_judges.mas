@@ -75,7 +75,9 @@
 			person.id person,
 
 			(select judge_hire.id
-				from judge_hire where judge_hire.judge = judge.id and judge_hire.school = school.id
+				from judge_hire
+				where judge_hire.judge = judge.id
+				and judge_hire.school = school.id
 				limit 1
 			) hire,
 
@@ -130,6 +132,9 @@
 	my $judges;
 
 	foreach my $judge_ref (@{$results}) {
+
+		Tab::debuglog("Testing judges ".$judge_ref->{last}." hire ".$judge_ref->{hire});
+
 		if ($category_settings->{"free_strikes_no_pref"}) {
 			next if $judge_ref->{"free_strike"};
 			if ($category_settings->{"fyo_free_strikes"}) {
@@ -143,7 +148,7 @@
 			}
 		}
 
-		if ($category_settings->{"auto_conflict_hires"} && $judge_ref->{"hire"}) {
+		if ($category_settings->{"auto_conflict_hires"} && $judge_ref->{"hire"}) {{
 			next;
 		}
 

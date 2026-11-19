@@ -83,7 +83,7 @@
 	}
 
 	my $from = " judge ";
-	my $selector = " where judge.category = ? and judge.school != ".int($school->id);
+	my $selector = " where judge.category = ? and (judge.school != ".int($school->id)." OR judge.school IS NULL)";
 	my $item = $category->id;
 
 	my $jpool_id = $category->setting("pref_jpool");
