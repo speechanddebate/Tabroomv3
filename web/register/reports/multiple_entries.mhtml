@@ -26,13 +26,14 @@
 			and entry.id          = es.entry
 			and es.student        = student.id
 			and entry.event       = event.id
-			and entry.unconfirmed = 0
+			and entry.active = 1
 
 			and student.id       = os.student
 			and os.entry         = otherentry.id
 			and otherentry.event = otherevent.id
 			and otherentry.id   != entry.id
 			and otherevent.tourn = event.tourn
+			and otherentry.active = 1
 	");
 
 	$sth->execute($tourn->id);
