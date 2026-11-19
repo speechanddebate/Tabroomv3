@@ -30,7 +30,7 @@
 
 	if ($mode eq "schools") {
 
-		my $filename = $year->year."-TabroomSchoolParticipation.csv";
+		my $filename = $year."-TabroomSchoolParticipation.csv";
 		$m->clear_buffer;
 		$r->content_type('application/csv');
 		$r->headers_out->{'Content-Disposition'} = "attachment; filename=$filename";
@@ -84,7 +84,7 @@
 
 	if ($mode eq "students") {
 
-		my $filename = $year->year."-TabroomStudentParticipation.csv";
+		my $filename = $year."-TabroomStudentParticipation.csv";
 		$m->clear_buffer;
 		$r->content_type('application/csv');
 		$r->headers_out->{'Content-Disposition'} = "attachment; filename=$filename";

@@ -193,19 +193,19 @@
 		} keys %panels
 	) {
 
-		my $fontsize = 48;
-		$fontsize = 36 if length($panels{$pid}{"event_name"}) > 20;
-		$fontsize = 24 if length($panels{$pid}{"event_name"}) > 32;
+		my $titlefont = 48;
+		$titlefont = 40 if length($panels{$pid}{"event_name"}) > 10;
+		$titlefont = 36 if length($panels{$pid}{"event_name"}) > 20;
+		$titlefont = 24 if length($panels{$pid}{"event_name"}) > 32;
 
-		print TEXOUT "\\fontsize{".$fontsize."pt}{".$fontsize."pt}\\selectfont ";
+		my $fontsize = 40;
+
+		print TEXOUT "\\fontsize{".$titlefont."pt}{".$titlefont."pt}\\selectfont ";
 
 		print TEXOUT "\\strut\n";
-		print TEXOUT "\\hfill\n";
-		print TEXOUT "{\\bf ".Tab::texify($panels{$pid}{"event_name"})." }\n";
-		print TEXOUT "\\hfill\n";
-		print TEXOUT "\\strut\n";
+		print TEXOUT "\\parbox{\\textwidth}{\\centering {\\bf ".Tab::texify($panels{$pid}{"event_name"})." }}\n";
 
-		print TEXOUT "\\medskip\n";
+		print TEXOUT "\\skip\n";
 		print TEXOUT "\\newline\n";
 
 		print TEXOUT "\\strut\n";
@@ -213,10 +213,7 @@
 
 		$fontsize -= 8;
 		print TEXOUT "\\fontsize{".$fontsize."pt}{".$fontsize."pt}\\selectfont ";
-		print TEXOUT "\\color{black!64}\n";
-		print TEXOUT Tab::texify(uc($panels{$pid}{"round"}))."\n";
-
-		print TEXOUT "\\hfill\n";
+		print TEXOUT "\\parbox{\\textwidth}{\\centering {\\bf \\color{black!64} ".Tab::texify(uc($panels{$pid}{"round"}))." }}\n";
 		print TEXOUT "\\strut\n";
 
 		unless ($panels{$pid}{"round_type"} eq "final") {

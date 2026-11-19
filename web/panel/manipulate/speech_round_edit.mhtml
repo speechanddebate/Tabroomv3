@@ -558,7 +558,6 @@
 						</td>
 
 						<td class="smallish centeralign nospace">
-
 %							unless ($panel->{bad_judges} || $panel->{mine} || (not defined $entry)) {
 								<a
 									class="buttonwhite greentext smallish half fa fa-lg fa-plus invert"
@@ -566,9 +565,7 @@
 %							} else {
 								Judge Block
 %							}
-
 						</td>
-
 					</tr>
 
 %				}
@@ -583,8 +580,12 @@
 					Red entries/judges are from the same school as <% $entry->code %>
 				</p>
 
+				<p class="graytext semibold">
+					Grey entries/judges have previously hit <% $entry->code %>
+				</p>
+
 				<p class="orangetext semibold">
-					Orange entries/judges have previously hit <% $entry->code %>
+					Orange entries/judges are from the same region as <% $entry->code %>
 				</p>
 
 				<p class="bluetext semibold">

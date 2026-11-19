@@ -55,7 +55,7 @@
 			publish_isbn.value,
 			publish_url.value,
 			SUM(student.novice),
-			GROUP_CONCAT(CONCAT(student.first,' ',student.last) SEPARATOR ',')
+			GROUP_CONCAT(CONCAT(student.id,'|',student.first,' ',student.last) ORDER BY es.id SEPARATOR '\t')
 
 		from (entry, school, event, entry_student es, student)
 
@@ -143,6 +143,8 @@
 	$m->print("\"Source URL\",");
 	$m->print("\"RegSeed\",");
 	$m->print("\"Pairing Seed\",");
+	$m->print("\"Entry ID\",");
+	$m->print("\"Student IDs\",");
 	$m->print("\"Individual Students\"");
 	$m->print("\n");
 
@@ -171,6 +173,15 @@
 			$students
 		) = $sth->fetchrow_array()
 	) {
+
+		my @student_ids;
+		my @student_names;
+
+		foreach my $student (split (/\t/, $students) ) {
+			my ($student_id, $student_name) = split(/\|/, $student, 2);
+			push @student_ids, $student_id;
+			push @student_names, $student_name;
+		}
 
 		$m->print('"'.$event_abbr.'",');
 		$m->print('"'.$entry_code.'",');
@@ -213,7 +224,9 @@
 		$m->print('"'.$publish_url.'",');
 		$m->print('"'.$registered_seed.'",');
 		$m->print('"'.$pairing_seed.'",');
-		$m->print($students);
+		$m->print('"'.$entry_id.'",');
+		$m->print('"'.join(",", @student_ids).'",');
+		$m->print(join(",", @student_names));
 		$m->print("\n");
 	}
 

@@ -427,7 +427,7 @@
 								<a
 									class="redtext buttonwhite fa fa-sm fa-trash"
 									<& "/funclib/confirm.mas", warn => "Are you sure you mean to delete this student's forms?" &>
-									href  = "release_rm.mhtml?student_id=<% $student->id %>&entry_id=<% $entry->id %>"
+									href  = "release_rm.mhtml?student_id=<% $student->id %>&entry_id=<% $entry ? $entry->id : "" %>"
 								></a>
 %							}
 						</span>
@@ -505,7 +505,7 @@
 								<a
 									class="redtext buttonwhite fa fa-sm fa-trash"
 									<& "/funclib/confirm.mas", warn => "Are you sure you mean to delete this student's eligibility upload?" &>
-									href  = "release_rm.mhtml?student_id=<% $student->id %>&eligibility=1"
+									href  = "release_rm.mhtml?student_id=<% $student->id %>&entry_id=<% $entry ? $entry->id : "" %>&eligibility=1"
 								></a>
 %							}
 						</span>

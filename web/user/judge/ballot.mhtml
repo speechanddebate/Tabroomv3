@@ -30,6 +30,9 @@
 	}
 
 	my $event_type = $event->type;
+	if ($event_type ne "mock_trial" && $event_type ne "speech") {
+		undef $event_settings{"ballot_rubric"};
+	}
 
 	my %tb_types = $m->comp(
 		"/funclib/tiebreak_types.mas",
@@ -538,7 +541,8 @@
 
 	<script>
 
-%		if ($event_settings{"ballot_rubric"}) {
+%		if ($event_settings{"ballot_rubric"} && $tb_types{"point"}) {
+
 			const totalRubric = (ballotId) => {
 
 				let totalPoints = 0;
@@ -1075,7 +1079,7 @@
 			setInterval(checkAccess, 120000);
 			checkLPW();
 
-%			if ($event_settings{"ballot_rubric"}) {
+%			if ($event_settings{"ballot_rubric"} && $tb_types{"point"}) {
 %				foreach my $ballot (@ballots) {
 					totalRubric(<% $ballot->id %>)
 %				}
@@ -1467,7 +1471,7 @@
 		<div class="padvert centeralign ltbordertop">
 			<span class="ninetenths leftalign">
 
-%				if ($tb_types{"point"} && (not defined $event_settings{"ballot_rubric"}) ) {
+%				if ($tb_types{"point"} && (not defined $event_settings{"ballot_rubric"})) {
 					<div class="full flexrow italic semibold centeralign">
 						<span class="semibold redtext inline biggish">
 							Points Rules:
@@ -1827,7 +1831,7 @@
 
 								if ($num > 0) {
 </%perl>
-									<th colspan="<% $num %>">
+									<th colspan="<% $num %>" class="nosort">
 										<div class = "full flexrow nospace" >
 <%perl>
 									my $tick;
@@ -1847,14 +1851,14 @@
 %									}
 
 %									if ($tb_types{"rank"}) {
-										<span class="third marno centeralign">
+										<span class="third marno centeralign grow">
 											Rank
 										</span>
 %									}
 
 %									if ($tb_types{"point"}) {
 
-										<span class="third marno centeralign">
+										<span class="third marno centeralign grow">
 
 %										if ($event_settings{"wsdc_categories"}) {
 %											foreach my $score (@scores) {
@@ -2430,7 +2434,6 @@
 												} @students
 											) {
 </%perl>
-
 												<div class="flexrow padless marno <% $notfirst++ ? "ltbordertop" : "" %> centeralign padleft">
 
 													<span class='smallish <% $length %> marno padless leftalign <% $student->id."_row" %>' >
@@ -2846,7 +2849,7 @@
 				</div>
 %			}
 
-%			unless ($event_settings{"ballot_rubric"} && $tb_types{"point"} && $event_type ne "speech") {
+%			unless ($event_settings{"ballot_rubric"} && $tb_types{"point"} && $event_type eq "mock_trial") {
 
 				<div class="warning hidden online_status centeralign marvertmore padvert ltbordertop ltborderbottom">
 

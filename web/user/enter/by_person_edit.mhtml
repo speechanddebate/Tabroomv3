@@ -9,7 +9,13 @@
 	my %tourn_settings = $tourn->all_settings();
 	my $student = Tab::Student->retrieve($student_id);
 
-	$m->abort unless $student;
+	unless ($student) {
+		$m->comp("/funclib/abort.mas", message => "No valid student with that ID found on your roster");
+	}
+
+	unless ($student->chapter == $school->chapter) {
+		$m->comp("/funclib/abort.mas", message => "No valid student with that ID found on your roster");
+	}
 
 	my $tz = $tourn->tz;
 	$tz = "UTC" unless $tz;

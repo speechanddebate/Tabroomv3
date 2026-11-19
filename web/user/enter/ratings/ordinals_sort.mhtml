@@ -113,6 +113,7 @@
 							ui.item.toggleClass("ui-state-changed");
 							$('#subme').removeClass("hidden");
 							$('#submoi').removeClass("hidden");
+							$('#subdeux').removeClass("hidden");
 						}
 					});
 
@@ -128,8 +129,8 @@
 
 				<span class="quarter rightalign">
 					<a
-						class="ltbuttonwhite bluetext centeralign"
-						href="ordinals_prefs.mhtml?entry_id=<% $entry_id %>#yo">
+						class = "ltbuttonwhite bluetext centeralign"
+						href  = "ordinals_prefs.mhtml?entry_id=<% $entry_id %>#yo">
 						Numeric Entry
 					</a>
 				</span>
@@ -139,7 +140,10 @@
 				Judges marked in green are free strikes; they do not count against rating quotas.
 			</p>
 
-			<form action="ordinals_sort_save.mhtml" method="post">
+			<form
+				action ="ordinals_sort_save.mhtml"
+				method ="post"
+			>
 
 				<input
 					type  = "hidden"
@@ -169,7 +173,16 @@
 <%perl>
 					foreach my $judge (sort {$a->{ordinal} <=> $b->{ordinal}} @{$results}) {
 
-						next if ($judge->{school_id} == $school->id && (not defined $judge->{neutral}));
+						my $free_strike;
+
+						if ($judge->{'free_strike'}
+							|| ($judge->{"first_year"} && $category_settings{"fyo_free_strikes"})
+						) {
+							$free_strike++;
+						}
+
+						$judge->{last} =~ s/- ONLINE//g;
+						$judge->{last} =~ s/ ONLINE//g;
 </%perl>
 						<li class = "leftalign ltyellowhover flexrow ui-state-default border full semibold <% $judge->{free_strike} ? "greentext greenborder" : "" %>"
 							id    = "judge_<% $judge->{id} %>"
@@ -230,7 +243,7 @@
 
 			<div class="sidenote">
 
-				<div class="block centeralign">
+				<div class="flexrow centeralign hidden" id="subdeux">
 					<input
 						type  = "submit"
 						value = "Save Pref Sheet"

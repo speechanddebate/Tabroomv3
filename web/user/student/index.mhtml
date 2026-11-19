@@ -405,7 +405,6 @@
 	}
 
 	unless (@current_entries) {
-
 		if ($ARGS{'update_nsda'}) {
 			$default = "NSDA";
 		} elsif (keys %upcoming) {
@@ -413,6 +412,7 @@
 		} elsif (keys %signups) {
 			$default = "signups";
 		} else {
+			undef @tabs;
 			$default = "results";
 		}
 	}
@@ -428,17 +428,19 @@
 
 	<div class="main">
 
-		<span class="threefifths nospace">
-			<h3>
-				<% $person->first %> <% $person->last %>
-			</h3>
-		</span>
+		<div class="full flexrow martop">
+			<span class="threefifths">
+				<h3 class='nospace padvertless'>
+					<% $person->first %> <% $person->last %>
+				</h3>
+			</span>
 
-		<span class="twofifths rightalign nospace">
-			<h4>
-				Competitor Records
-			</h4>
-		</span>
+			<span class="twofifths rightalign padright">
+				<h5>
+					Competitor Records
+				</h5>
+			</span>
+		</div>
 
 		<& "/funclib/tabs.mas",
 			tabs    => \@tabs,
@@ -990,16 +992,16 @@
 				} keys %students
 			) {
 </%perl>
-				<div class="martopmore full nospace">
+				<div class="flexrow martopmore">
 					<span class="fourfifths martopless">
-						<h4 class="nospace">
+						<h5 class="nospace strong">
 							History at <% $students{$student_id}{"chapter_name"} %>
-						</h4>
+						</h5>
 					</span>
 
 					<span
 						id    = "<% $student_id %>_buttonarea"
-						class = "fifth rightalign nospace"
+						class = "fifth rightalign padright"
 					>
 					</span>
 				</div>

@@ -1,4 +1,5 @@
 <%args>
+	$generate => undef
 	$tourn
 	$person
 	$judge
@@ -12,8 +13,6 @@
 		return "One-time passwords are forbidden for site admins.";
 	}
 
-	unless ($person->site_admin) {
-
 		return "Judge does not have an linked Tabroom account" unless $jp_id;
 
 		my $sth = $dbh->prepare("
@@ -24,6 +23,7 @@
 
 		$sth->execute($jp_id);
 		my $perms = $sth->fetch_hash();
+
 		if ($perms->{count} > 0) {
 			return "Judge has external Tabroom permissions so their password cannot be reset this way";
 		}
@@ -60,6 +60,7 @@
 				and category.tourn = tourn.id
 				and tourn.start < NOW()
 				and tourn.end > NOW()
+				and tourn.id != ?
 				and not exists (
 					select permission.id
 					from permission
@@ -69,44 +70,61 @@
 				)
 		");
 
-		$many_sth->execute($jp_id, $person->id);
+		$many_sth->execute($jp_id, $tourn->id, $person->id);
 
 		my $others = $many_sth->fetch_hash();
 		if ($others->{count} > 0) {
-			return "Judge is judging tournaments besides yours right now, so their password cannot be reset this way";
+			return "Judge is judging ".$others->{count}." tournaments besides yours right now, so their password cannot be reset this way";
 		}
-	}
 
-	if ($ARGS{generate}) {
+		if ($generate) {
 
-		my $salt = $m->comp("/funclib/generate_randomstring.mas");
-		my $otp = uc($m->comp("/funclib/generate_randomstring.mas"));
+			my $salt = $m->comp("/funclib/generate_randomstring.mas");
+			my $otp = uc($m->comp("/funclib/generate_randomstring.mas"));
 
-		my $sha_crypt = crypt(uc($otp), '$6$' . $salt);
+			my $sha_crypt = crypt(uc($otp), '$6$' . $salt);
 
-		$judge->person->setting("otp", 0);
+			my $jp = $judge->person;
 
-		my $make_otp_sth = $dbh->prepare("
-			insert into person_setting (person, tag, value, value_date)
-				values (?, 'otp', ?, (NOW() + INTERVAL 1 HOUR));
-		");
+			$jp->setting("otp", 0);
 
-		$make_otp_sth->execute($jp_id, $sha_crypt);
+			my $make_otp_sth = $dbh->prepare("
+				insert into person_setting (person, tag, value, value_date)
+					values (?, 'otp', ?, (NOW() + INTERVAL 1 HOUR));
+			");
 
-		$m->comp("/funclib/log.mas",
-			tag         => "account",
-			person      => $judge->person,
-			description => "One time password created by ".$person->email." ID ".$person->id." for tourn ".$tourn->name,
-			tourn       => $tourn,
-			judge       => $judge
-		);
+			$make_otp_sth->execute($jp_id, $sha_crypt);
+			my @ids = ($person->id, $jp->id);
+			my $subject = "One time password created for ".$jp->first." ".$jp->last." for ".$person->first." ".$person->last." at ".$tourn->name;
 
-		my $payload = {
-			otp => $otp
-		};
+			my $desc = "The tournament administrator ".$person->first." ".$person->last." &lt;".$person->email."&gt;";
+			$desc .= " (ID #".$person->id.") for the tournament ".$tourn->name;
+			$desc .= " (ID #".$tourn->id.") has issued a one-time password for your account.</p><p>";
+			$desc .= "A one-time password can be used to access your Tabroom records one time for the next 48 hours.  ";
+			$desc .= "If you did not request this password, and do not know the tournament admin who requested it, ";
+			$desc .= "please contact us at <a href='mailto:help\@tabroom.com'>help\@tabroom.com</a> immediately.</p>";
 
-		return $payload;
-	}
+			my $message = $m->comp("/funclib/send_notify.mas",
+				from_string => "Tabroom Accounts <otp_".$tourn->id."\@www.tabroom.com>",
+				ids         => \@ids,
+				subject     => $subject,
+				html        => "<p>".$desc."</p>",
+			);
+
+			$m->comp("/funclib/log.mas",
+				tag         => "account",
+				person      => $jp,
+				description => $subject,
+				tourn       => $tourn,
+				judge       => $judge
+			);
+
+			my $payload = {
+				otp => $otp
+			};
+
+			return $payload;
+		}
 
 	return 1;
 

@@ -131,6 +131,7 @@
 				print TEXOUT " & ";
 
 				foreach my $panel (@{$panels_by_ts{$timeslot->id}}) {
+					print TEXOUT ", " if $used;
 					print TEXOUT $panel->round->event->abbr." ".$panel->round->name." ".$panel->letter;
 					$used++;
 				}

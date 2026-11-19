@@ -17,11 +17,12 @@
 		);
 	}
 
+	my $tourn = $category->tourn;
 	my $judge = Tab::Judge->retrieve($judge_id) if $judge_id;
 
 	my @already = $m->comp(
 		"/funclib/tourn_person_judges.mas",
-		tourn  => $category->tourn,
+		tourn  => $tourn,
 		person => $person
 	);
 
@@ -57,7 +58,7 @@
 
 		if ($text) {
 
-			my $tourn_name = $category->tourn->name;
+			my $tourn_name = $tourn->name;
 			$tourn_name =~ s/[\W_]//g;
 			$tourn_name = lc($tourn_name);
 
@@ -67,7 +68,7 @@
 				judge      => $judge,
 				person     => $person,
 				jperson    => $judge->person,
-				tourn      => $category->tourn,
+				tourn      => $tourn,
 				category   => $category,
 				text       => $text,
 				from_email => $from_email
@@ -111,7 +112,7 @@
 					start      => $shift->start,
 					end        => $shift->end,
 					conflictee => 1,
-					tourn      => $category->tourn->id,
+					tourn      => $tourn->id,
 					entered_by => $person
 				});
 			}

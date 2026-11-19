@@ -1,4 +1,5 @@
 <%args>
+	$dbh
 	$tourn
 	$tourn_settings
 	$session
@@ -17,67 +18,69 @@
 	my $ncfl++ if $tourn_settings->{"ncfl"};
 	my $nsda++ if $tourn_settings->{"nsda_nats"} || $tourn_settings->{"nsda_ms_nats"};
 
-	my @schools = $tourn->schools;
-	@schools = sort { $a->name cmp $b->name } @schools;
-	@schools = sort { $a->region->code cmp $b->region->code } @schools if ($ncfl);
-
-	my $dbh = Tab::DBI->db_Main();
-
-	my $category_sth = $dbh->prepare("
+	my $school_sth = $dbh->prepare("
 		select school.id,
 			school.name, school.code, school.onsite, school.state,
-			chapter.state, chapter.country,
-			category.abbr,
-			count(distinct entry.id), count(distinct es.student), count(distinct judge.id),
-			district.name, district.code, region.code, region.name, chapter.nsda,
-			disclaimed_at.value_date,
-			contact_name.value,
-			contact_email.value,
-			contact_number.value,
-			unpaid_onsite.value
+			chapter.state, chapter.country, chapter.nsda,
 
-		from (school, entry, entry_student es, student, event, category)
+			(select count(distinct entry.id)
+				from entry
+				where entry.school = school.id
+				and entry.active = 1
+			),
+
+			(select count(distinct es.student)
+				from entry, entry_student es
+				where entry.school = school.id
+				and entry.active = 1
+				and es.entry = entry.id
+			),
+
+			(select count(distinct judge.id)
+				from judge
+				where judge.school = school.id
+			),
+
+			district.name, district.code,
+			region.code, region.name,
+
+			(select disclaimed.value
+				from school_setting disclaimed
+				where disclaimed.school = school.id
+				and disclaimed.tag   = 'disclaimed'
+			) disclaimed,
+
+			(select disclaimed_at.value_date
+				from school_setting disclaimed_at
+				where disclaimed_at.school = school.id
+				and disclaimed_at.tag   = 'disclaimed_at'
+			) disclaimed_at,
+
+			CONCAT(contact.first,' ',contact.last) as contact_name,
+			contact.email as contact_email,
+			contact.phone as contact_phone,
+
+			(select unpaid_onsite.value
+				from school_setting unpaid_onsite
+				where unpaid_onsite.school = school.id
+				and unpaid_onsite.tag   = 'unpaid_onsite'
+			) unpaid_onsite
+
+		from school
 
 			left join region on region.id = school.region
 			left join district on district.id = school.district
 			left join chapter on chapter.id = school.chapter
 
-			left join school_setting disclaimed_at
-				on disclaimed_at.school = school.id
-				and disclaimed_at.tag   = 'disclaimed_at'
+			left join contact school_contact on school_contact.school = school.id AND school_contact.official = 1
+			left join person contact on contact.id = school_contact.person
 
-			left join school_setting contact_name
-				on contact_name.school = school.id
-				and contact_name.tag   = 'contact_name'
-
-			left join school_setting unpaid_onsite
-				on unpaid_onsite.school = school.id
-				and unpaid_onsite.tag   = 'unpaid_onsite'
-
-			left join school_setting contact_email
-				on contact_email.school = school.id
-				and contact_email.tag   = 'contact_email'
-
-			left join school_setting contact_number
-				on contact_number.school = school.id
-				and contact_number.tag   = 'contact_number'
-
-			left join judge on judge.school = school.id
-
-		where category.tourn    = ?
-			and category.id     = event.category
-			and event.id        = entry.event
-			and entry.active    = 1
-			and entry.id        = es.entry
-			and es.student      = student.id
-			and student.chapter = school.chapter
-			and school.tourn    = category.tourn
-
+		where school.tourn = ?
 		group by school.id
 		order by school.code
 	");
 
-	$category_sth->execute($tourn->id);
+	$school_sth->execute($tourn->id);
 
 	my %schools;
 	my %categories;
@@ -86,50 +89,64 @@
 		my (
 			$school_id,
 			$school_name, $school_code, $school_onsite, $school_state,
-			$chapter_state, $chapter_country,
-			$category_abbr,
+			$chapter_state, $chapter_country, $chapter_nsda,
 			$entry_count, $student_count, $judge_count,
-			$district_name, $district_code, $region_code, $region_name, $nsda_id,
+			$district_name, $district_code, $region_code, $region_name,
+			$disclaimed,
 			$disclaimed_at,
 			$contact_name,
 			$contact_email,
 			$contact_number,
 			$unpaid_onsite
 		)
-		= $category_sth->fetchrow_array()
+		= $school_sth->fetchrow_array()
 	) {
 
 		$schools{$school_id}{"school_name"}     = $school_name;
 		$schools{$school_id}{"school_code"}     = $school_code;
-
 		$schools{$school_id}{"school_onsite"}   = "Y" if $school_onsite;
-		$schools{$school_id}{"school_state"}    = $school_state;
-		$schools{$school_id}{"school_state"}    = $chapter_state unless $school_state;
+		$schools{$school_id}{"school_state"}    = $school_state || $chapter_state;
 		$schools{$school_id}{"student_count"}   = $student_count;
 		$schools{$school_id}{"judge_count"}     = $judge_count;
 		$schools{$school_id}{"chapter_country"} = $chapter_country;
+		$schools{$school_id}{"district_name"}   = $district_name;
+		$schools{$school_id}{"district_code"}   = $district_code;
+		$schools{$school_id}{"region_name"}     = $region_name;
+		$schools{$school_id}{"nsda_id"}         = $chapter_nsda;
+		$schools{$school_id}{"region_code"}     = $region_code;
+		$schools{$school_id}{"disclaimed_at"}   = $disclaimed_at;
+		$schools{$school_id}{"contact_number"}  = $contact_number;
+		$schools{$school_id}{"contact_name"}    = $contact_name;
+		$schools{$school_id}{"contact_email"}   = $contact_email;
+		$schools{$school_id}{"unpaid_onsite"}   = "Y" if $unpaid_onsite;
+	}
 
-		$schools{$school_id}{"category_count"}{$category_abbr} = $entry_count;
-		$schools{$school_id}{"district_name"}  = $district_name;
-		$schools{$school_id}{"district_code"}  = $district_code;
-		$schools{$school_id}{"region_name"}    = $region_name;
-		$schools{$school_id}{"nsda_id"}        = $nsda_id;
-		$schools{$school_id}{"region_code"}    = $region_code;
-		$schools{$school_id}{"disclaimed_at"}  = $disclaimed_at;
-		$schools{$school_id}{"contact_number"} = $contact_number;
-		$schools{$school_id}{"contact_name"}   = $contact_name;
-		$schools{$school_id}{"contact_email"}  = $contact_email;
-		$schools{$school_id}{"unpaid_onsite"}  = "Y" if $unpaid_onsite;
-		$schools{$school_id}{"entries"}++;
+	my $category_sth = $dbh->prepare("
+		select entry.school, category.abbr, count(distinct entry.id)
+		from entry, event, category
+		where category.tourn = ?
+			and category.id  = event.category
+			and event.id     = entry.event
+			and entry.active = 1
+		group by entry.school, category.abbr
+	");
+
+	$category_sth->execute($tourn->id);
+
+	while (
+		my ($school_id, $category_abbr, $entry_count) = $category_sth->fetchrow_array()
+	) {
 		$categories{$category_abbr}++;
+		next unless $schools{$school_id};
+		$schools{$school_id}{"category_count"}{$category_abbr} = $entry_count;
 	}
 
 	if ($ncfl) {
-		$m->print("Name,Shortened,Diocese,DioCode,Students,Judges,Total Count,Contact,Number,Email,Onsite,OnsiteOverride,TabID,Timestamp");
+		$m->print("Name,Shortened,Diocese,DioCode,Students,Judges,Total Count,Contact,Number,Email,Onsite,OnsiteOverride,TabID,Disclaimed");
 	} elsif ($nsda) {
-		$m->print("Name,Shortened,ID,RealState,TournState,StCode,District,DCode,Students,Judges,Total Count,Contact,Number,Email,Onsite,OnsiteOverride,TabID,Timestamp");
+		$m->print("Name,Shortened,ID,RealState,TournState,StCode,District,DCode,Students,Judges,Total Count,Contact,Number,Email,Onsite,OnsiteOverride,TabID,Disclaimed");
 	} else {
-		$m->print("Name,Shortened,Code,State,Country,Students,Judges,Total Count,Contact,Number,Email,Onsite,OnsiteOverride,TabID,Timestamp");
+		$m->print("Name,Shortened,Code,State,Country,Students,Judges,Total Count,Contact,Number,Email,Onsite,OnsiteOverride,TabID,Disclaimed");
 	}
 
 	foreach my $key (sort {$a cmp $b} keys %categories) {
@@ -139,8 +156,6 @@
 	$m->print("\n");
 
 	foreach my $school_id (sort {$schools{$a}{"school_name"} cmp $schools{$b}{"school_name"}} keys %schools) {
-
-		next unless $schools{$school_id}{"entries"};
 
 		$m->print('"'.$schools{$school_id}{"school_name"}.'",');
 		$m->print('"'.Tab::short_name($schools{$school_id}{"school_name"}).'",');
@@ -180,7 +195,7 @@
 		$m->print('",');
 
 		foreach my $key (sort {$a cmp $b} keys %categories) {
-			$m->print($schools{$school_id}{"category_count"}{$key});
+			$m->print($schools{$school_id}{"category_count"}{$key} || 0);
 			$m->print(",");
 		}
 

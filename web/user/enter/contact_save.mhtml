@@ -259,9 +259,16 @@
 
 		my $filetemp = $upload->tempname;
 
-		if ($filename) {
+		if ($filename && not $m->comp("/funclib/s3_put.mas",
+				source => $filetemp,
+				key    => "tourns/".$tourn->id."/school_upload/".$school->id."/".$filename
+			)) {
 
-			system $Tab::s3_cmd." put $filetemp ".$Tab::s3_bucket."/tourns/".$tourn->id."/school_upload/".$school->id."/$filename";
+			$err .= "<br />" if $err;
+			$err .= "Tabroom could not save the file ".$filename." to file storage, so it was not uploaded. Please try again.";
+
+		} elsif ($filename) {
+
 			$school->setting("upload_file", "text", $filename);
 			$school->setting("upload_file_timestamp", "date", DateTime->now());
 

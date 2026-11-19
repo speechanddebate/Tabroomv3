@@ -80,7 +80,7 @@
     }
 
 	if ($personless) {
-		$limit .= " and judge.person = 0 ";
+		$limit .= " and (judge.person = 0 OR judge.person IS NULL )";
 	}
 
 	my %category_settings;

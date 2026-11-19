@@ -30,6 +30,8 @@
 	$m->print( "Event,");
 	$m->print( "Code,");
 	$m->print( "Name,");
+	$m->print( "EntryID,");
+	$m->print( "StudentIDs,");
 	$m->print( "Students\n");
 
 	my $sth = $dbh->prepare("
@@ -40,7 +42,8 @@
 			event.abbr,
 			entry.code,
 			entry.name,
-			GROUP_CONCAT(CONCAT(student.first,' ',student.last) SEPARATOR ',') as students
+			entry.id,
+			GROUP_CONCAT(CONCAT(student.id,'|',student.first,' ',student.last) ORDER BY es.id SEPARATOR '\t') as students
 
 		from (school, event, entry, entry_student es, student)
 			left join region on school.region = region.id
@@ -69,9 +72,19 @@
 			$event,
 			$code,
 			$name,
+			$entry_id,
 			$students
 		) = $sth->fetchrow_array()
 	) {
+
+		my @student_ids;
+		my @student_names;
+
+		foreach my $student (split (/\t/, $students) ) {
+			my ($student_id, $student_name) = split(/\|/, $student, 2);
+			push @student_ids, $student_id;
+			push @student_names, $student_name;
+		}
 
 		$m->print('"');
 
@@ -90,9 +103,11 @@
 
 		$m->print($event.'","');
 		$m->print($code.'","');
-		$m->print($name);
+		$m->print($name.'","');
+		$m->print($entry_id.'","');
+		$m->print(join(",", @student_ids));
 
-		foreach my $student (split (/\,/, $students) ) {
+		foreach my $student (@student_names) {
 			$m->print('","');
 			$m->print($student);
 		}

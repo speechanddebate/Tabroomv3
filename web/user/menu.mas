@@ -1,5 +1,6 @@
 <%args>
 	$person
+	$dbh             => undef
 	$person_settings => undef
 	$chapter         => undef
 	$region          => undef
@@ -16,7 +17,9 @@
 
 	my $chapter_name;
 
-	my $dbh = Tab::DBI->db_Main();
+	unless ($dbh) {
+		$dbh = Tab::DBI->db_Main();
+	}
 
 	my $sth = $dbh->prepare("
 		select
@@ -177,12 +180,11 @@
 	}
 
 	my $student_sth = $dbh->prepare("
-		select student.id, chapter.name, chapter.id chapter_id
+		select student.id, chapter.name, chapter.id chapter_id, student.retired
 			from (student, chapter)
 		left join entry_student es on es.student = student.id
 		where student.person = ?
 			and student.chapter = chapter.id
-			and student.retired = 0
 		order by es.id DESC, student.id DESC
 		limit 1
 	");
@@ -192,11 +194,16 @@
 	my $students = $student_sth->fetchall_hash();
 
 	my $entries;
+	my $retired;
 
 	foreach my $sref (@{$students}) {
-		$menus{"rchapter"}{$sref->{chapter_id}}{"sort"} = $sref->{chapter_id};
-		$menus{"rchapter"}{$sref->{chapter_id}}{"name"} = $sref->{name};
-		$entries++;
+		if ($sref->{retired}) {
+			$retired++;
+		} else {
+			$menus{"rchapter"}{$sref->{chapter_id}}{"sort"} = $sref->{chapter_id};
+			$menus{"rchapter"}{$sref->{chapter_id}}{"name"} = $sref->{name};
+			$entries++;
+		}
 	}
 
 	$student_sth->finish();
@@ -481,7 +488,10 @@
 
 		<div class="sidenote">
 
-			<h4>NSDA Campus Test Rooms</h4>
+%			if (keys %{$menus{rchapter}}) {
+				<h4>NSDA Campus Test Rooms</h4>
+%			}
+
 <%perl>
 			foreach my $cid (
 				sort {
@@ -520,6 +530,13 @@
 
 			<h4>Your Account</h4>
 
+%			if ($retired) {
+				<a
+					class="blue full flexrow"
+					href="/user/student/index.mhtml"
+				>Student Competitive Records</a>
+%			}
+
 			<a
 				class = "<% $ARGS{"unfollow"} ? "dk" : "" %>yellow full flexrow"
 				href  = "/user/unfollow.mhtml"
@@ -528,6 +545,8 @@
 			</a>
 
 %			unless ($person_settings->{"email_unconfirmed"}) {
+
+
 				<a
 					class="yellow full flexrow"
 					href="/user/chapter/create.mhtml"

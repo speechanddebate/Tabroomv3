@@ -1,4 +1,5 @@
 <%args>
+	$tourn
 	$judge_id
 	$school_id
 </%args>
@@ -6,27 +7,29 @@
 
 	my $judge = Tab::Judge->retrieve($judge_id);
 	my $school = Tab::School->retrieve($school_id);
-	my $category = $judge->category;
-	my $tourn = $category->tourn;
 
-	my $switch;
+	unless ($judge && $judge->category->tourn == $tourn) {
+		$m->comp("/funclib/abort.mas", message => "No judge found with that ID in this tournament");
+	}
+
+	my $category = $judge->category;
 
 </%init>
 
-	<div class="main"> 
+	<div class="main">
 
 		<h2>Limit <% $judge->first." ".$judge->last %>'s availability</h2>
 
 		<table>
 
 			<tr class="yellowrow">
-			
+
 				<th>
 					Timeblock
 				</th>
 
 				<th>
-					Fee if under 
+					Fee if under
 				</th>
 
 				<th>
@@ -35,32 +38,32 @@
 
 			</tr>
 
-%			foreach my $shift ($category->shifts) { 
+%			foreach my $shift ($category->shifts) {
 
 				<tr class="row">
 
 					<td>
 						<% $shift->name %>
 					</td>
-	
+
 					<td class="centeralign">
 						$<% $shift->fine %>
 					</td>
 
 					<td class="centeralign">
 
-%						if ($shift->strike($judge)) { 
-		
-							<a 
-								class="redtext buttonwhite hover"  
+%						if ($shift->strike($judge)) {
+
+							<a
+								class="redtext buttonwhite hover"
 								href="judge_shifts_flip.mhtml?judge_id=<% $judge->id %>&shift_id=<% $shift->id %>&school_id=<% $school->id %>">
 								Unavailable
 							</a>
 
-%						} else { 
+%						} else {
 
-							<a 
-								class="greentext buttonwhite hover"  
+							<a
+								class="greentext buttonwhite hover"
 								href="judge_shifts_flip.mhtml?judge_id=<% $judge->id %>&shift_id=<% $shift->id %>&school_id=<% $school->id %>">
 								Available
 							</a>
@@ -76,7 +79,7 @@
 		</table>
 
 		<p class="explain">
-			Toggle the "Available" button to mark a judge as not available 
+			Toggle the "Available" button to mark a judge as not available
 			for a given time block.
 		</p>
 
@@ -84,7 +87,7 @@
 			You owe your full judge burden for every time block.  A judge
 			marked available for only part of the tournament will result in a
 			fee unless another judge is made available for the parts the first
-			judge is missing.  
+			judge is missing.
 		</p>
 
 
@@ -92,20 +95,20 @@
 
 
 	<div class="menu">
-	
+
 		<div class="sidenote">
 
 			<h4>Return to:</h4>
 
-			<a 
-				class="blue full" 
+			<a
+				class="blue full"
 				href="judges.mhtml?category_id=<% $category->id %>&school_id=<% $school->id %>"
 			>
 				Judge: <% $judge->first." ".$judge->last %>
 			</a>
 
-			<a 
-				class="blue full" 
+			<a
+				class="blue full"
 				href="judges.mhtml?category_id=<% $category->id %>&school_id=<% $school->id %>"
 			>
 				<% $judge->category->name %>

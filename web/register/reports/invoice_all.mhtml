@@ -90,6 +90,7 @@
 		}
 
 		$schools{"entry_fee_discount"}{$school_id} = $school_settings{$school_id}{"entry_fee_discount"};
+		$schools{"entry_fee_percent_off"}{$school_id} = $school_settings{$school_id}{"entry_fee_percent_off"};
 		$schools{"all_fee_discount"}{$school_id} = $school_settings{$school_id}{"all_fee_discount"};
 		$schools{"concession_fee_discount"}{$school_id} = $school_settings{$school_id}{"concession_fee_discount"};
 		$schools{"individuals"}{$school_id} = $school_settings{$school_id}{"individuals"};

@@ -246,14 +246,18 @@
 		if ($text) {
 
 			unless ($comments) {
-				$comments = Tab::Score->create({
-					tag     => "comments",
-					ballot  => $ballot->id
-				});
+				$comments = eval {
+					return Tab::Score->create({
+						tag     => "comments",
+						ballot  => $ballot->id
+					});
+				};
 			}
 
-			$comments->text($text);
-			$comments->update();
+			if ($comments) {
+				$comments->text($text);
+				$comments->update();
+			}
 		}
 	}
 
@@ -839,6 +843,9 @@
 		}
 	}
 
+	if ($type ne "mock_trial") {
+		undef $event_settings{"ballot_rubric"};
+	}
 
 	if (
 		$team_points
