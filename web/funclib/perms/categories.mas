@@ -104,6 +104,9 @@
 			$a->abbr cmp $b->abbr
 		} $tourn->categories;
 
+		Tab::debuglog("I am owner hear me roar of tourn $tourn");
+		Tab::debuglog("I have ".scalar @categories." categories: @categories");
+
 		if (keys %{$args}) {
 			unless ($default_id) {
 				my @keys = sort {$a <=> $b} @categories;

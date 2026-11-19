@@ -52,7 +52,7 @@
 	my $ok;
 	my $school;
 	my $entry;
-
+	my $judge;
 
 	if ($ARGS{"school_id"}) {
 		$school = Tab::School->retrieve($ARGS{"school_id"});
@@ -60,6 +60,16 @@
 
 	if ($ARGS{"entry_id"}) {
 		$entry = Tab::Entry->retrieve($ARGS{"entry_id"});
+		$tourn = eval {
+			return $entry->event->tourn;
+		};
+	}
+
+	if ($ARGS{"judge_id"}) {
+		$judge = Tab::Judge->retrieve($ARGS{"judge_id"});
+		$tourn = eval {
+			return $judge->category->tourn;
+		};
 	}
 
 	if ($perms->{tourn}{$tourn} eq "owner"
@@ -140,8 +150,10 @@
 		<div id="content">
 <%perl>
 			$m->call_next(
-				school  => $school,
-				entry  => $entry
+				tourn  => $tourn,
+				school => $school,
+				entry  => $entry,
+				judge  => $judge
 			);
 </%perl>
 		</div>

@@ -25,7 +25,7 @@
 		$category = $cats{$judge->category};
 	} else {
 		$m->comp("/funclib/abort.mas",
-			message => "That judge does not belong to a category you have access to"
+			message => "That judge does not belong to a category you have access to. ".$judge->category->id,
 		);
 	}
 

@@ -118,6 +118,22 @@
 
 		$sth->execute($args->{"jpool_id"});
 
+	} elsif ($args->{"judge_id"} && $args->{"judge_id"} eq int($args->{"judge_id"})) {
+
+		$checks{test}++;
+		$checks{disallow} = "Judge ".$args->{"judge_id"};
+
+		$sth = $dbh->prepare("
+			select
+				category.tourn,
+				category.id category
+			from (judge, category)
+			where judge.id = ?
+				and judge.category = category.id
+		");
+
+		$sth->execute($args->{"judge_id"});
+
 	} elsif ($args->{"tourn_id"} && $args->{"tourn_id"} eq int($args->{"tourn_id"})) {
 		$checks{tourn} = $args->{"tourn_id"};
 	}
