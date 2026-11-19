@@ -53,7 +53,7 @@
 		my $webname = lc($district->name);
 		$webname =~ s/\([^)]*\)//;
 		$webname =~ s/[\W_]//g;
-		$tourn->(webname) = $webname;
+		$tourn->webname($webname);
 		$tourn->update();
 	}
 
