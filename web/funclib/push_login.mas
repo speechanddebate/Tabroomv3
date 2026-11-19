@@ -2,7 +2,7 @@
 	$person
 	$person_settings
 	$session
-	$tourn => 0
+	$tourn    => 0
 	$defaults => 0
 </%args>
 <%init>
@@ -42,7 +42,7 @@
 			id    = 'push-blocked'
 		>
 			<p class="biggish semibold leftalign blueborderbottom">
-				Your Browser Is Blocking Us
+				Your Browser Is Blocking Notifications
 			</p>
 
 			<p class="leftalign">
@@ -218,12 +218,12 @@
 
 					if ( subscriptionId && (subscriptionId !== sessionPushId) && OneSignal.User.PushSubscription.optedIn) {
 						const pushResponse = await $.ajax({
-							type : 'POST',
-							data : { subscriptionId },
-							url  : `<% $Tab::indexcards_url %>/user/push/sync`,
-							crossDomain : true,
-							xhrFields: {
-								withCredentials: true
+							type                : 'POST',
+							data                : { subscriptionId },
+							url                 : `<% $Tab::indexcards_url %>/user/push/sync`,
+							crossDomain         : true,
+							xhrFields           : {
+								withCredentials : true
 							},
 						});
 
@@ -248,7 +248,6 @@
 						}
 					}
 
-
 					if (OneSignal.User.PushSubscription.optedIn) {
 
 						const now = new Date();
@@ -256,14 +255,14 @@
 
 						sessionActive.setHours(sessionActive.getHours() + 4);
 
-						if (sessionActive < now) {
+						if (subscriptionId && sessionActive < now) {
 							await $.ajax({
-								type : 'POST',
-								data : { subscriptionId },
-								url  : `<% $Tab::indexcards_url %>/user/push/sync`,
-								crossDomain : true,
-								xhrFields: {
-									withCredentials: true
+								type                : 'POST',
+								data                : { subscriptionId },
+								url                 : `<% $Tab::indexcards_url %>/user/push/sync`,
+								crossDomain         : true,
+								xhrFields           : {
+									withCredentials : true
 								},
 							});
 						}
