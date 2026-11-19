@@ -58,8 +58,7 @@
 			site  => $already->id
 		});
 
-		if ( (scalar (t$tourn->sites) == 1)) {
-
+		if ( (scalar ($tourn->sites) == 1)) {
 			foreach my $round ($m->comp('/funclib/tourn_rounds.mas', tourn => $tourn)) {
 				$round->site($already->id);
 				$round->update;
