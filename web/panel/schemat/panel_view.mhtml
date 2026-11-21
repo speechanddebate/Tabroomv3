@@ -468,8 +468,8 @@
 
 	$settings{"rating_by_judge_ref"} = \%rating_by_judge;
 	$settings{"rounds_per"} = $category_settings{"rounds_per"};
-
 	my $round_type = $round->type;
+	$settings{"rounds_type"} = $round_type;
 
 	undef $settings{"rounds_per"}
 		if $round_type eq "elim"

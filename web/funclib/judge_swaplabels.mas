@@ -273,7 +273,10 @@
 			my $judge_other;
 
 			if ($busy ) {
-				$judge_other .= "Bk ".($others{$judge_id}{"bracket"} || 0)." ";
+
+				if ($settings{round_type} eq "highlow" || $settings{round_type} eq "highhigh") {
+					$judge_other .= "Bk ".($others{$judge_id}{"bracket"} || 0)." ";
+				}
 
 				if ($settings{"prefs"}) {
 					$judge_strings{$judge_id}{"m-OPref"} = $others{$judge_id}{"prefs"};
@@ -284,7 +287,7 @@
 				if $others{$judge_id}{"other_flight"}
 				&& $settings{"round_flighted"} > 1;
 
-			$judge_other .= "Rm: ".$others{$judge_id}{"other_room"}." ";
+			$judge_other .= "Rm ".$others{$judge_id}{"other_room"}." ";
 
 
 			$judge_strings{$judge_id}{"n-Other Rnd"} = $judge_other;
