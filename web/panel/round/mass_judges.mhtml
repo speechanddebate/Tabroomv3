@@ -65,7 +65,6 @@
 			and ballot.forfeit != 1
 			and ballot.entry = entry.id
 			and entry.active = 1
-			$supp_limit
 		order by panel.bracket DESC, panel.letter
 	");
 

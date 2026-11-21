@@ -461,8 +461,11 @@
 				});
 
 				if (replaceStatus) {
+
 					Object.keys(status.panels).forEach( panelId => {
 						$(`#${panelId}_sort`).removeClass('doublespace');
+
+						console.log(`Status of panel ${panelId} is ${status.panels[panelId]}`);
 
 						if (status.panels[panelId] > 2) {
 							$(`#${panelId}_sort`).attr('data-text', parseFloat(status.panels[panelId] * 10));
