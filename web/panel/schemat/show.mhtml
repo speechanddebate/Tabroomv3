@@ -377,12 +377,30 @@
 				},
 			}).then( function(status) {
 
+				const startCount = { };
+
 				Object.keys(status.judges).forEach( judgeId => {
 
 					Object.keys(status.judges[judgeId]).forEach( panelId => {
 
 						const judge = status.judges[judgeId][panelId];
 						const judgeKey = `${judgeId}_${panelId}`;
+						const flight = judge.flight || 1;
+
+						if (!startCount[flight]) {
+							startCount[flight] = {
+								started   : 0,
+								unstarted : 0
+							};
+						}
+
+						if (judge.tag === 'started') {
+							startCount[flight].started++;
+							$(`#${panelId}_sort`).attr('data-text', parseFloat(status.panels[panelId] * 10));
+						} else if (judge.tag === 'unstarted') {
+							startCount[flight].unstarted++;
+							$(`#${panelId}_sort`).attr('data-text', -1000);
+						}
 
 						if (judge.text || judge.count || judge.class) {
 
@@ -449,6 +467,7 @@
 					});
 				});
 
+
 				let replaceStatus = false;
 
 				Object.keys(status.panels).forEach( panelId => {
@@ -460,13 +479,19 @@
 					}
 				});
 
+				Object.keys(startCount).forEach( (flight) => {
+
+					if (startCount[flight].started > 0 && startCount[flight].unstarted > 0) {
+						const total = startCount[flight].started + startCount[flight].unstarted;
+						$(`#ballots_out_flight_${ flight }`).text(`${startCount[flight].started}/${total} Started`);
+						replaceStatus = false;
+					}
+				});
+
 				if (replaceStatus) {
 
 					Object.keys(status.panels).forEach( panelId => {
 						$(`#${panelId}_sort`).removeClass('doublespace');
-
-						console.log(`Status of panel ${panelId} is ${status.panels[panelId]}`);
-
 						if (status.panels[panelId] > 2) {
 							$(`#${panelId}_sort`).attr('data-text', parseFloat(status.panels[panelId] * 10));
 						}
@@ -1084,7 +1109,6 @@
 						</a>
 %					}
 
-
 					<span class="nospace padvertless full"></span>
 <%perl>
 					unless ($preset) {
@@ -1131,7 +1155,6 @@
 								Auto-Assign Both
 							</a>
 <%perl>
-
 						} elsif (
 							$event_type eq "speech"
 							|| $event_type eq "congress"
@@ -2582,6 +2605,7 @@
 									? $ballots_out{$flight}." out"
 									: "DONE"
 								%></span>
+
 							</div>
 %						}
 					</div>
@@ -2707,8 +2731,6 @@
 							withCredentials: true
 						},
 					}).success( (flipStatus) => {
-
-						console.log(flipStatus);
 
 						for (let flight = 1; flight <= (flipStatus.flighted || 1) ; flight++) {
 

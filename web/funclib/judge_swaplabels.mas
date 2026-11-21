@@ -274,6 +274,8 @@
 
 			if ($busy ) {
 
+				Tab::debuglog($settings{round_type});
+
 				if ($settings{round_type} eq "highlow" || $settings{round_type} eq "highhigh") {
 					$judge_other .= "Bk ".($others{$judge_id}{"bracket"} || 0)." ";
 				}
