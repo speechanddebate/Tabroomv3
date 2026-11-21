@@ -14,7 +14,7 @@
 	my $category = $event->category;
 
 	my $sth = $dbh->prepare("
-		select judge.id, panel.id, panel.bracket, event.abbr
+		select judge.id, panel.id, panel.bracket, event.abbr, panel.flight
 			from panel, ballot, judge, event, round
 		where round.timeslot = ?
 			and event.category = ?
@@ -31,7 +31,12 @@
 			judge.id judge, rating.rating_tier tier,
 			round(rating.percentile,0) rating, panel.id panel, rating.entry, rating.id,
 			ballot.side
-		from panel, ballot, judge, rating, round, event
+		from (panel, ballot, judge, round, event)
+
+			left join rating on
+				rating.entry = ballot.entry
+				and rating.judge = ballot.judge
+
 		where round.timeslot = ?
 			and event.category = ?
 			and round.event = event.id
@@ -39,8 +44,6 @@
 			and panel.id = ballot.panel
 			and ballot.judge = judge.id
 			and panel.flight = ?
-			and ballot.entry = rating.entry
-			and rating.judge = ballot.judge
 	");
 
 	my $other_room_sth = $dbh->prepare("
@@ -54,7 +57,7 @@
 
 	my $other_event_sth = $dbh->prepare("
 		select
-			panel.id, ballot.judge, event.abbr, round.name, round.label, room.name
+			panel.id, ballot.judge, event.abbr, round.name, round.label, room.name, panel.flight
 		from (panel, round, event, ballot, timeslot, timeslot t2)
 			left join room on room.id = panel.room
 		where t2.id  = ?
@@ -102,10 +105,9 @@
 	my @judges;
 
 	while (
-		my ($judge, $panel, $bracket, $event)
+		my ($judge, $panel, $bracket, $event, $flight)
 		= $sth->fetchrow_array()
 	) {
-
 		unless ($round->type eq "elim") {
 			$judge_panel{$judge}{"bracket"} = $bracket." ";
 		}
@@ -120,11 +122,7 @@
 		my $judge = $rating->{judge};
 
 		$judge_panel{$judge}{"prefs"} .= "-" if $judge_panel{$judge}{"prefs"};
-		if ($rating->{rating}) {
-			$judge_panel{$judge}{"prefs"} .= round($rating->{rating});
-		} else {
-			$judge_panel{$judge}{"prefs"} .= $tier_name{$rating->{tier}};
-		}
+		$judge_panel{$judge}{"prefs"} .= $rating->{rating} ||$tier_name{$rating->{tier}} || "x";
 	}
 
 	while (
@@ -136,13 +134,14 @@
 	}
 
 	while (
-		my ($panel, $judge, $event, $roundname, $roundlabel, $room)
+		my ($panel, $judge, $event, $roundname, $roundlabel, $room, $flight)
 		= $other_event_sth->fetchrow_array()
 	) {
-		$judge_panel{$judge}{"other_event"} = $event;
-		$judge_panel{$judge}{"other_room"} = $room;
-		$judge_panel{$judge}{"other_round"} = $roundname;
-		$judge_panel{$judge}{"other_round"} = $roundlabel if $roundlabel;
+		$judge_panel{$judge}{"other_event"}  = $event;
+		$judge_panel{$judge}{"other_room"}   = $room;
+		$judge_panel{$judge}{"other_round"}  = $roundname;
+		$judge_panel{$judge}{"other_round"}  = $roundlabel if $roundlabel;
+		$judge_panel{$judge}{"other_flight"} = $flight;
 	}
 
 	return %judge_panel;

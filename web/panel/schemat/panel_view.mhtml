@@ -79,6 +79,7 @@
 
 	$settings{"online_hybrid"} = $event_settings{"online_hybrid"};
 	$settings{"online_mode"} = $event_settings{"online_mode"};
+	$settings{"round_flighted"} = $round->flighted;
 	$settings{"flighted"} = $round->flighted;
 
 	my $judge_sth = $dbh->prepare("
@@ -414,7 +415,10 @@
 	undef $settings{"prefs"} if $settings{"prefs"} eq "none";
 
 	if ($settings{"prefs"}) {
-		%{$settings{"averages"}} = $m->comp("/funclib/judge_averages.mas", category => $category, prefs => $settings{"prefs"});
+		%{$settings{"averages"}} = $m->comp("/funclib/judge_averages.mas",
+			category => $category,
+			prefs    => $settings{"prefs"}
+		);
 	}
 
 	$settings{"no_judge_codes"}++ if $category_settings{"no_codes"};
@@ -519,6 +523,7 @@
 	unless ($category_settings{"elim_only_ratings"} && $round->type ne "elim" && $round->type ne "final") {
 
 		if ($settings{"coach_ratings"}) {
+
 			@good_judges = sort {
 				$rating_by_judge{$a} cmp $rating_by_judge{$b}
 			} @good_judges;
@@ -555,8 +560,11 @@
 	);
 
 	my @busy_judges = keys %busy_judges;
-	@busy_judges = sort {$busy_judges{$b}{"strikes"} <=> $busy_judges{$a}{"strikes"}} @busy_judges;
-	@busy_judges = sort {$busy_judges{$b}{"ballots"} <=> $busy_judges{$a}{"ballots"}} @busy_judges;
+
+	@busy_judges = sort {
+		$busy_judges{$b}{"ballots"} <=> $busy_judges{$a}{"ballots"}
+		|| $busy_judges{$b}{"strikes"} <=> $busy_judges{$a}{"strikes"}
+	} @busy_judges;
 
 	if ($settings{"coach_ratings"}) {
 		@busy_judges =
@@ -607,7 +615,9 @@
 		my %sort_score;
 
 		foreach my $gj (@good_judges) {
-			${$diffref}{$gj} = 110 unless defined ${$diffref}{$gj};
+
+			$diffref->{$gj} = 110 unless defined $diffref->{$gj};
+
 			$sort_score{$gj} = ($diffref->{$gj} * $mutuality)
 				+ (
 					($ratings->{$aff}{$gj} + + $ratings->{$neg}{$gj}) * $preference
@@ -615,7 +625,7 @@
 		}
 
 		foreach my $bj (@busy_judges) {
-			${$diffref}{$bj} = 110 unless defined ${$diffref}{$bj};
+			$diffref->{$bj} = 110 unless defined $diffref->{$bj};
 
 			$sort_score{$bj} = ($diffref->{$bj} * $mutuality)
 				+ ( ($ratings->{$aff}{$bj} + + $ratings->{$neg}{$bj}) * $preference);
@@ -885,7 +895,6 @@
 				<p class="centeralign semibold bluetext">
 					To hold an actual debate, uncheck the "Walk Over" indicator at right
 				</p>
-
 %			}
 
 		</div>
@@ -894,7 +903,10 @@
 
 			<h6 class="semibold">Judging</h6>
 
-			<& "/funclib/tablesorter.mas", table => 'panel_judges', nobuttons => 1 &>
+			<& "/funclib/tablesorter.mas",
+				table     => 'panel_judges',
+				nobuttons => 1
+			&>
 
 			<table id="panel_judges">
 
@@ -967,7 +979,6 @@
 									School
 								</th>
 %							}
-
 <%perl>
 							if (
 								$tourn_settings->{"mock_trial_registration"}

@@ -49,21 +49,39 @@
 		if ($settings{"prefs"}) {
 
 			my $rating = Math::Round::nearest(1, $ratings->{$aff}{$judge_id}) || "x";
+			if ($settings{"prefs"} eq "ordinals" && $rating < 10) {
+				$rating = '&nbsp;'.$rating;
+			}
 			$rating .= '&nbsp;';
-			$rating .= Math::Round::nearest(1, $ratings->{$neg}{$judge_id}) || "x";
+
+			my $neg_rating = Math::Round::nearest(1, $ratings->{$neg}{$judge_id}) || "x";
+			if ($settings{"prefs"} eq "ordinals" && $neg_rating < 10) {
+				$neg_rating = '&nbsp;'.$neg_rating;
+			}
+			$rating .= $neg_rating;
 
 			$judge_strings{$judge_id}{"b-Prf"} = $rating;
-			$judge_headers{"b-Prf"} = length($rating) if length($rating) > $judge_headers{"b-Prf"};
+
+			my $tmp_rating = $rating;
+			$tmp_rating =~ s/&nbsp;/ /g;
+
+			if (length($tmp_rating) > $judge_headers{"b-Prf"}) {
+				$judge_headers{"b-Prf"} = length($tmp_rating);
+			}
 
 			my $avg;
 			$avg = "percentile" if $settings{"prefs"} eq "ordinals";
 
 			if ($settings{'averages'}) {
-				$judge_strings{$judge_id}{"c-AP"} = round($settings{"averages"}{$judge_id});
+				$judge_strings{$judge_id}{"c-AP"} = $settings{"averages"}{$judge_id};
 			}
 
-			$judge_headers{"c-AP"} = length($judge_strings{$judge_id}{"c-AP"})
-				if length($judge_strings{$judge_id}{"c-AP"}) > $judge_headers{"c-AP"};
+			my $tmp_ap = $judge_strings{$judge_id}{"c-AP"};
+			$tmp_ap =~ s/&nbsp;/ /g;
+
+			if (length($tmp_ap) > $judge_headers{"c-AP"}) {
+				$judge_headers{"c-AP"} = length($tmp_ap);
+			}
 		}
 
 		if ($settings{"tab_ratings"}) {
@@ -97,8 +115,19 @@
 		my $usage;
 
 		if ($settings{"rounds_per"}) {
-			$usage .= $judge_use{$judge_id}{percentage}."&nbsp;";
-			$usage .= $judge_use{$judge_id}{'left'} ."/".($judge_use{$judge_id}{'judged_already'}
+
+			my $tmp_pri = $judge_use{$judge_id}{percentage};
+
+			if (length($tmp_pri) < 2) {
+				$tmp_pri = "&nbsp;&nbsp;".$tmp_pri;
+			} elsif (length($tmp_pri) < 3) {
+				$tmp_pri = "&nbsp;".$tmp_pri;
+			}
+
+			$judge_headers{"f-Pri"}            = 4;
+			$judge_strings{$judge_id}{"f-Pri"} = $tmp_pri;
+
+			$usage = $judge_use{$judge_id}{'left'} ."/".($judge_use{$judge_id}{'judged_already'}
 				+ $judge_use{$judge_id}{'will_judge'})."/".$judge_use{$judge_id}{'oblig'};
 
 		} else {
@@ -107,7 +136,12 @@
 		}
 
 		$judge_strings{$judge_id}{"f-Use"} = $usage;
-		$judge_headers{"f-Use"} = length($usage) if length($usage) > $judge_headers{"f-Use"};
+		my $tmp_usage = $usage;
+		$tmp_usage =~ s/&nbsp;/ /g;
+
+		if ($judge_headers{"f-Use"} < length($tmp_usage)) {
+			$judge_headers{"f-Use"} = length($tmp_usage);
+		}
 
 		unless ($settings{"blind_mode"}) {
 
@@ -153,14 +187,17 @@
 			) {
 
 				$judges->{$judge_id}{"school_name"} = Tab::short_name($judges->{$judge_id}{"school_name"});
-				my $school = substr($judges->{$judge_id}{"school_name"}, 0, 18);
+
+				my $school;
 
 				if ($ARGS{"short_name"}) {
 					$school .= substr($school, 0, 14);
 				} elsif (not defined $judges->{$judge_id}{"school_name"}) {
 					$school .= "Unaffiliated";
-				} elsif ($judges->{$judge_id}{"school_code"}) {
+				} elsif ($judges->{$judge_id}{"school_code"} && length($judges->{$judge_id}{"school_code"}) < 5) {
 					$school .= substr( ($judges->{$judge_id}{"school_code"}." ".$judges->{$judge_id}{"school_name"}),0,18);
+				} else {
+					$school = substr($judges->{$judge_id}{"school_name"}, 0, 18);
 				}
 
 				$judge_strings{$judge_id}{"j-School"} = $school;
@@ -200,8 +237,9 @@
 			}
 
 			$judge_strings{$judge_id}{"l-Name"} = $judge_name;
-			$judge_headers{"l-Name"} = length($judge_name)
-				if length($judge_name) > $judge_headers{"l-Name"};
+			if (length($judge_name) > $judge_headers{"l-Name"}) {
+				$judge_headers{"l-Name"} = length($judge_name);
+			}
 
 		} else {
 
@@ -222,40 +260,47 @@
 			$judge_other .= $others{$judge_id}{"other_event"}."  ";
 			$judge_other .= "Rd: ".$others{$judge_id}{"other_round"}." ";
 			$judge_other .= "Rm: ".$others{$judge_id}{"other_room"}." ";
+			$judge_other .= "Flt ".$others{$judge_id}{"other_flight"}." ";
 
 			$judge_strings{$judge_id}{"n-Other Rnd"} = $judge_other;
-			$judge_headers{"n-Other Rnd"} = length($judge_other)
-				if length($judge_other) > $judge_headers{"n-Other Rnd"};
+
+			if (length($judge_other) > $judge_headers{"n-Other Rnd"}) {
+				$judge_headers{"n-Other Rnd"} = length($judge_other);
+			}
 
 		} elsif ($others{$judge_id}{"other_room"}) {
 
 			my $judge_other;
 
 			if ($busy ) {
-				if ($others{$judge_id}{"bracket"} > 0) {
-					$judge_other .= "Bk ".$others{$judge_id}{"bracket"}." ";
-				}
+				$judge_other .= "Bk ".($others{$judge_id}{"bracket"} || 0)." ";
 
 				if ($settings{"prefs"}) {
-					$judge_strings{$judge_id}{"m-OPrefs"} = $others{$judge_id}{"prefs"};
+					$judge_strings{$judge_id}{"m-OPref"} = $others{$judge_id}{"prefs"};
 				}
 			}
 
-			$judge_other .= "Rm: ".$others{$judge_id}{"other_room"}." ";
-
-			$judge_other .= "Flt ".$others{$judge_id}{"other_flight"}
+			$judge_other .= "Fl ".$others{$judge_id}{"other_flight"}." "
 				if $others{$judge_id}{"other_flight"}
 				&& $settings{"round_flighted"} > 1;
 
-			$judge_strings{$judge_id}{"n-Other Rnd"} = $judge_other;
-			$judge_headers{"n-Other Rnd"} = length($judge_other) if length($judge_other) > $judge_headers{"n-Other Rnd"};
+			$judge_other .= "Rm: ".$others{$judge_id}{"other_room"}." ";
 
-			if ($settings{prefs}) {
-				if (defined $judge_headers{"m-OPrefs"}) {
-					$judge_headers{"m-OPrefs"} = length("m-OPrefs")
+
+			$judge_strings{$judge_id}{"n-Other Rnd"} = $judge_other;
+
+			if (length($judge_other) > $judge_headers{"n-Other Rnd"}) {
+				$judge_headers{"n-Other Rnd"} = length($judge_other);
+			}
+
+			if ($settings{prefs} && $others{$judge_id}{'prefs'}) {
+				if (length($others{$judge_id}{'prefs'}) > $judge_headers{"m-OPref"}) {
+					$judge_headers{"m-OPref"} = length($others{$judge_id}{"prefs"});
 				}
-				$judge_headers{"m-OPrefs"} = length($others{$judge_id}{"prefs"})
-					if length($others{$judge_id}{'prefs'}) > $judge_headers{"m-OPrefs"};
+
+				if (length("m-OPref") > $judge_headers{"m-OPref"}) {
+					$judge_headers{"m-OPref"} = length("m-OPref");
+				}
 			}
 		}
 	}
@@ -269,12 +314,10 @@
 		$judge_headers{$fullkey} = length($key) if $judge_headers{$fullkey} < length($key);
 		my $pad;
 
-		unless ($key eq "Other Rnd") {
-			my $needed = ($judge_headers{$fullkey} - length($key));
-			if ($needed > 0) {
-				foreach (1..ceil($needed)) {
-					$pad .= "&nbsp;";
-				}
+		my $needed = ($judge_headers{$fullkey} - length($key));
+		if ($needed > 0) {
+			foreach (1 .. ceil($needed)) {
+				$pad .= "&nbsp;";
 			}
 		}
 
@@ -297,6 +340,9 @@
 			$string =~ s/^\s+//;
 			$string =~ s/\s+$//;
 
+			my $count_string = $string;
+			$count_string =~ s/&nbsp;/ /g;
+
 			my $before;
 			my $after;
 
@@ -306,14 +352,11 @@
 				|| $key eq "m-Site"
 				|| $key eq "e-OL"
 				|| $key eq "j-School"
-				|| $key eq "m-OPrefs"
+				|| $key eq "m-OPref"
 			) {
 
-				my $needed = $judge_headers{$key} - length($string);
+				my $needed = $judge_headers{$key} - length($count_string);
 
-				if ($key eq "l-Name") {
-					$needed += 2;
-				}
 				$needed = ceil($needed);
 				my $switch;
 
@@ -322,9 +365,23 @@
 					$needed--;
 				}
 
+			} elsif (
+				$key eq "f-Use"
+			) {
+
+				my $needed = $judge_headers{$key} - length($count_string);
+
+				$needed = ceil($needed);
+				my $switch;
+
+				while ($needed > 0) {
+					$before .= "&nbsp;";
+					$needed--;
+				}
+
 			} else {
 
-				my $needed = $judge_headers{$key} - length($string);
+				my $needed = $judge_headers{$key} - length($count_string);
 				$needed += 6 if $string eq "Unaffiliated";
 				$needed = ceil($needed);
 

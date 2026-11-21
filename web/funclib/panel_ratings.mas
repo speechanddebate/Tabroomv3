@@ -1,10 +1,13 @@
 <%args>
+	$dbh => undef
 	$panel
 	$type
 </%args>
 <%init>
 
-	my $dbh = Tab::DBI->db_Main();
+	unless ($dbh) {
+		$dbh = Tab::DBI->db_Main();
+	}
 
 	$type = "ordinals" if $type eq "ndt";
 
@@ -117,7 +120,7 @@
 
 		foreach my $judge (@judges) {
 			$mutuality{$judge} = abs($ratings{$aff}{$judge} - $ratings{$neg}{$judge});
-			$mutuality{$judge} = 100 unless $mutuality{$judge};
+			$mutuality{$judge} = 0 unless $mutuality{$judge};
 		}
 
 		return \%ratings, \%mutuality;

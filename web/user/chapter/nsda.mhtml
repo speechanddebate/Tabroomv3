@@ -10,6 +10,10 @@
 
 	my $chapter = Tab::Chapter->retrieve($chapter_id);
 
+	unless ($chapter) {
+		$m->comp("/funclib/abort.mas", message => "No institution found with id $chapter_id");
+	}
+
 	$m->comp(
 		"/user/chapter/auth.mas",
 		chapter => $chapter,

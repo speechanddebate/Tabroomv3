@@ -1,7 +1,7 @@
 <%args>
-	$dbh => undef
+	$dbh      => undef
 	$category => undef
-	$digits => .1
+	$digits   => undef
 </%args>
 <%init>
 
@@ -15,11 +15,11 @@
 
 	if ($ARGS{"prefs"} eq "ordinals") {
 		$select = "AVG(percentile) rating";
-		$round = 1;
+		$round = $digits || 1;
 	} else {
 		$select = "AVG(rating_tier.name) rating";
 		$left = "left join rating_tier on rating.rating_tier = rating_tier.id";
-		$round = .1;
+		$round = $digits || .1;
 	}
 
 	my $sth = $dbh->prepare("
@@ -41,7 +41,10 @@
 	$sth->execute($category->id);
 	my $results = $sth->fetchall_hash();
 
-	my %judge_data = map {$_->{id} => Math::Round::nearest($digits, $_->{rating})} @{$results};
-	return %judge_data;
+	if ($round == 1) {
+		return map {$_->{id} => Math::Round::nearest($round, $_->{rating})} @{$results};
+	}
+
+	return map {$_->{id} => sprintf("%".$round."f", Math::Round::nearest($round, $_->{rating}))} @{$results};
 
 </%init>
