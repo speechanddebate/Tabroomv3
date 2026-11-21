@@ -144,10 +144,12 @@
 					href  = "online_ballots.mhtml?round_id=<% $round->id %>"
 					class =" buttonwhite greentext thin invert marright"
 				>View RFDs</a>
-				<a
-					href  = "online_ballots_csv.mhtml?timeslot_id=<% $round->timeslot->id %>"
-					class =" buttonwhite bluetext smallish thin marno padvert invert marrightmore"
-				>CSV of RFDs</a>
+%				if ($round->timeslot) {
+					<a
+						href  = "online_ballots_csv.mhtml?timeslot_id=<% $round->timeslot->id %>"
+						class =" buttonwhite bluetext smallish thin marno padvert invert marrightmore"
+					>CSV of RFDs</a>
+%				}
 %			}
 		</span>
 
