@@ -398,7 +398,6 @@
 							$(`#${panelId}_sort`).attr('data-text', parseFloat(status.panels[panelId] * 10));
 						} else if (judge.tag === 'unstarted') {
 							startCount[flight].unstarted++;
-							$(`#${panelId}_sort`).attr('data-text', -1000);
 						}
 
 						if (judge.text || judge.count || judge.class) {
@@ -529,7 +528,6 @@
 
 			}).then( () => {
 				fixVisual();
-				console.log("1");
 			});
 
 			$.ajax({
@@ -558,7 +556,6 @@
 			});
 
 			fixVisual();
-			console.log("2");
 		}
 
 		// Show/hide various values on the schematic.  This time with at least
@@ -2720,7 +2717,6 @@
 					}
 				}).then( () => {
 					fixVisual();
-					console.log("3");
 				});
 			};
 
@@ -2773,7 +2769,6 @@
 						}
 					}).then( () => {
 						fixVisual();
-						console.log("4");
 					});
 				});
 %			}
