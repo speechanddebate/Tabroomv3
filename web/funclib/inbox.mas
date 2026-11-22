@@ -23,7 +23,7 @@
 
 		$(document).ready(function () {
 			checkCacheCount();
-			setInterval(youveGotMail, 30000);
+			setInterval(youveGotMail, 60000);
 		});
 
 		function checkCacheCount() {
@@ -33,7 +33,7 @@
 			const now = new Date();
 			const difference = Math.abs(now - mailTimestamp) / 1000;
 
-			if (difference < 30) {
+			if (difference < 60) {
 
 				if (mailCount > 0) {
 					$(`#tabroom_inbox`).addClass('orangetext');

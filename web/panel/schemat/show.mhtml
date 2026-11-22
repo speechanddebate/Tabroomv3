@@ -358,7 +358,6 @@
 			// results.
 
 			$('.allprefs').each( (index, prefbox) => {
-
 				const key      = $(prefbox).attr('key');
 				const existing = $(`#${key}_sortme`).text();
 				const prefs    = $(`#${key}_prefs`).text();
@@ -410,6 +409,7 @@
 								judge.text = '';
 								judge.text = `${judge.count.toString()}`;
 							}
+
 							let isHalf = $(`#${judgeKey}_result`).attr('half');
 
 							if (existing === '½' || existing === '&frac12;' || isHalf) {
@@ -523,12 +523,13 @@
 							$(`#ballots_out_flight_${flight}`).html('DONE');
 						}
 					});
-
-					fixVisual();
 				}
+
+				fixVisual();
 
 			}).then( () => {
 				fixVisual();
+				console.log("1");
 			});
 
 			$.ajax({
@@ -557,6 +558,7 @@
 			});
 
 			fixVisual();
+			console.log("2");
 		}
 
 		// Show/hide various values on the schematic.  This time with at least
@@ -2716,6 +2718,9 @@
 					} else {
 						$(`#blastStatus`).addClass('hidden');
 					}
+				}).then( () => {
+					fixVisual();
+					console.log("3");
 				});
 			};
 
@@ -2766,8 +2771,11 @@
 								$(`#deadlines_${flight}`).removeClass('hidden');
 							}
 						}
+					}).then( () => {
+						fixVisual();
+						console.log("4");
 					});
-				};
+				});
 %			}
 
 		</script>
