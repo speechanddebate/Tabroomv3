@@ -500,12 +500,12 @@
 				<span class="threequarters semibold padleft">
 					Strikes Allowed
 				</span>
-				<span class="padright quarter">
+				<span class="padrightmore quarter rightalign">
 					<input
 						type         = "number"
 						name         = "number"
 						min          = "0"
-						max          = "99"
+						max          = "9999"
 						class        = "smaller"
 						value        = <% $default %>
 						setting_name = "strikes"
@@ -523,12 +523,12 @@
 				>
 					Target panel size
 				</span>
-				<span class="padright quarter">
+				<span class="padrightmore quarter rightalign">
 					<input
 						type         = "number"
 						name         = "number"
 						min          = "0"
-						max          = "99"
+						max          = "9999"
 						class        = "smaller"
 						value        = "<% $round_settings->{'strikes_panel_size'} %>"
 						setting_name = "strikes_panel_size"
@@ -544,7 +544,7 @@
 					Strike Deadline <% $round_start->month."/".$round_start->day %> @
 				</span>
 
-				<span class="padright quarter">
+				<span class="padrightmore quarter rightalign">
 					<script type="text/javascript">
 						 $(document).ready(function() {
 							 $('#strikes_due').timepicker({
@@ -574,21 +574,21 @@
 
 			<div class="row fixedheight flexrow">
 				<span
-					class="threequarters semibold padleft"
-					title="This setting will randomly remove judges if an even number remains after the strikes are processed, or for teams that do not enter strikes by the deadline.  It will also automatically publish and blast the round once all strikes are in or the deadline is reached. Otherwise you will have to do so manually."
+					class ="threequarters semibold padleft grow"
+					title ="This setting will randomly remove judges if an even number remains after the strikes are processed, or for teams that do not enter strikes by the deadline.  It will also automatically publish and blast the round once all strikes are in or the deadline is reached. Otherwise you will have to do so manually."
 				>
-					Auto-publish round
+					Auto-Publish Round
 				</span>
 
-				<span class="padright quarter">
-					<label class="switch">
+				<span class="padrightmore rightalign">
+					<label class="switch border">
 						<input
 							type         = "checkbox"
 							value        = "1"
 							id           = "<% $round->id %>"
 							setting_name = "strikes_auto"
 							target_type  = "round"
-							round_id    = "<% $round->id %>"
+							round_id     = "<% $round->id %>"
 							onChange     = "postSwitch( this, 'strike_cards.mhtml');"
 							<% $round_settings->{"strikes_auto"}
 								? 'checked="checked"'
@@ -602,13 +602,13 @@
 
 			<div class="row fixedheight flexrow">
 				<span
-					class = "threequarters semibold padleft"
+					class = "threequarters semibold padleft grow"
 					title = "This setting will blast each panel individually once both teams have entered their cards.  It only works if auto-publish is also enabled."
 				>
 					Instant Publish
 				</span>
 
-				<span class="padright quarter">
+				<span class="padrightmore rightalign">
 					<label class="switch">
 						<input
 							type         = "checkbox"
@@ -635,7 +635,7 @@
 					Open strike cards online
 				</span>
 
-				<span class="quarter padright leftalign">
+				<span class="quarter padright rightalign">
 					<label class="switch">
 						<input
 							type         = "checkbox"
@@ -643,7 +643,7 @@
 							id           = "<% $round->id %>"
 							setting_name = "strikes_published"
 							target_type  = "round"
-							round_id    = "<% $round->id %>"
+							round_id     = "<% $round->id %>"
 							onChange     = "postSwitch( this, 'strike_cards.mhtml');"
 							<% $round_settings->{"strikes_published"}
 								? 'checked="checked"'
@@ -674,19 +674,24 @@
 			</div>
 
 			<div class="row fixedheight flexrow">
-				<span class="threequarters semibold padleft">
+				<span class="twothirds semibold padleft">
 					Strike blast sent
 				</span>
 
 				<span
 					id    = "blasted"
-					class = "quarter padsettingless"
+					class = "third padsettingless rightalign padrightmore"
 				>
 <%perl>
 					if ($round_settings->{"strikes_blasted"}) {
-						$m->comp("/funclib/showdt.mas",
-							dt => $round_settings->{"strikes_blasted"}
+
+						$m->comp("/funclib/showtime.mas",
+							string => $round_settings->{"strikes_blasted"},
+							tz     => $tourn->tz,
+							day    => 1,
+							format => "formalday",
 						);
+
 					} else {
 </%perl>
 						Not Blasted

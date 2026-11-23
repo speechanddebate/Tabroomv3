@@ -1,4 +1,6 @@
 <%args>
+	$dbh
+	$now
 	$tourn
 	$person
 	$round_id       => undef
@@ -110,7 +112,6 @@
 
 			my %nonsense = map {$_->id => 1} @persons;
 			my @ids = keys %nonsense;
-			my $now = DateTime->now();
 
 			# Google is so stupid.
 			my $numberwang = substr($now->epoch, -6, 6);
@@ -127,7 +128,6 @@
 				);
 			}
 
-			my $dbh = Tab::DBI->db_Main();
 			my $sth = $dbh->prepare('
 				select person.id, person.first, person.last
 					from person, judge, ballot, panel
@@ -141,20 +141,22 @@
 
 			$sth->execute($round);
 			my $judges = $sth->fetchall_hash();
-			my $due_string = $m->comp("/funclib/showtime.mas", dt => $due, return => 1, tz => $tz);
+
+			my $due_string = $m->comp("/funclib/showtime.mas",
+				dt     => $due,
+				return => 1,
+				tz     => $tz
+			);
+
 			my $round_name = $round->label || "Round ".$round->name;
 			my $event_name = $event->abbr || $event->name;
 
 			foreach my $judge (@{$judges}) {
-				next;
-
 				my $message = " Judge ".$judge->{first}." ".$judge->{last}." is on a strike card for ";
 				$message .= $round_name." of ".$event_name;
 				$message .= " Please be sure you're available in case you end up judging the round.\n\n";
 				$message .= "The strike cards are due by $due_string \n";
-				my @id = [$judge->{id}];
-
-				push (@ids, @id);
+				push @ids, $judge->{id};
 
 				$m->comp( "/funclib/send_notify.mas",
 					from    => $from_string,
@@ -166,6 +168,7 @@
 			}
 
 			$msg = "Blasted strike cards to ".scalar @ids." recipients";
+			$round->setting("strikes_blasted", "date", $now);
 		}
 	}
 
