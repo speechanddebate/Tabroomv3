@@ -20,6 +20,13 @@
 	}
 
 	my $school = $fine->school;
+
+	unless ($school) {
+		$m->comp('/funclib/abort.mas',
+			message => "There is no school attached to that fine at your tournament";
+		);
+	}
+
 	if ($school->tourn != $tourn){
 		$m->comp('/funclib/abort.mas',
 			message => "That fine does not belong to your tournamnent"

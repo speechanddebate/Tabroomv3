@@ -70,7 +70,7 @@
 
 	$ARGS{"flighted"} = 1 unless $ARGS{"flighted"};
 
-	foreach my $key ("type", "flighted", "label", "split_team", "presplit") {
+	foreach my $key ("type", "flighted", "label") {
 
 		if ($ARGS{$key} ne $round->$key) {
 
@@ -136,6 +136,8 @@
 		"coach_feedback",
 		"session_lock",
 		"motion_publish"
+		"split_team",
+		"presplit"
 	);
 
     foreach my $setting (@settings) {
