@@ -314,9 +314,11 @@
 
 	my $round_url = $Tab::indexcards_url."/tab/".$tourn->id."/round/".$round->id;
 	my $stat_url  = $round_url."/status";
+	my $count_url  = $round_url."/sectionCounts";
 	my $blast_url = $round_url."/blastStatus";
-	my $flip_url = "/panel/schemat/flip_status.mhtml?round_id=".$round->id."&whole=1";
 	my $side_url  = $round_url."/sidecount";
+
+	my $flip_url = "/panel/schemat/flip_status.mhtml?round_id=".$round->id."&whole=1";
 
 	my $online_flips;
 
@@ -455,9 +457,13 @@
 
 						} else if (status.panels[judge.panel] < 10) {
 
-							$(`.${judgeKey}`).removeClass('hidden');
-							$(`#${judgeKey}_result`).addClass('hidden');
-							$(`.${judge.panel}_prefs`).removeClass('hidden');
+							if (status.panels[judge.panel] > 0) {
+								$(`.${judgeKey}`).removeClass('hidden');
+								$(`#${judgeKey}_result`).addClass('hidden');
+								$(`.${judge.panel}_prefs`).removeClass('hidden');
+							} else {
+								$(`#${panelId}_sort`).attr('data-text', parseFloat(status.panels[panelId]));
+							}
 
 							$(`.${judge.panel}_sortme`).html(
 								$(`.${judge.panel}_prefs`).text()
@@ -466,6 +472,12 @@
 					});
 				});
 
+				Object.keys(status.panels).forEach( panelId => {
+					$(`#${panelId}_sort`).removeClass('doublespace');
+					if (status.panels[panelId] > 2) {
+						$(`#${panelId}_sort`).attr('data-text', parseFloat(status.panels[panelId]));
+					}
+				});
 
 				let replaceStatus = false;
 
@@ -479,22 +491,16 @@
 				});
 
 				Object.keys(startCount).forEach( (flight) => {
-
 					if (startCount[flight].started > 0 && startCount[flight].unstarted > 0) {
 						const total = startCount[flight].started + startCount[flight].unstarted;
-						$(`#ballots_out_flight_${ flight }`).text(`${startCount[flight].started}/${total} Started`);
+						$(`#ballots_out_flight_${ flight }`).html(`<span class="grow">Started:</span>
+							<span class="quarter rightalign padright">${startCount[flight].started}/${total}</span>
+						`);
 						replaceStatus = false;
 					}
 				});
 
 				if (replaceStatus) {
-
-					Object.keys(status.panels).forEach( panelId => {
-						$(`#${panelId}_sort`).removeClass('doublespace');
-						if (status.panels[panelId] > 2) {
-							$(`#${panelId}_sort`).attr('data-text', parseFloat(status.panels[panelId] * 10));
-						}
-					});
 
 					Object.keys(status.byePanels).forEach( panelId => {
 
@@ -509,17 +515,6 @@
 							$(`#${panelId}_sort`).attr("title", status.byePanels[panelId]);
 							$(`#${panelId}_sort`).addClass("smaller");
 							$(`#${panelId}_sort`).addClass('doublespace');
-						}
-					});
-
-					Object.keys(status.out).forEach( flight => {
-						const outCount = Object.keys(status.out[flight]).length;
-						if (outCount > 0) {
-							$(`#ballots_out_flight_${flight}`).html(outCount+' out');
-							$(`#ballots_out_flight_${flight}`).removeClass('greentext');
-						} else {
-							$(`#ballots_out_flight_${flight}`).addClass('greentext');
-							$(`#ballots_out_flight_${flight}`).html('DONE');
 						}
 					});
 				}
@@ -650,9 +645,7 @@
 			refreshResult(true);
 			checkIgnoreResults();
 			checkBlastStatus();
-%			if ($online_flips) {
-				checkFlipStatus();
-%			}
+			checkSectionCounts();
 
 			$("#hide").click(function(){
 				$("#eraser").hide();
@@ -675,10 +668,8 @@
 
 %			if ($round->published != 1) {
 				setInterval(checkBlastStatus, 15000);
-%				if ($online_flips) {
-					setInterval(checkFlipStatus, 15000);
-%				}
 %			}
+			setInterval(checkSectionCounts, 15000);
 		});
 
 	</script>
@@ -716,9 +707,9 @@
 						></a>
 
 						<a
-							class = "notfirst fa fa-sm fa-eye buttonwhite redtext"
-							id    = "show"
-							style = "<% $settings_visible ? "display: none;" : ""%>"
+							class ="notfirst fa fa-sm fa-eye buttonwhite redtext"
+							id    ="show"
+							style ="<% $settings_visible ? "display: none;" : ""%>"
 						></a>
 					</span>
 
@@ -822,8 +813,8 @@
 
 %					if ($show_buttons{"qualifiers"}) {
 						<a
-							class="dkyellow full martopmore centeralign"
-							href="/tabbing/results/nsda_qualifiers.mhtml?event_id=<% $event->id %>"
+							class = "dkyellow full martopmore centeralign"
+							href  = "/tabbing/results/nsda_qualifiers.mhtml?event_id=<% $event->id %>"
 						>
 							Display National Qualifiers
 						</a>
@@ -831,8 +822,8 @@
 
 %					if ($show_buttons{"top14"}) {
 						<a
-							class="dkgreen full martopmore"
-							href="/tabbing/results/nsda_qualifiers.mhtml?event_id=<% $event->id %>"
+							class = "dkgreen full martopmore"
+							href  = "/tabbing/results/nsda_qualifiers.mhtml?event_id=<% $event->id %>"
 						>
 							Display Top 14 Finishers
 						</a>
@@ -840,8 +831,8 @@
 
 %					if ($show_buttons{"nsda_section"}) {
 						<a
-							class="<% $preset ? "dkgreen" : "dkyellow" %> martop full marbottom"
-							href="/panel/round/nsda/redirector.mhtml?round_id=<% $round->id %>"
+							class = "<% $preset ? "dkgreen" : "dkyellow" %> martop full marbottom"
+							href  = "/panel/round/nsda/redirector.mhtml?round_id=<% $round->id %>"
 						>
 							<% $preset ? "" : "Re-" %><% ucfirst($section) %>
 							<% $round->realname %>
@@ -2562,7 +2553,7 @@
 				</span>
 %			}
 
-			<span class="fifth grow wrap flexrow padleft">
+			<span class="fifth wrap flexrow padleft">
 				<h6 class="full semibold bluetext nospace padbottomless padright">
 					<% $round->realname %>: <% &Tab::nicetime($start) %>
 				</h6>
@@ -2574,43 +2565,83 @@
 %				}
 			</span>
 
-%			unless ($missing_judges) {
+			<span class="marno grow fifth wrap flexrow">
+				<div id="deadlines" class="full flexrow wrap top">
+%					foreach my $flight (@flights) {
 
-				<span class="marno fifth wrap flexrow">
-					<div id="deadlines" class="full nospace flexrow wrap">
+						<span
+							id    = "status_<% $flight %>"
+							class = "grow <% scalar @flights > 1 && $flight > 1 ? 'ltborderleft' : '' %> <% scalar @flights > 1 ? "smallish centeralign" : "padright rightalign" %>"
+						>
 
-%						foreach my $flight (@flights) {
-%							if ($online_flips) {
-								<div
-									class ="full flexrow wrap smallish"
-									id    ="flipStatus_<% $flight %>"
-								>
-								</div>
+%							if (scalar @flights > 1) {
+								<p class="ltborderbottom smallish semibold graytext nospace padbottomless">Flight <% $flight %></p>
 %							}
 
-							<div
-								id    = "deadlines_<% $flight %>"
-								class = "semibold bigger <% scalar @flights > 2 ? "half" : "full" %> nowrap flexrow nospace padbottomless"
-							>
-								<span class="padright third rightalign nospace bluetext">
-									<% (scalar @flights) > 1
-										? " F".$flight.": "
-										: ""
-									%>
-								</span>
-								<span class="leftalign twothirds nospace"
-									id    = "ballots_out_flight_<% $flight %>"
-								><% $ballots_out{$flight}
-									? $ballots_out{$flight}." out"
-									: "DONE"
-								%></span>
-
+							<div id="flightStatus_<% $flight %>" class="greentext bigger semibold hidden padtop">
+								DONE
 							</div>
-%						}
-					</div>
-				</span>
-%			}
-		</div>
+
+							<div
+								id    = "flippedStatus_<% $flight %>"
+								class = "flexrow hidden orangetext nospace padtopless allStatus_<% $flight %>"
+								title = "Online Coinflips Not Completed"
+							>
+								<span class="threequarters semibold padright nospace">
+									Flips
+								</span>
+								<span
+									id    = "flippedCount_<% $flight %>"
+									class = "quarter semibold nospace"
+								>
+								</span>
+							</div>
+
+							<div
+								id    = "startedStatus_<% $flight %>"
+								class = "flexrow hidden bluetext nospace padtopless allStatus_<% $flight %>"
+								title = "Judges Not Marked as Started"
+							>
+								<span class = "threequarters semibold nospace padright">
+									Starts
+								</span>
+								<span
+									id    = "startedCount_<% $flight %>"
+									class = "quarter semibold nospace">
+								</span>
+							</div>
+
+							<div
+								id    = "enteredStatus_<% $flight %>"
+								class = "flexrow hidden redtext nospace padtopless allStatus_<% $flight %>"
+								title = "Judges With Results Entered but Not Confirmed"
+							>
+								<span class = "threequarters semibold nospace padright">
+									Half
+								</span>
+								<span
+									id    = "enteredCount_<% $flight %>"
+									class = "quarter semibold nospace">
+								</span>
+							</div>
+
+							<div
+								id    = "auditedStatus_<% $flight %>"
+								class = "flexrow hidden greentext nospace padtopless allStatus_<% $flight %>"
+								title = "Judges With Fully Confirmed Ballots"
+							>
+								<span class="threequarters semibold nospace padright">
+									In
+								</span>
+								<span
+									id    = "auditedCount_<% $flight %>"
+									class = "quarter semibold nospace">
+								</span>
+							</div>
+						</span>
+%					}
+				</div>
+			</div>
 
 <%perl>
 			if (
@@ -2720,58 +2751,67 @@
 				});
 			};
 
-%			if ($online_flips) {
 
-				const checkFlipStatus = async () => {
+			const checkSectionCounts = async () => {
 
-					$.ajax({
-						type        : 'GET',
-						url         : '<% $flip_url %>',
-						crossDomain : true,
-						xhrFields   : {
-							withCredentials: true
-						},
-					}).success( (flipStatus) => {
+				$.ajax({
+					type        : 'GET',
+					url         : '<% $count_url %>',
+					crossDomain : true,
+					xhrFields   : {
+						withCredentials: true
+					},
+				}).success( (counts) => {
 
-						for (let flight = 1; flight <= (flipStatus.flighted || 1) ; flight++) {
+					Object.keys(counts).forEach( (flight) => {
 
-							const flipTag = `flip_${flight}`;
+						let done = true;
 
-							if (flipStatus[flipTag]) {
+						Object.keys(counts[flight]).forEach( (target) => {
 
-								let message = `<div class="full padbottomless flexrow">`;
-								message += `<span class="grow orangetext semibold rightalign padright">`;
-								message += `Flt ${flight} Flips At`;
-								message += `</span>`;
-								message += `<span class="rightalign">${flipStatus[flipTag]}</span></div>`;
+							if (target === 'totalSections' || target === 'totalJudges') return;
 
-								$(`#flipStatus_${flight}`).html(message);
-								$(`#flipStatus_${flight}`).removeClass('hidden');
-								$(`#deadlines_${flight}`).addClass('hidden');
+							$(`#${target}Status_${flight}`).addClass('hidden');
 
-							} else if (flipStatus[flight].count) {
+							if (target === 'flipped') {
 
-								let message = `<div class="full padbottomless flexrow">`;
-								message += `<span class="grow orangetext semibold rightalign padright">`;
-								message += `Flt ${flight} Pendings`;
-								message += `</span>`;
-								message += `<span class="rightalign">${flipStatus[flight].count}</span></div>`;
-
-								$(`#flipStatus_${flight}`).html(message);
-								$(`#flipStatus_${flight}`).removeClass('hidden');
-								$(`#deadlines_${flight}`).addClass('hidden');
-
+								if (counts[flight][target] && counts[flight][target] < counts[flight].totalSections) {
+									$(`#${target}Status_${flight}`).removeClass('hidden');
+									$(`#${target}Count_${flight}`).text(`${counts[flight][target]}/${counts[flight].totalSections}`);
+									if (counts[flight][target] < counts[flight].totalSections) {
+										done = false;
+									};
+									if (counts[flight][target] == counts[flight].totalSections) {
+										$(`#${target}Status_${flight}`).addClass('italic');
+										$(`#${target}Status_${flight}`).addClass('greytext');
+									};
+								}
 							} else {
 
-								$(`#flipStatus_${flight}`).addClass('hidden');
-								$(`#deadlines_${flight}`).removeClass('hidden');
+								if (counts[flight][target] && counts[flight][target] < counts[flight].totalJudges) {
+									done = false;
+									$(`#${target}Status_${flight}`).removeClass('hidden');
+									$(`#${target}Count_${flight}`).text(`${counts[flight][target]}/${counts[flight].totalJudges}`);
+									if (counts[flight][target] == counts[flight].totalJudges) {
+										$(`#${target}Status_${flight}`).addClass('italic');
+										$(`#${target}Status_${flight}`).addClass('greytext');
+									};
+								}
 							}
+						});
+
+						if (done) {
+							$(`#flightStatus_${flight}`).removeClass("hidden");
+							$(`.allStatus_${flight}`).addClass("hidden");
+						} else {
+							$(`#flightStatus_${flight}`).addClass("hidden");
 						}
-					}).then( () => {
-						fixVisual();
 					});
-				}
-%			}
+
+				}).then( () => {
+					fixVisual();
+				});
+			}
 
 		</script>
 
