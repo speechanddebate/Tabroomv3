@@ -85,8 +85,6 @@
 
 	foreach my $round (@{$rounds}) {
 
-		next if $used{$round->{entry_id}}++;
-
 		if ($final && $round->{round_id} == $final->id) {
 			if ($round->{bye} || $round->{win}) {
 				$final_ballots{$round->{entry_id}}++;
@@ -94,6 +92,7 @@
 			}
 		}
 
+		next if $used{$round->{entry_id}}++;
 		push @{$in_round{$round->{round_id}}}, $round->{entry_id};
 	}
 
@@ -104,6 +103,7 @@
 
 	if ($final) {
 		foreach my $entry_id (@{$in_round{$final->id}}) {
+			Tab::debuglog("Entry $entry_id was in the final round with ".$final_ballots{$entry_id}." ballots of ".$final_ballots{total}." ballots");
 			if ($final_ballots{$entry_id} > ($final_ballots{total} / 2)) {
 				$round_multiplier{$entry_id} = 2.3;
 			} else {
