@@ -822,6 +822,19 @@
 
 	<div class="main padvertless">
 
+		<div class="full noticebox" style="background-color: var(--barely-yellow); border: 2px solid brown; border-radius: 4px">
+
+			<p class='semibold bigger'>Brief Downtime Window: Friday Morning<p>
+
+			<p>
+				Tabroom will have a brief downtime to address
+				a file storage issue and to bring additional resources online.
+				The window will last from on Friday November 27th from 9:00 to
+				9:30 AM Central time (15:00-15:30 UTC).  This message will
+				disappear when the maintenance is complete.
+			</p>
+		</div>
+
 		<div class="full flexrow">
 			<span class="threeifths grow">
 				<h1 class="nospace padvertless padtopmore">
