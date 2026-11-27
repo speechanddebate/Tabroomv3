@@ -23,7 +23,7 @@
 	my $deploy_sth = $dbh->prepare("
 		update server
 		set status = 'deploying'
-		where id = ?
+		where linode_id = ?
 	");
 
 	if ($server_id eq int($server_id) && $server_id > 1000) {

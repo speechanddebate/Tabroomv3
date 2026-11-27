@@ -710,9 +710,10 @@
 
 									<span class="fifteenth centeralign smallish" title="Reinstall Server">
 										<button
-											id      = "${server.label}_reboot"
-											class   = "buttonwhite orangetext invert fa fa-lg fa-refresh hidden"
-											onClick = "rebootLinode('${ server.linode_id }');"
+											id        = "${server.label}_reinstall"
+											class     = "buttonwhite orangetext invert fa fa-lg fa-refresh hidden"
+											server_id = '${server.linode_id}'
+											onClick   = "postSwitch(this, 'reinstall.mhtml');";
 											disabled
 										></button>
 									</span>
@@ -732,9 +733,11 @@
 
 							if (server.tags.includes('tabweb') || server.tags.includes('tab-admin')) {
 								$(`#${server.label}_reboot`).removeClass('hidden');
+								$(`#${server.label}_reinstall`).removeClass('hidden');
 								$(`#${server.label}_mason`).removeClass('hidden');
 								$(`#${server.label}_masoncards`).removeClass('hidden');
 								$(`#${server.label}_reboot`).prop('disabled', false);
+								$(`#${server.label}_reinstall`).prop('disabled', false);
 							}
 						}
 					}
