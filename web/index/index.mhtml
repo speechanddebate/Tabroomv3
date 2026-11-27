@@ -822,10 +822,8 @@
 
 	<div class="main padvertless">
 
-		<div class="full noticebox" style="background-color: var(--barely-yellow); border: 2px solid brown; border-radius: 4px">
-
+		<div class="hidden downtime full noticebox" style="background-color: var(--barely-yellow); border: 2px solid brown; border-radius: 4px">
 			<p class='semibold bigger'>Brief Downtime Window: Friday Morning<p>
-
 			<p>
 				Tabroom will have a brief downtime to address
 				a file storage issue and to bring additional resources online.
