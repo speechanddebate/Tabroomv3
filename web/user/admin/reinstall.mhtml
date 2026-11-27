@@ -1,0 +1,49 @@
+<%args>
+	$dbh
+	$now
+	$person
+	$tourn
+	$server_id => undef
+</%args>
+<%init>
+
+	$m->clear_buffer();
+	$r->content_type('application/json');
+
+	unless ($server_id) {
+		$m->print('{ "error": true, "message": "No server ID sent"}');
+		$m->abort();
+	}
+
+	unless ($erson->site_admin) {
+		$m->print('{ "error": true, "message": "No permissions"}');
+		$m->abort();
+	}
+
+	my $deploy_sth = $dbh->prepare("
+		update server
+		set status = 'deploying'
+		where id = ?
+	");
+
+	if ($server_id eq int($server_id) && $server_id > 1000) {
+		$deploy_sth->execute($server_id);
+	}
+
+	my $message = "Server $server_id set to deploying mode for an Ansible re-install";
+
+    my %response = (
+		error   => 0,
+		message => $message
+    );
+
+	$m->comp("/funclib/log.mas",
+		type        => 'admin',
+		person      => $person->id,
+		description => $message
+	);
+
+    $m->print(JSON::encode_json(\%response));
+	$m->abort();
+
+</%init>
