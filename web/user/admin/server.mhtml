@@ -721,7 +721,7 @@
 									<span class="fifteenth centeralign smallish" title="Reboot Server">
 										<button
 											id      = "${server.label}_reboot"
-											class   = "buttonwhite orangetext invert fa fa-lg fa-power-off hidden"
+											class   = "buttonwhite redtext invert fa fa-lg fa-power-off hidden"
 											onClick = "rebootLinode('${ server.linode_id }');"
 											disabled
 										></button>
