@@ -244,15 +244,19 @@
 			</span>
 
 			<span class="seventh centeralign smallish">
-				Mason
+				Mason Dockers
 			</span>
 
 			<span class="seventh centeralign smallish">
-				API
+				API Dockers
 			</span>
 
 			<span class="fifteenth centeralign smallish" title="Reboot Machine">
-				REB
+				Inst
+			</span>
+
+			<span class="fifteenth centeralign smallish" title="Reboot Machine">
+				Boot
 			</span>
 		</div>
 
@@ -704,10 +708,19 @@
 										</div>
 									</span>
 
-									<span class="fifteenth centeralign smallish">
+									<span class="fifteenth centeralign smallish" title="Reinstall Server">
 										<button
 											id      = "${server.label}_reboot"
 											class   = "buttonwhite orangetext invert fa fa-lg fa-refresh hidden"
+											onClick = "rebootLinode('${ server.linode_id }');"
+											disabled
+										></button>
+									</span>
+
+									<span class="fifteenth centeralign smallish" title="Reboot Server">
+										<button
+											id      = "${server.label}_reboot"
+											class   = "buttonwhite orangetext invert fa fa-lg fa-power-off hidden"
 											onClick = "rebootLinode('${ server.linode_id }');"
 											disabled
 										></button>

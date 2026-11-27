@@ -23,7 +23,7 @@
 
 	unless ($school) {
 		$m->comp('/funclib/abort.mas',
-			message => "There is no school attached to that fine at your tournament";
+			message => "There is no school attached to that fine at your tournament"
 		);
 	}
 

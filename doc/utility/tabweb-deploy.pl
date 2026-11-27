@@ -21,13 +21,14 @@
 		where status = "deploying"
 		order by created_at
 	');
+
 	$sth->execute();
 
 	my $results = $sth->fetchall_hashref('id');
-
 	my $status_sth = $dbh->prepare('update server set status = ? where id = ?');
 
 	foreach my $id (keys %{$results}) {
+
 		my $row = $results->{$id};
 		print "Machine ".$row->{hostname}." created ".$row->{created_at}." has status ".$row->{status}."\n";
 		system "logger -t tabweb.info Machine ".$row->{hostname}." created ".$row->{created_at}." has status ".$row->{status};

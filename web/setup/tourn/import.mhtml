@@ -424,6 +424,7 @@
 		};
 
 		next unless $nevent;
+
 		$translator{"event"}{$event->id} = $nevent;
 
 		SETTING:
