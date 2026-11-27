@@ -15,7 +15,7 @@
 		$m->abort();
 	}
 
-	unless ($erson->site_admin) {
+	unless ($person->site_admin) {
 		$m->print('{ "error": true, "message": "No permissions"}');
 		$m->abort();
 	}
